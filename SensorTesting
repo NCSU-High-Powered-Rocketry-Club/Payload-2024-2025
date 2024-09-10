@@ -1,0 +1,23 @@
+import time
+import board
+import busio
+import adafruit_bmp280
+
+# Create I2C bus
+i2c = busio.I2C(board.SCL, board.SDA)
+
+# Create BMP280 object
+bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c)
+
+# Function to log data
+def log_data():
+    with open("sensor_data.log", "a") as log_file:
+        while True:
+            temperature = bmp280.temperature
+            pressure = bmp280.pressure
+            log_file.write(f"Temperature: {temperature:.2f} C, Pressure: {pressure:.2f} hPa\n")
+            log_file.flush()
+            time.sleep(1)
+
+if __name__ == "__main__":
+    log_data()
