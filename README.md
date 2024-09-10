@@ -34,6 +34,12 @@ pip3 install -r requirements.txt
 
 ## Running the Program
 
+Source the venv
+
+```bash
+source venv/bin/activate
+```
+
 Now that you have all the required packages installed, you can run the program by running the command
 
 ```bash
