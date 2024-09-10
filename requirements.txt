@@ -1,2 +1,1 @@
-adafruit-circuitpython-pca9685
-adafruit-circuitpython-servokit
+adafruit-circuitpython-bmp280
