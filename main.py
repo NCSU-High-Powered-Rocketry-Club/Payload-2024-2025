@@ -1,8 +1,8 @@
 # For Command line arguments
 import argparse
 
-# Payload system
-import payload
+# Payload module
+import spaceducks
 
 
 # Program description
@@ -19,16 +19,15 @@ args = parser.parse_args()
 
 def main(args):
 
-    payload = payload.PayloadSystem()
+    payload = spaceducks.PayloadSystem()
 
     try:
-        while not payload.ready_to_shutdown:
+        while payload.running:
             payload.update()
 
     except KeyboardInterrupt:
-        pass
-
-    payload.shutdown()
+        # Early shutdown if interrupted
+        payload.shutdown()
 
     print("Program complete. Waiting for recovery.")
 
