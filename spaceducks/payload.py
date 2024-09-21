@@ -35,6 +35,7 @@ class SensorState(msgspec.Struct):
 class FlightStats(msgspec.Struct):
     max_acceleration: float = 0.0
     max_temperature: float = 0.0
+    max_altitude: float = 0.0
 
 
 class PayloadSystem:
@@ -103,6 +104,8 @@ class PayloadSystem:
             self.data.acceleration = self.imu.acceleration
             self.data.linear_accel = self.imu.linear_acceleration
 
+            self.update_stats()
+
             # If enough time has passed, let's log this data
             if (time.time() - self.last_log_time) >= self.LOG_INTERVAL:
                 logging.info(str(self.data))
@@ -111,6 +114,18 @@ class PayloadSystem:
             # using epsilon here because this can't be exactly zero
             # (because then it might not switch threads at all)
             time.sleep(sys.float_info.epsilon + self.SENSOR_WAIT_TIME)
+
+    def update_stats(self):
+        if self.data.altitude > self.stats.max_altitude:
+            self.stats.max_altitude = self.data.altitude
+
+        if self.data.temperature > self.stats.max_temperature:
+            self.stats.max_temperature = self.data.temperature
+
+        # Include gravity since we're getting overall accel
+        magnitude = math.sqrt(sum(axis**2 for axis in self.data.acceleration))
+        if magnitude > self.stats.max_acceleration:
+            self.stats.max_acceleration = magnitude
 
     def update(self):
         current_state = self.state
@@ -140,6 +155,9 @@ class PayloadSystem:
         else:
             # Should be in recover state, shutdown
             self.shutdown()
+
+        # Ensure the main thread also doesn't hog thread time
+        time.sleep(sys.float_info.epsilon)
 
     def detect_takeoff(self) -> bool:
         # Simply calculate the magnitude
