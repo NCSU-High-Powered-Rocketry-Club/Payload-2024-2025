@@ -106,6 +106,7 @@ class PayloadSystem:
             # If enough time has passed, let's log this data
             if (time.time() - self.last_log_time) >= self.LOG_INTERVAL:
                 logging.info(str(self.data))
+                self.last_log_time = time.time()
 
             # using epsilon here because this can't be exactly zero
             # (because then it might not switch threads at all)
