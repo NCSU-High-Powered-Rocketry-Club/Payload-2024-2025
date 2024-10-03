@@ -68,10 +68,10 @@ class PayloadSystem:
     LOG_INTERVAL = 0.1
 
     # Arm the payload if we detect at least this much acceleration
-    MINIMUM_ARM_ACCEL = 50  # m/s^2
+    MINIMUM_ARM_ACCEL = 12  # m/s^2
 
     # The maximum rest acceleration and altitude to detect if we've landed
-    MAXIMUM_REST_ACCEL = 0.4  # m/s^2
+    MAXIMUM_REST_ACCEL = 0.1  # m/s^2
     MAXIMUM_REST_ALT = 2  # meters above initial takeoff altitude to consider
 
     # Time to wait between reading sensors (seconds)
@@ -124,20 +124,27 @@ class PayloadSystem:
             # (because then it might not switch threads at all)
             time.sleep(sys.float_info.epsilon + self.SENSOR_WAIT_TIME)
 
+            alt = self.altimeter.altitude
+            temp = self.altimeter.temperature
+
             # Read altitude and temperature
-            if self.altimeter.altitude is not None:
+            if all(None not in alt, temp):
                 self.data.altitude = self.altimeter.altitude
                 self.data.temperature = self.altimeter.temperature
             else:
                 logging.warning("Altimeter not initialized!")
                 continue
 
-            if None not in self.imu.euler:
+            orient = self.imu.euler
+            accel = self.imu.acceleration
+            linear = self.imu.linear_acceleration
+
+            if all(None not in orient, accel, linear):
                 # Read orientation as an euler angle
-                self.data.orientation = self.imu.euler
+                self.data.orientation = orient
                 # Read acceleration
-                self.data.acceleration = self.imu.acceleration
-                self.data.linear_accel = self.imu.linear_acceleration
+                self.data.acceleration = accel
+                self.data.linear_accel = linear
             else:
                 logging.warning("IMU not initialized!")
                 continue
