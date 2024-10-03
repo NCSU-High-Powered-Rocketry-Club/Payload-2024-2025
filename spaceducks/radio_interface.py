@@ -8,10 +8,10 @@ if TYPE_CHECKING:
 import serial
 import sounddevice as sd
 import soundfile as sf
-import pyttsx3
 
 import logging
 import time
+import subprocess
 
 
 class RadioPTT:
@@ -38,25 +38,25 @@ class RFInterface:
 
     def __init__(self, callsign: str, ptt_port: str):
         self.callsign = callsign
-        self.ptt = None  # RadioPTT(ptt_port)
-        self.tts_engine = pyttsx3.init()
+        self.ptt = RadioPTT(ptt_port)
 
     def transmit_data(self, data: FlightStats):
         logging.info("Generating TTS...")
-
-        self.tts_engine.save_to_file(
+        
+        cmd = (
+            "espeak \""
             f"This is {self.callsign} for Student Launch. "
             f"{str(data)}"
-            f"This is {self.callsign}. ",
-            self.AUDIO_FILE_NAME,
+            f"This is {self.callsign}. \" -w "
+            f"{self.AUDIO_FILE_NAME}"
         )
-        self.tts_engine.runAndWait()
+        subprocess.call(cmd, shell=True)
 
         logging.info("Reading audio file...")
         audio, samplerate = sf.read(self.AUDIO_FILE_NAME)
 
         logging.info("Speaking...")
-        return
+
         with self.ptt:
             # play audio file and block
             sd.play(audio, samplerate, device=self.AUDIO_DEVICE_SUBSTR)

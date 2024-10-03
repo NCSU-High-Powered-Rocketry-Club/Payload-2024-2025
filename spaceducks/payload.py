@@ -56,7 +56,7 @@ class FlightStats(msgspec.Struct):
             f"Maximum Acceleration: {self.max_acceleration}. "
             f"Maximum Temperature: {self.max_temperature}. "
             f"Maximum Altitude: {self.max_altitude}. "
-            f"STEMnaut Survivability: {self.survivability_rating / 100.0} percent. "
+            f"STEMnaut Survivability: {self.survivability_rating * 100.0} percent. "
         )
 
 
@@ -68,10 +68,10 @@ class PayloadSystem:
     LOG_INTERVAL = 0.1
 
     # Arm the payload if we detect at least this much acceleration
-    MINIMUM_ARM_ACCEL = 12  # m/s^2
+    MINIMUM_ARM_ACCEL = 50  # m/s^2
 
     # The maximum rest acceleration and altitude to detect if we've landed
-    MAXIMUM_REST_ACCEL = 0.1  # m/s^2
+    MAXIMUM_REST_ACCEL = 0.4  # m/s^2
     MAXIMUM_REST_ALT = 2  # meters above initial takeoff altitude to consider
 
     # Time to wait between reading sensors (seconds)

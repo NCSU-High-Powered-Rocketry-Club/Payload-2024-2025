@@ -4,5 +4,4 @@ msgspec
 pyserial
 sounddevice
 soundfile
-pyttsx3
 numpy
