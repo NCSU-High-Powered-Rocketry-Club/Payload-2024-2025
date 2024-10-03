@@ -47,6 +47,17 @@ class FlightStats(msgspec.Struct):
     max_acceleration: float = 0.0
     max_temperature: float = 0.0
     max_altitude: float = 0.0
+    survivability_rating: float = 0.0
+
+    def __str__(self) -> str:
+        """This string will be used for text-to-speech"""
+
+        return (
+            f"Maximum Acceleration: {self.max_acceleration}. "
+            f"Maximum Temperature: {self.max_temperature}. "
+            f"Maximum Altitude: {self.max_altitude}. "
+            f"STEMnaut Survivability: {self.survivability_rating / 100.0} percent. "
+        )
 
 
 class PayloadSystem:
@@ -69,7 +80,7 @@ class PayloadSystem:
     # Sea level pressure used to calibrate altimeter (hPa)
     SEA_LEVEL_PRESSURE = 1013.25  # this is the default from adafruit docs
 
-    def __init__(self, callsign: str):
+    def __init__(self, callsign: str, ptt_port: str):
         # Initialize the logger
         self.setup_logger()
         logging.debug("Initializing payload...")
@@ -82,7 +93,9 @@ class PayloadSystem:
         self.stats = FlightStats()
         self.last_log_time = time.time()
 
-        self.radio = RFInterface(callsign) if callsign != "NOTRANSMIT" else None
+        self.radio = (
+            RFInterface(callsign, ptt_port) if callsign != "NOTRANSMIT" else None
+        )
 
         # Initialize our sensors and store them.
         self.i2c_bus = board.I2C()
@@ -170,10 +183,12 @@ class PayloadSystem:
         ### Landed state
         elif current_state is LaunchState.LANDED:
             if self.radio:
+                logging.info("Transmitting data...")
                 self.radio.transmit_data(self.stats)
 
             logging.info("Landed state.")
             logging.info(str(self.stats))
+            self.state = LaunchState.RECOVER
 
         ### Recovery
         else:

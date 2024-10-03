@@ -19,12 +19,16 @@ parser.add_argument(
     required=True,
 )
 
+parser.add_argument(
+    "-p", "--Port", help="Port to use for PTT", required=False, default="/dev/ttyACM0"
+)
+
 args = parser.parse_args()
 
 
 def main(args):
 
-    payload = spaceducks.PayloadSystem(args.Callsign)
+    payload = spaceducks.PayloadSystem(args.Callsign, args.Port)
 
     try:
         while payload.running:
