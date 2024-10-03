@@ -12,14 +12,19 @@ msg = "Main HPRC Payload Program for 2024-2025."
 parser = argparse.ArgumentParser(description=msg)
 
 # TODO: Add any arguments we might need
-# parser.add_argument("-f", "--Frequency", help="APRS Frequency in MHz")
+parser.add_argument(
+    "-c",
+    "--Callsign",
+    help="Callsign to use for transmission. NOTRANSMIT to disable.",
+    required=True,
+)
 
 args = parser.parse_args()
 
 
 def main(args):
 
-    payload = spaceducks.PayloadSystem()
+    payload = spaceducks.PayloadSystem(args.Callsign)
 
     try:
         while payload.running:
@@ -29,7 +34,7 @@ def main(args):
         # Early shutdown if interrupted
         payload.shutdown()
 
-    print(str(payload.CALLSIGN) + "-> Max Altitude: " + str(payload.stats.max_altitude))
+    # print(str(payload.CALLSIGN) + "-> Max Altitude: " + str(payload.stats.max_altitude))
     print("Program complete. Waiting for recovery.")
 
 
