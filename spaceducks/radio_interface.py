@@ -38,7 +38,7 @@ class RFInterface:
 
     def __init__(self, callsign: str, ptt_port: str):
         self.callsign = callsign
-        self.ptt = RadioPTT(ptt_port)
+        self.ptt = None  # RadioPTT(ptt_port)
         self.tts_engine = pyttsx3.init()
 
     def transmit_data(self, data: FlightStats):
@@ -56,7 +56,7 @@ class RFInterface:
         audio, samplerate = sf.read(self.AUDIO_FILE_NAME)
 
         logging.info("Speaking...")
-
+        return
         with self.ptt:
             # play audio file and block
             sd.play(audio, samplerate, device=self.AUDIO_DEVICE_SUBSTR)

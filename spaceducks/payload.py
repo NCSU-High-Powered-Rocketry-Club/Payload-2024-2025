@@ -128,7 +128,7 @@ class PayloadSystem:
             temp = self.altimeter.temperature
 
             # Read altitude and temperature
-            if all(None not in alt, temp):
+            if all(val is not None for val in (alt, temp)):
                 self.data.altitude = self.altimeter.altitude
                 self.data.temperature = self.altimeter.temperature
             else:
@@ -139,7 +139,7 @@ class PayloadSystem:
             accel = self.imu.acceleration
             linear = self.imu.linear_acceleration
 
-            if all(None not in orient, accel, linear):
+            if all(None not in val for val in (orient, accel, linear)):
                 # Read orientation as an euler angle
                 self.data.orientation = orient
                 # Read acceleration
