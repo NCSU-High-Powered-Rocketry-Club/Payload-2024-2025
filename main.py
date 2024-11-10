@@ -2,7 +2,7 @@
 import argparse
 
 # Payload module
-import spaceducks
+import payload
 
 
 # Program description
@@ -28,7 +28,7 @@ args = parser.parse_args()
 
 def main(args):
 
-    payload = spaceducks.PayloadSystem(args.Callsign, args.Port)
+    payload = payload.PayloadSystem(args.Callsign, args.Port)
 
     try:
         while payload.running:
