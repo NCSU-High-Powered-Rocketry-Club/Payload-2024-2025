@@ -23,7 +23,7 @@ class XbeeInterface:
 
     def send_data(self, data: MESSAGE_TYPES):
         with self.lock:
-            self.xbee.write(self.encoder.encode(data))
+            self.xbee.write(self.encoder.encode(data) + b";")
 
     def start(self):
         self.running = True
