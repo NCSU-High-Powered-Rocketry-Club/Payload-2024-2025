@@ -31,6 +31,7 @@ class XbeeInterface:
 
     def stop(self):
         self.running = False
+        self.xbee.close()
         self.recv_thread.join()
 
     def process_data(self, data: bytes):
@@ -47,6 +48,9 @@ class XbeeInterface:
 
         """
         while self.running:
+            # Avoid hogging thread time
+            time.sleep(0.0001)
+
             data = self._readline(self.xbee, b";")
 
             if data == b"":
@@ -60,9 +64,6 @@ class XbeeInterface:
             except Exception as e:
                 logging.error(e)
                 logging.error(f"Error on processing data {data}")
-
-            # Avoid hogging thread time
-            time.sleep(0.0001)
 
     def _readline(self, serial: serial.Serial, eol: bytes) -> bytes:
         """
