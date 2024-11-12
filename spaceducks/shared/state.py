@@ -27,7 +27,7 @@ class SensorState(msgspec.Struct, array_like=True, tag=True):
         )
 
 
-class FlightStats(msgspec.Struct, array_like=True):
+class FlightStats(msgspec.Struct, array_like=True, tag=True):
     current_alt: float = 0.0
     max_acceleration: float = 0.0
     max_temperature: float = 0.0
