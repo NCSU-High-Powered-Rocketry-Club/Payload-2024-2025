@@ -85,6 +85,8 @@ class PayloadSystem:
         self.xbee.send_data(Message("Howdy!"))
 
     def setup_logger(self):
+        """Set up the logger to log to file and stderr"""
+
         logging.basicConfig(
             handlers=[logging.FileHandler(self.LOG_FILENAME), logging.StreamHandler()],
             level=logging.DEBUG,
@@ -93,6 +95,8 @@ class PayloadSystem:
         )
 
     def read_sensors(self):
+        """Threaded function to read sensors continuously in the background"""
+
         while self.running:
             # using epsilon here because this can't be exactly zero
             # (because then it might not switch threads at all)
@@ -135,6 +139,7 @@ class PayloadSystem:
                 self.last_tx_time = time.time()
 
     def update_stats(self):
+        """Update flight statistics (max/min/etc) from our sensor state to transmit later"""
 
         if self.data.altitude > self.stats.max_altitude:
             self.stats.max_altitude = self.data.altitude
@@ -148,6 +153,8 @@ class PayloadSystem:
             self.stats.max_acceleration = magnitude
 
     def update(self):
+        """Update the main payload state machine"""
+
         current_state = self.state
 
         ### Standby state
@@ -158,12 +165,16 @@ class PayloadSystem:
             # If we detect takeoff, then we switch to armed mode
             if self.detect_takeoff():
                 logging.info("Takeoff detected, switching to arm state.")
+                self.xbee.send_data(Message("Takeoff detected."))
+
                 self.state = LaunchState.ARMED
 
         ### Armed state
         elif current_state is LaunchState.ARMED:
             if self.detect_landing():
                 logging.info("Landing detected, switching to land state.")
+                self.xbee.send_data(Message("Landing detected."))
+
                 self.state = LaunchState.LANDED
 
         ### Landed state
@@ -185,6 +196,8 @@ class PayloadSystem:
         time.sleep(sys.float_info.epsilon)
 
     def detect_takeoff(self) -> bool:
+        """Function to test for takeoff conditions"""
+
         if None in self.data.linear_accel:
             return False
 
@@ -194,6 +207,8 @@ class PayloadSystem:
         return magnitude >= self.MINIMUM_ARM_ACCEL
 
     def detect_landing(self) -> bool:
+        """Function to test if the rocket has likely landed"""
+
         if None in self.data.linear_accel:
             return False
 
@@ -210,4 +225,9 @@ class PayloadSystem:
         self.sensor_thread.join()
 
     def receive_message(self, data: MESSAGE_TYPES):
-        pass
+        if type(data) is Message:
+            if data.message == "!transmitnow":
+                self.state = LaunchState.LANDED
+
+            elif data.message == "!recover":
+                self.state = LaunchState.RECOVER
