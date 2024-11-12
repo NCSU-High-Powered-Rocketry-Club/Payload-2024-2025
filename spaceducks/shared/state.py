@@ -1,8 +1,13 @@
 # Data storage and serialization
 import msgspec
+from typing import Union
 
 
-class SensorState(msgspec.Struct, array_like=True):
+class Message(msgspec.Struct, array_like=True, tag=True):
+    message: str
+
+
+class SensorState(msgspec.Struct, array_like=True, tag=True):
     altitude: float = 0.0
     temperature: float = 0.0
     orientation: tuple[float, float, float] = (0.0, 0.0, 0.0)
@@ -23,6 +28,7 @@ class SensorState(msgspec.Struct, array_like=True):
 
 
 class FlightStats(msgspec.Struct, array_like=True):
+    current_alt: float = 0.0
     max_acceleration: float = 0.0
     max_temperature: float = 0.0
     max_altitude: float = 0.0
@@ -37,3 +43,6 @@ class FlightStats(msgspec.Struct, array_like=True):
             f"Maximum Altitude: {self.max_altitude}. "
             f"STEMnaut Survivability: {self.survivability_rating * 100.0} percent."
         )
+
+
+MESSAGE_TYPES = Union[Message, SensorState, FlightStats]

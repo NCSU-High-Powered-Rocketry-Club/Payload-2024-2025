@@ -11,17 +11,13 @@ msg = "Main HPRC Payload Program for 2024-2025."
 # Initialize parser
 parser = argparse.ArgumentParser(description=msg)
 
-# TODO: Add any arguments we might need
+# Callsign argument
 parser.add_argument(
-    "-c",
-    "--Callsign",
-    help="Callsign to use for transmission. NOTRANSMIT to disable.",
-    required=True,
+    "callsign", help="Callsign to use for transmission. NOTRANSMIT to disable."
 )
 
-parser.add_argument(
-    "-p", "--Port", help="Port to use for PTT", required=False, default="/dev/ttyACM0"
-)
+# Port argument
+parser.add_argument("port", help="Port to use for XBee communication")
 
 args = parser.parse_args()
 
@@ -38,7 +34,6 @@ def main(args):
         # Early shutdown if interrupted
         payload.shutdown()
 
-    # print(str(payload.CALLSIGN) + "-> Max Altitude: " + str(payload.stats.max_altitude))
     print("Program complete. Waiting for recovery.")
 
 

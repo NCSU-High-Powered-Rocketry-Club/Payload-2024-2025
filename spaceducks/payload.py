@@ -10,9 +10,9 @@ import board
 from adafruit_bno055 import BNO055_I2C
 from adafruit_bmp280 import Adafruit_BMP280_I2C
 
-
+from .shared.xbee_interface import XbeeInterface
 from .radio_interface import RFInterface
-from .state import SensorState, FlightStats
+from .shared.state import SensorState, FlightStats, MESSAGE_TYPES, Message
 
 
 class LaunchState(Enum):
@@ -29,6 +29,9 @@ class PayloadSystem:
     # Interval (seconds) to log data at
     LOG_INTERVAL = 0.1
 
+    # Interval (seconds) to transmit data at
+    TX_INTERVAL = 0.5
+
     # Arm the payload if we detect at least this much acceleration
     MINIMUM_ARM_ACCEL = 50  # m/s^2
 
@@ -42,22 +45,28 @@ class PayloadSystem:
     # Sea level pressure used to calibrate altimeter (hPa)
     SEA_LEVEL_PRESSURE = 1013.25  # this is the default from adafruit docs
 
-    def __init__(self, callsign: str, ptt_port: str):
+    def __init__(self, callsign: str, port: str):
         # Initialize the logger
         self.setup_logger()
         logging.debug("Initializing payload...")
 
         # Initialize payload state
-        self.state = LaunchState.STANDBY
-        self.init_time = time.time()
         self.running = True
+        self.state = LaunchState.STANDBY
+
+        self.init_time = time.time()
+        self.last_log_time = time.time()
+        self.last_tx_time = time.time()
+
         self.data = SensorState()
         self.stats = FlightStats()
-        self.last_log_time = time.time()
 
-        self.radio = (
-            RFInterface(callsign, ptt_port) if callsign != "NOTRANSMIT" else None
-        )
+        self.xbee = XbeeInterface(port, self.receive_message)
+
+        if callsign != "NOTRANSMIT":
+            self.radio = RFInterface(callsign, self.xbee)
+        else:
+            self.radio = None
 
         # Initialize our sensors and store them.
         self.i2c_bus = board.I2C()
@@ -71,6 +80,9 @@ class PayloadSystem:
 
         logging.debug("Starting sensor read thread...")
         self.sensor_thread.start()
+
+        logging.debug("Payload initialized.")
+        self.xbee.send_data(Message("Howdy!"))
 
     def setup_logger(self):
         logging.basicConfig(
@@ -103,10 +115,10 @@ class PayloadSystem:
 
             if all(None not in val for val in (orient, accel, linear)):
                 # Read orientation as an euler angle
-                self.data.orientation = orient
+                self.data.orientation = orient  # type: ignore
                 # Read acceleration
-                self.data.acceleration = accel
-                self.data.linear_accel = linear
+                self.data.acceleration = accel  # type: ignore
+                self.data.linear_accel = linear  # type: ignore
             else:
                 logging.warning("IMU not initialized!")
                 continue
@@ -117,6 +129,10 @@ class PayloadSystem:
             if (time.time() - self.last_log_time) >= self.LOG_INTERVAL:
                 logging.info(str(self.data))
                 self.last_log_time = time.time()
+
+            if (time.time() - self.last_tx_time) >= self.TX_INTERVAL:
+                self.xbee.send_data(self.data)
+                self.last_tx_time = time.time()
 
     def update_stats(self):
 
@@ -192,3 +208,6 @@ class PayloadSystem:
 
         # Wait for the sensor thread to finish
         self.sensor_thread.join()
+
+    def receive_message(self, data: MESSAGE_TYPES):
+        pass
