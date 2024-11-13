@@ -14,6 +14,7 @@ from adafruit_bno08x import (
     BNO_REPORT_GYROSCOPE,
     BNO_REPORT_MAGNETOMETER,
     BNO_REPORT_ROTATION_VECTOR,
+    BNO_REPORT_LINEAR_ACCELERATION
 )
 
 from .shared.xbee_interface import XbeeInterface
@@ -46,7 +47,7 @@ class PayloadSystem:
     MAXIMUM_REST_ALT = 2  # meters above initial takeoff altitude to consider
 
     # Time to wait between reading sensors (seconds)
-    SENSOR_WAIT_TIME = 0.0
+    SENSOR_WAIT_TIME = 0.05
 
     # Sea level pressure used to calibrate altimeter (hPa)
     SEA_LEVEL_PRESSURE = 1013.25  # this is the default from adafruit docs
@@ -67,10 +68,10 @@ class PayloadSystem:
         self.data = SensorState()
         self.stats = FlightStats()
 
-        self.xbee = XbeeInterface(port, self.receive_message)
+        #self.xbee = XbeeInterface(port, self.receive_message)
 
         if callsign != "NOTRANSMIT":
-            self.radio = RFInterface(callsign, self.xbee)
+            self.radio = RFInterface(callsign, None)
         else:
             self.radio = None
 
@@ -82,6 +83,7 @@ class PayloadSystem:
         self.imu.enable_feature(BNO_REPORT_GYROSCOPE)
         self.imu.enable_feature(BNO_REPORT_MAGNETOMETER)
         self.imu.enable_feature(BNO_REPORT_ROTATION_VECTOR)
+        self.imu.enable_feature(BNO_REPORT_LINEAR_ACCELERATION)
 
         # Initialize the BMP280 (currently using I2C address 0x77)
         self.altimeter = DPS310(self.i2c_bus)
@@ -93,7 +95,7 @@ class PayloadSystem:
         self.sensor_thread.start()
 
         logging.debug("Payload initialized.")
-        self.xbee.send_data(Message("Howdy!"))
+        #self.xbee.send_data(Message("Howdy!"))
 
     def setup_logger(self):
         """Set up the logger to log to file and stderr"""
@@ -123,20 +125,23 @@ class PayloadSystem:
             else:
                 logging.warning("Altimeter not initialized!")
                 continue
+            # try:
+            # orient = self.imu.gyro
+            # accel = self.imu.acceleration
+            # linear = self.imu.linear_acceleration
 
-            orient = self.imu.gyro
-            accel = self.imu.acceleration
-            linear = self.imu.linear_acceleration
+            # # except KeyError:
+            # #     continue
 
-            if all(val is not None for val in (orient, accel, linear)):
-                # Read orientation as an euler angle
-                self.data.orientation = orient  # type: ignore
-                # Read acceleration
-                self.data.acceleration = accel  # type: ignore
-                self.data.linear_accel = linear  # type: ignore
-            else:
-                logging.warning("IMU not initialized!")
-                continue
+            # if all(val is not None for val in (orient, accel, linear)):
+            #     # Read orientation as an euler angle
+            #     self.data.orientation = orient  # type: ignore
+            #     # Read acceleration
+            #     self.data.acceleration = accel  # type: ignore
+            #     self.data.linear_accel = linear  # type: ignore
+            # else:
+            #     logging.warning("IMU not initialized!")
+            #     continue
 
             self.update_stats()
 
@@ -146,7 +151,7 @@ class PayloadSystem:
                 self.last_log_time = time.time()
 
             if (time.time() - self.last_tx_time) >= self.TX_INTERVAL:
-                self.xbee.send_data(self.data)
+                #self.xbee.send_data(self.data)
                 self.last_tx_time = time.time()
 
     def update_stats(self):
@@ -176,7 +181,7 @@ class PayloadSystem:
             # If we detect takeoff, then we switch to armed mode
             if self.detect_takeoff():
                 logging.info("Takeoff detected, switching to arm state.")
-                self.xbee.send_data(Message("Takeoff detected."))
+                #self.xbee.send_data(Message("Takeoff detected."))
 
                 self.state = LaunchState.ARMED
 
@@ -184,7 +189,7 @@ class PayloadSystem:
         elif current_state is LaunchState.ARMED:
             if self.detect_landing():
                 logging.info("Landing detected, switching to land state.")
-                self.xbee.send_data(Message("Landing detected."))
+                #self.xbee.send_data(Message("Landing detected."))
 
                 self.state = LaunchState.LANDED
 

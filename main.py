@@ -24,7 +24,7 @@ args = parser.parse_args()
 
 def main(args):
 
-    payload = spaceducks.PayloadSystem(args.Callsign, args.Port)
+    payload = spaceducks.PayloadSystem(args.callsign, args.port)
 
     try:
         while payload.running:
