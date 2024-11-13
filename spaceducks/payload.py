@@ -7,8 +7,14 @@ import math
 
 # Hardware libraries
 import board
-from adafruit_bno055 import BNO055_I2C
-from adafruit_bmp280 import Adafruit_BMP280_I2C
+from adafruit_dps310.basic import DPS310
+from adafruit_bno08x.i2c import BNO08X_I2C
+from adafruit_bno08x import (
+    BNO_REPORT_ACCELEROMETER,
+    BNO_REPORT_GYROSCOPE,
+    BNO_REPORT_MAGNETOMETER,
+    BNO_REPORT_ROTATION_VECTOR,
+)
 
 from .shared.xbee_interface import XbeeInterface
 from .radio_interface import RFInterface
@@ -70,10 +76,15 @@ class PayloadSystem:
 
         # Initialize our sensors and store them.
         self.i2c_bus = board.I2C()
-        self.imu = BNO055_I2C(self.i2c_bus)
+        self.imu = BNO08X_I2C(self.i2c_bus)
+
+        self.imu.enable_feature(BNO_REPORT_ACCELEROMETER)
+        self.imu.enable_feature(BNO_REPORT_GYROSCOPE)
+        self.imu.enable_feature(BNO_REPORT_MAGNETOMETER)
+        self.imu.enable_feature(BNO_REPORT_ROTATION_VECTOR)
 
         # Initialize the BMP280 (currently using I2C address 0x77)
-        self.altimeter = Adafruit_BMP280_I2C(self.i2c_bus)
+        self.altimeter = DPS310(self.i2c_bus)
         self.altimeter.sea_level_pressure = self.SEA_LEVEL_PRESSURE
 
         self.sensor_thread = threading.Thread(target=self.read_sensors)
@@ -113,11 +124,11 @@ class PayloadSystem:
                 logging.warning("Altimeter not initialized!")
                 continue
 
-            orient = self.imu.euler
+            orient = self.imu.gyro
             accel = self.imu.acceleration
             linear = self.imu.linear_acceleration
 
-            if all(None not in val for val in (orient, accel, linear)):
+            if all(val is not None for val in (orient, accel, linear)):
                 # Read orientation as an euler angle
                 self.data.orientation = orient  # type: ignore
                 # Read acceleration
