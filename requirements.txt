@@ -1,5 +1,5 @@
-adafruit-circuitpython-bmp280
-adafruit-circuitpython-bno055
+adafruit-circuitpython-dps310
+adafruit-circuitpython-bno08x
 msgspec
 pyserial
 sounddevice
