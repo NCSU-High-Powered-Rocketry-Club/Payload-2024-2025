@@ -5,6 +5,7 @@ from .state import MESSAGE_TYPES
 import time
 import logging
 from typing import Callable
+from .utils import readline
 
 
 class XbeeInterface:
@@ -51,12 +52,9 @@ class XbeeInterface:
             # Avoid hogging thread time
             time.sleep(0.0001)
 
-            data = self._readline(self.xbee, b";")
+            data = readline(self.xbee, b";", lambda: self.running)
 
             if data == b"":
-                continue
-
-            if data == b";":
                 continue
 
             try:
@@ -64,23 +62,3 @@ class XbeeInterface:
             except Exception as e:
                 logging.error(e)
                 logging.error(f"Error on processing data {data}")
-
-    def _readline(self, serial: serial.Serial, eol: bytes) -> bytes:
-        """
-        Taken almost wholesale from
-        https://stackoverflow.com/questions/16470903/pyserial-2-6-specify-end-of-line-in-readline
-
-        Modified so it actually blocks until fully read incoming data rather than receiving a
-        half-finished string because the incoming stream paused
-        """
-
-        leneol = len(eol)
-        line = bytearray()
-        while self.running:
-            c = serial.read(1)
-            line += c
-            if line[-leneol:] == eol:
-                line = line.strip(eol)
-                break
-
-        return bytes(line)
