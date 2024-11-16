@@ -16,15 +16,17 @@ parser.add_argument(
     "callsign", help="Callsign to use for transmission. NOTRANSMIT to disable."
 )
 
-# Port argument
-parser.add_argument("port", help="Port to use for XBee communication")
+# Port arguments
+parser.add_argument("xbee_port", help="Port to use for XBee communication")
+
+parser.add_argument("feather_port", help="Port to use for feather sensor reading")
 
 args = parser.parse_args()
 
 
 def main(args):
 
-    payload = spaceducks.PayloadSystem(args.callsign, args.port)
+    payload = spaceducks.PayloadSystem(args.callsign, args.xbee_port, args.feather_port)
 
     try:
         while payload.running:
