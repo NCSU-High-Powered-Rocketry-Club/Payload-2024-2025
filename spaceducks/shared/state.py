@@ -1,6 +1,6 @@
 # Data storage and serialization
 import msgspec
-from typing import Union, Optional
+from typing import Union
 
 
 class Message(msgspec.Struct, array_like=True, tag=True):
