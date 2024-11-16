@@ -31,7 +31,7 @@ class PayloadSystem:
     TX_INTERVAL = 0.5
 
     # Time to wait between reading sensors (seconds)
-    SENSOR_WAIT_TIME = 0.0
+    SENSOR_WAIT_TIME = 0.05
 
     # Sea level pressure used to calibrate altimeter (hPa)
     SEA_LEVEL_PRESSURE = 1013.25  # this is the default from adafruit docs
@@ -51,24 +51,27 @@ class PayloadSystem:
         self.data = SensorState()
         self.stats = FlightStats()
 
+
         self.xbee = XbeeInterface(xbee_port, self.receive_message)
         self.xbee.start()
 
         self.sensor_reader = SensorReader(self, feather_port)
         self.sensor_reader.start()
 
+
         if callsign != "NOTRANSMIT":
-            self.radio = RFInterface(callsign, self.xbee)
+            self.radio = RFInterface(callsign, None)
         else:
             self.radio = None
 
         self.log_thread = threading.Thread(target=self.log_data)
 
+
         logging.debug("Starting data logging thread...")
         self.log_thread.start()
 
         logging.debug("Payload initialized.")
-        self.xbee.send_data(Message("Howdy!"))
+        #self.xbee.send_data(Message("Howdy!"))
 
     def setup_logger(self):
         """Set up the logger to log to file and stderr"""
@@ -86,7 +89,9 @@ class PayloadSystem:
         while self.running:
             # using epsilon here because this can't be exactly zero
             # (because then it might not switch threads at all)
+
             time.sleep(sys.float_info.epsilon)
+
 
             # If enough time has passed, let's log this data
             if (time.time() - self.last_log_time) >= self.LOG_INTERVAL:
@@ -95,7 +100,7 @@ class PayloadSystem:
 
             # and if enough time has passed, transmit it to the ground station
             if (time.time() - self.last_tx_time) >= self.TX_INTERVAL:
-                self.xbee.send_data(self.data)
+                #self.xbee.send_data(self.data)
                 self.last_tx_time = time.time()
 
     def update_stats(self):
