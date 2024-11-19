@@ -19,7 +19,8 @@ class SensorReading(msgspec.Struct):
 
     gyro: Optional[dict[str, float]] = None
     accel: Optional[dict[str, float]] = None
-    linear_accel: Optional[dict[str, float]] = None
+    mag: Optional[dict[str, float]] = None
+    linearAccel: Optional[dict[str, float]] = None
     quat: Optional[dict[str, float]] = None
     gps: Optional[str] = None
 
@@ -64,13 +65,21 @@ class SensorReader:
                 received["z"],
             )
 
-        if decoded_data.linear_accel:
-            received = decoded_data.linear_accel
-            self.payload.data.accel = (
+        if decoded_data.linearAccel:
+            received = decoded_data.linearAccel
+            self.payload.data.linear_accel = (
                 received["x"],
                 received["y"],
                 received["z"],
             )
+        if decoded_data.mag:
+            received = decoded_data.mag
+            self.payload.data.mag = (
+                received["x"],
+                received["y"],
+                received["z"],
+            )
+
 
         if decoded_data.quat:
             received = decoded_data.quat
@@ -85,7 +94,12 @@ class SensorReader:
         self.payload.data.temperature = decoded_data.temperature
 
         if decoded_data.gps:
-            self.payload.data.gps = decoded_data.gps
+            received = decoded_data.gps
+            self.payload.data.gps = (
+                received["lat"],
+                received["lon"],
+                received["alt"],
+            )
 
         logging.info(data.decode())
 

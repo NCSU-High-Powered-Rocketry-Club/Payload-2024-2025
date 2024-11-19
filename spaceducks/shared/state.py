@@ -16,7 +16,8 @@ class SensorState(msgspec.Struct, array_like=True, tag=True):
     accel: tuple[float, float, float] = (0, 0, 0)
     linear_accel: tuple[float, float, float] = (0, 0, 0)
     quat: tuple[float, float, float, float] = (0, 0, 0, 1)
-    gps: str = ""
+    gps: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    mag: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     def __str__(self) -> str:
         return (
