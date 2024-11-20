@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class SensorReading(msgspec.Struct):
     altitude: float
-    battery_voltage: float
+    voltage: float
     temperature: float
 
     gyro: Optional[dict[str, float]] = None
@@ -22,7 +22,7 @@ class SensorReading(msgspec.Struct):
     mag: Optional[dict[str, float]] = None
     linearAccel: Optional[dict[str, float]] = None
     quat: Optional[dict[str, float]] = None
-    gps: Optional[str] = None
+    gps: Optional[dict[str, float]] = None
 
 
 class SensorReader:

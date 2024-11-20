@@ -1,8 +1,18 @@
 # For Command line arguments
 import argparse
+import RPi.GPIO as GPIO
+import time
 
-# Payload module
-import spaceducks
+XBEE_SHUTDOWN_PIN = 18
+# GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(XBEE_SHUTDOWN_PIN, GPIO.OUT)
+GPIO.output(XBEE_SHUTDOWN_PIN, GPIO.HIGH)
+
+time.sleep(2)
+if True:
+    # Payload module
+    import spaceducks
 
 
 # Program description
