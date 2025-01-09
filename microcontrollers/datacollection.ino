@@ -1,106 +1,170 @@
+#include <ArduinoJson.h>
 #include <Adafruit_DPS310.h>         // DPS310 Library
-#include <Adafruit_BNO08x.h>          // BNO08x Library
-#include <SparkFun_u-blox_GNSS_v3.h>  // GNSS (GPS) Library
-#include <Wire.h>                     // Wire Library for I2C
-// DPS310 (pressure/temperature sensor)
+#include <Adafruit_BNO08x.h>         // BNO085 Library
+#include <SparkFun_u-blox_GNSS_v3.h> // SAM-M10Q GPS Library
+#include <Wire.h>                    // I2C Library
+
+// Pin definitions
+#define VOLTAGE_PIN A0               // Analog pin for voltage sensor
+#define MIN_VOLTAGE 530              // ADC value for 0% battery (2.6V)
+#define MAX_VOLTAGE 614              // ADC value for 100% battery (3.01V)
+
+// DPS310 sensor object
 Adafruit_DPS310 dps310;
-// BNO085 (IMU sensor)
+
+// BNO085 IMU object
 Adafruit_BNO08x bno = Adafruit_BNO08x();
-#define BNO_REPORT_ACCELEROMETER       0x01
-#define BNO_REPORT_GYROSCOPE           0x02
-#define BNO_REPORT_MAGNETOMETER        0x03
-#define BNO_REPORT_ROTATION_VECTOR     0x05
-#define BNO_REPORT_LINEAR_ACCELERATION 0x04  // Linear acceleration report
-// SAM-M10Q (GPS)
-SFE_UBLOX_GNSS myGNSS;
-#define mySerial Serial1 // Define Serial1 for GPS communication
-// Voltage measurement parameters
-#define VOLTAGE_PIN A0
-#define MIN_VOLTAGE 530  // ADC reading for 0% battery (2.6V)
-#define MAX_VOLTAGE 614  // ADC reading for 100% battery (3.01V)
-bool gpsInitialized = false;
+#define BNO_REPORT_ACCELEROMETER      0x01
+#define BNO_REPORT_GYROSCOPE          0x02
+#define BNO_REPORT_MAGNETOMETER       0x03
+#define BNO_REPORT_ROTATION_VECTOR    0x05
+#define BNO_REPORT_LINEAR_ACCELERATION 0x06  // Linear Acceleration report
+
+// GNSS object
+SFE_UBLOX_GNSS_SERIAL myGNSS; 
+#define mySerial Serial1 // Use Serial1 to connect to the GNSS module
+
+// Variables to store previous BNO085 values
+float prevAccelX = 0.0, prevAccelY = 0.0, prevAccelZ = 0.0;
+float prevGyroX = 0.0, prevGyroY = 0.0, prevGyroZ = 0.0;
+float prevMagX = 0.0, prevMagY = 0.0, prevMagZ = 0.0;
+float prevQuatI = 0.0, prevQuatJ = 0.0, prevQuatK = 0.0, prevQuatReal = 1.0;
+float prevLinearAccelX = 0.0, prevLinearAccelY = 0.0, prevLinearAccelZ = 0.0;
+
 void setup() {
+  // Start serial communication
   Serial.begin(115200);
-  delay(1000);
-  // Initialize sensors
+  delay(3000); // Allow time for the Serial Monitor to initialize
+  Serial.println("Initializing Sensors...");
+
+  // Initialize DPS310
   if (!dps310.begin_I2C()) {
     Serial.println("DPS310 initialization failed!");
+  } else {
+    Serial.println("DPS310 initialized successfully!");
   }
+
+  // Initialize BNO085
   if (!bno.begin_I2C()) {
     Serial.println("BNO085 initialization failed!");
+    while (1);  // Halt if initialization fails
   } else {
-    bno.enableReport(BNO_REPORT_ACCELEROMETER, 100);       // Accelerometer
-    bno.enableReport(BNO_REPORT_GYROSCOPE, 100);           // Gyroscope
-    bno.enableReport(BNO_REPORT_MAGNETOMETER, 100);        // Magnetometer
-    bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 100);     // Quaternion (rotation vector)
-    bno.enableReport(BNO_REPORT_LINEAR_ACCELERATION, 100); // Linear acceleration
+    Serial.println("BNO085 initialized successfully!");
+    bno.enableReport(BNO_REPORT_ACCELEROMETER, 100);
+    bno.enableReport(BNO_REPORT_GYROSCOPE, 100);
+    bno.enableReport(BNO_REPORT_MAGNETOMETER, 50);      // Enable Magnetometer at 50 Hz
+    bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 100);
+    bno.enableReport(BNO_REPORT_LINEAR_ACCELERATION, 100); // Enable Linear Acceleration
   }
-  mySerial.begin(9600);
-  gpsInitialized = myGNSS.begin(mySerial);
+
+  // Initialize GPS
+  mySerial.begin(9600); // Default baud rate for the module
+  while (myGNSS.begin(mySerial) == false) {
+    Serial.println(F("u-blox GNSS not detected. Retrying..."));
+    delay(1000);
+  }
+  myGNSS.setUART1Output(COM_TYPE_UBX); // Set UART1 port to output UBX only
+  Serial.println("GPS initialized successfully!");
 }
+
 void loop() {
-  // Collect data
-  String data = "";
-  // Voltage
+  // Create a JSON document
+  StaticJsonDocument<512> jsonDoc;
+
+  // Analog voltage sensor
   int voltageRaw = analogRead(VOLTAGE_PIN);
   float voltage = (voltageRaw * 3.3) / 1023.0;
-  float percentage = (voltageRaw - MIN_VOLTAGE) * 100.0 / (MAX_VOLTAGE - MIN_VOLTAGE);
-  data += "Voltage: " + String(voltage, 2) + " V, ";
-  data += "Battery Level: " + String(constrain(percentage, 0, 100), 2) + " %, ";
-  // DPS310
-  sensors_event_t temp_event, pressure_event;
-  if (dps310.getEvents(&temp_event, &pressure_event)) {
-    data += "Temperature: " + String(temp_event.temperature, 2) + " °C, ";
-    data += "Pressure: " + String(pressure_event.pressure, 2) + " Pa, ";
+  jsonDoc["voltage"] = voltage;
+
+  // DPS310 (pressure and temperature)
+  sensors_event_t tempEvent, pressureEvent;
+  if (dps310.getEvents(&tempEvent, &pressureEvent)) {
+    jsonDoc["temperature"] = tempEvent.temperature;
+    jsonDoc["pressure"] = pressureEvent.pressure;
   } else {
-    data += "Temperature: NA, Pressure: NA, ";
+    Serial.println("DPS310 data unavailable!");
+    jsonDoc["temperature"] = nullptr; // Null if no data
+    jsonDoc["pressure"] = nullptr;
   }
-  // BNO085
+
+  // BNO085 (IMU and Magnetometer)
   sh2_SensorValue_t sensorValue;
-  if (bno.getSensorEvent(&sensorValue)) {
+  while (bno.getSensorEvent(&sensorValue)) {
     switch (sensorValue.sensorId) {
       case SH2_ACCELEROMETER:
-        data += "Accel: " + String(sensorValue.un.accelerometer.x, 2) + ", " +
-                String(sensorValue.un.accelerometer.y, 2) + ", " +
-                String(sensorValue.un.accelerometer.z, 2) + ", ";
+        prevAccelX = sensorValue.un.accelerometer.x;
+        prevAccelY = sensorValue.un.accelerometer.y;
+        prevAccelZ = sensorValue.un.accelerometer.z;
         break;
+
       case SH2_GYROSCOPE_CALIBRATED:
-        data += "Gyro: " + String(sensorValue.un.gyroscope.x, 2) + ", " +
-                String(sensorValue.un.gyroscope.y, 2) + ", " +
-                String(sensorValue.un.gyroscope.z, 2) + ", ";
+        prevGyroX = sensorValue.un.gyroscope.x;
+        prevGyroY = sensorValue.un.gyroscope.y;
+        prevGyroZ = sensorValue.un.gyroscope.z;
         break;
+
       case SH2_MAGNETIC_FIELD_CALIBRATED:
-        data += "Mag: " + String(sensorValue.un.magneticField.x, 2) + ", " +
-                String(sensorValue.un.magneticField.y, 2) + ", " +
-                String(sensorValue.un.magneticField.z, 2) + ", ";
+        prevMagX = sensorValue.un.magneticField.x;
+        prevMagY = sensorValue.un.magneticField.y;
+        prevMagZ = sensorValue.un.magneticField.z;
         break;
+
       case SH2_ROTATION_VECTOR:
-        data += "Quat: " + String(sensorValue.un.rotationVector.i, 2) + ", " +
-                String(sensorValue.un.rotationVector.j, 2) + ", " +
-                String(sensorValue.un.rotationVector.k, 2) + ", " +
-                String(sensorValue.un.rotationVector.real, 2) + ", ";
+        prevQuatI = sensorValue.un.rotationVector.i;
+        prevQuatJ = sensorValue.un.rotationVector.j;
+        prevQuatK = sensorValue.un.rotationVector.k;
+        prevQuatReal = sensorValue.un.rotationVector.real;
         break;
+
       case SH2_LINEAR_ACCELERATION:
-        data += "Lin Accel: " + String(sensorValue.un.linearAcceleration.x, 2) + ", " +
-                String(sensorValue.un.linearAcceleration.y, 2) + ", " +
-                String(sensorValue.un.linearAcceleration.z, 2) + ", ";
+        prevLinearAccelX = sensorValue.un.linearAcceleration.x;
+        prevLinearAccelY = sensorValue.un.linearAcceleration.y;
+        prevLinearAccelZ = sensorValue.un.linearAcceleration.z;
         break;
+
       default:
-        data += "IMU: Unknown data, ";
-        break;
+        break; // Ignore other reports
     }
-  } else {
-    data += "IMU: No data, ";
   }
-  // GPS
-  if (gpsInitialized && myGNSS.getPVT()) {
-    data += "Lat: " + String(myGNSS.getLatitude() / 10000000.0, 7) + ", ";
-    data += "Lon: " + String(myGNSS.getLongitude() / 10000000.0, 7) + ", ";
-    data += "Alt: " + String(myGNSS.getAltitudeMSL() / 1000.0, 2) + " m";
+
+  jsonDoc["accel"]["x"] = prevAccelX;
+  jsonDoc["accel"]["y"] = prevAccelY;
+  jsonDoc["accel"]["z"] = prevAccelZ;
+
+  jsonDoc["gyro"]["x"] = prevGyroX;
+  jsonDoc["gyro"]["y"] = prevGyroY;
+  jsonDoc["gyro"]["z"] = prevGyroZ;
+
+  jsonDoc["mag"]["x"] = prevMagX;
+  jsonDoc["mag"]["y"] = prevMagY;
+  jsonDoc["mag"]["z"] = prevMagZ;
+
+  jsonDoc["quat"]["i"] = prevQuatI;
+  jsonDoc["quat"]["j"] = prevQuatJ;
+  jsonDoc["quat"]["k"] = prevQuatK;
+  jsonDoc["quat"]["real"] = prevQuatReal;
+
+  jsonDoc["linearAccel"]["x"] = prevLinearAccelX;
+  jsonDoc["linearAccel"]["y"] = prevLinearAccelY;
+  jsonDoc["linearAccel"]["z"] = prevLinearAccelZ;
+
+  // GNSS (latitude, longitude, altitude)
+  if (myGNSS.getPVT()) {
+    jsonDoc["gps"]["lat"] = myGNSS.getLatitude() / 10000000.0;
+    jsonDoc["gps"]["lon"] = myGNSS.getLongitude() / 10000000.0;
+    jsonDoc["gps"]["alt"] = myGNSS.getAltitudeMSL() / 1000.0;
   } else {
-    data += "GPS: No data";
+    Serial.println("GPS data unavailable!");
+    jsonDoc["gps"] = nullptr; // Null if no data
   }
-  // Send data
-  Serial.println(data);
-  delay(300);  // Adjust as needed
+
+  // Serialize JSON to Serial
+  if (!serializeJson(jsonDoc, Serial)) {
+    Serial.println("Serialization failed!");
+  } else {
+    Serial.println();
+  }
+
+  // Delay to control loop frequency
+  delay(10); // Increase delay for readability in Serial Monitor
 }
