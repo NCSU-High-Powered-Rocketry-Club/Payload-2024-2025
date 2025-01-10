@@ -21,8 +21,8 @@ Adafruit_BNO08x bno = Adafruit_BNO08x();
 #define BNO_REPORT_LINEAR_ACCELERATION 0x06  // Linear Acceleration report
 
 // GNSS object
-SFE_UBLOX_GNSS_SERIAL myGNSS; 
-#define mySerial Serial1 // Use Serial1 to connect to the GNSS module
+SFE_UBLOX_GNSS myGNSS;
+#define mySerial Serial2 // Use Serial1 to connect to the GNSS module
 
 // Variables to store previous BNO085 values
 float prevAccelX = 0.0, prevAccelY = 0.0, prevAccelZ = 0.0;
@@ -37,6 +37,9 @@ void setup() {
   delay(3000); // Allow time for the Serial Monitor to initialize
   Serial.println("Initializing Sensors...");
 
+  Wire.begin();
+  Wire.setClock( 400000UL );
+
   // Initialize DPS310
   if (!dps310.begin_I2C()) {
     Serial.println("DPS310 initialization failed!");
@@ -50,21 +53,21 @@ void setup() {
     while (1);  // Halt if initialization fails
   } else {
     Serial.println("BNO085 initialized successfully!");
-    bno.enableReport(BNO_REPORT_ACCELEROMETER, 100);
-    bno.enableReport(BNO_REPORT_GYROSCOPE, 100);
-    bno.enableReport(BNO_REPORT_MAGNETOMETER, 50);      // Enable Magnetometer at 50 Hz
-    bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 100);
-    bno.enableReport(BNO_REPORT_LINEAR_ACCELERATION, 100); // Enable Linear Acceleration
+    bno.enableReport(BNO_REPORT_ACCELEROMETER, 50);
+    bno.enableReport(BNO_REPORT_GYROSCOPE, 50);
+    bno.enableReport(BNO_REPORT_MAGNETOMETER, 50);
+    bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 50);
+    bno.enableReport(BNO_REPORT_LINEAR_ACCELERATION, 50);
   }
 
   // Initialize GPS
-  mySerial.begin(9600); // Default baud rate for the module
-  while (myGNSS.begin(mySerial) == false) {
+  while (myGNSS.begin() == false) {
     Serial.println(F("u-blox GNSS not detected. Retrying..."));
     delay(1000);
   }
-  myGNSS.setUART1Output(COM_TYPE_UBX); // Set UART1 port to output UBX only
-  Serial.println("GPS initialized successfully!");
+
+  myGNSS.setI2COutput(COM_TYPE_UBX); //Set the I2C port to output UBX only 
+  myGNSS.setNavigationFrequency(60);
 }
 
 void loop() {
@@ -149,7 +152,8 @@ void loop() {
   jsonDoc["linearAccel"]["z"] = prevLinearAccelZ;
 
   // GNSS (latitude, longitude, altitude)
-  if (myGNSS.getPVT()) {
+  // The 20 represents the delay for the most part.
+  if (myGNSS.getPVT(20) == true) {
     jsonDoc["gps"]["lat"] = myGNSS.getLatitude() / 10000000.0;
     jsonDoc["gps"]["lon"] = myGNSS.getLongitude() / 10000000.0;
     jsonDoc["gps"]["alt"] = myGNSS.getAltitudeMSL() / 1000.0;
@@ -164,7 +168,4 @@ void loop() {
   } else {
     Serial.println();
   }
-
-  // Delay to control loop frequency
-  delay(10); // Increase delay for readability in Serial Monitor
 }
