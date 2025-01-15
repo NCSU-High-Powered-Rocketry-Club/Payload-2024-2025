@@ -74,6 +74,9 @@ void loop() {
   // Create a JSON document
   StaticJsonDocument<512> jsonDoc;
 
+  // Add timestamp
+  jsonDoc["timestamp"] = millis();
+
   // Analog voltage sensor
   int voltageRaw = analogRead(VOLTAGE_PIN);
   float voltage = (voltageRaw * 3.3) / 1023.0;

@@ -1,11 +1,14 @@
 import serial
-import time
+import json
+import struct
 
-# Adjust the port name based on your setup (often /dev/ttyACM0 or /dev/ttyUSB0)
-ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
-time.sleep(2)  # Give time for the serial connection to establish
+# Configure your serial port and baud rate
+SERIAL_PORT = "/dev/ttyS7"
+BAUD_RATE = 11522
+
+ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
 
 while True:
-    if ser.in_waiting > 0:
-        line = ser.readline().decode('utf-8').strip()
-        print(line)  # Print or process the data as needed
+    data = ser.read(92)
+    unpacked_data = struct.unpack('<f' * 18, data)
+    print(unpacked_data)
