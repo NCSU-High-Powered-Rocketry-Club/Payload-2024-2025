@@ -1,11 +1,11 @@
 import serial
 import threading
 import msgspec
-from .state import MESSAGE_TYPES
+from ..spaceducks.shared.state import MESSAGE_TYPES
 import time
 import logging
 from typing import Callable
-from .utils import readline
+from ..spaceducks.shared.utils import readline
 
 
 class XbeeInterface:

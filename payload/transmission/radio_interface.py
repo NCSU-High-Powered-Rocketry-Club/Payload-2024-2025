@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .shared.xbee_interface import XbeeInterface
+    from .xbee_interface import XbeeInterface
 
 
-from .shared.state import Message, FlightStats
+from ..spaceducks.shared.state import Message, FlightStats
 
 import sounddevice as sd
 import soundfile as sf
