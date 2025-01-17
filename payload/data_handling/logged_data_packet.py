@@ -36,10 +36,6 @@ class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields 
     estOrientQuaternionY: float | None
     estOrientQuaternionZ: float | None
     estPressureAlt: float | None
-    estAttitudeUncertQuaternionW: float | None
-    estAttitudeUncertQuaternionX: float | None
-    estAttitudeUncertQuaternionY: float | None
-    estAttitudeUncertQuaternionZ: float | None
     estAngularRateX: float | None
     estAngularRateY: float | None
     estAngularRateZ: float | None
