@@ -4,7 +4,7 @@ and run the main loop."""
 import argparse
 import time
 
-from payload.constants import IMU_PORT, LOGS_PATH
+from payload.constants import BAUD_RATE, SERIAL_PORT, LOGS_PATH
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.imu import IMU
@@ -13,7 +13,6 @@ from payload.mock.mock_imu import MockIMU
 from payload.mock.mock_logger import MockLogger
 from payload.payload import PayloadContext
 from payload.utils import arg_parser
-
 
 def run_real_flight() -> None:
     """Entry point for the application to run the real flight. Entered when run with
@@ -38,7 +37,7 @@ def run_flight(args: argparse.Namespace) -> None:
     flight_display = FlightDisplay(payload, mock_time_start, args)
 
     # Run the main flight loop
-    run_flight_loop(payload, flight_display, args.mock)
+    run_flight_loop(payload, flight_display)
 
 
 def create_components(
@@ -59,7 +58,7 @@ def create_components(
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
     else:
         # Use real hardware components
-        imu = IMU(IMU_PORT)
+        imu = IMU(SERIAL_PORT,BAUD_RATE)
         logger = Logger(LOGS_PATH)
 
     # Initialize data processing
@@ -68,7 +67,7 @@ def create_components(
 
 
 def run_flight_loop(
-    payload: PayloadContext, flight_display: FlightDisplay, is_mock: bool
+    payload: PayloadContext, flight_display: FlightDisplay
 ) -> None:
     """
     Main flight control loop that runs until shutdown is requested or interrupted.
@@ -76,32 +75,11 @@ def run_flight_loop(
     :param flight_display: Display interface for flight data.
     :param is_mock: Whether running in mock replay mode.
     """
-    try:
-        # Starts the payload system and display
-        payload.start()
-        flight_display.start()
+    flight_display.start()
 
-        while not payload.shutdown_requested:
-            # Update the state machine
-            payload.update()
-
-            # Stop the replay when the data is exhausted
-            if is_mock and not payload.imu.is_running:
-                break
-
-    # Handle user interrupt gracefully
-    except KeyboardInterrupt:
-        if is_mock:
-            flight_display.end_mock_interrupted.set()
-    else:  # This is run if we have landed and the program is not interrupted (see state.py)
-        if is_mock:
-            # Stop the mock replay naturally if not interrupted
-            flight_display.end_mock_natural.set()
-    finally:
-        # Stop the display and payload
-        flight_display.stop()
-        payload.stop()
-
+    while True:
+        # Update the state machine
+        payload.update()
 
 if __name__ == "__main__":
     args = arg_parser()

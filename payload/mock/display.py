@@ -60,12 +60,9 @@ class FlightDisplay:
         init(autoreset=True)  # Automatically reset colors after each print
         self._payload = payload
         self._start_time = start_time
-        self._running = False
         self._args = args
         self._launch_time: int = 0  # Launch time from MotorBurnState
         self._coast_time: int = 0  # Coast time from CoastState
-        # Prepare the processes for monitoring in the replay:
-        self._processes: dict[str, psutil.Process] | None = None
         self._cpu_usages: dict[str, float] | None = None
         # daemon threads are killed when the main thread exits.
         self._thread_target = threading.Thread(
@@ -90,8 +87,6 @@ class FlightDisplay:
         need the process IDs.
         """
         self._running = True
-        self._processes = self.prepare_process_dict()
-        self._cpu_usages = {name: 0.0 for name in self._processes}
         self._cpu_thread.start()
         self._thread_target.start()
 
@@ -147,23 +142,11 @@ class FlightDisplay:
         Updates the display with real-time data.
         :param end_type: Whether the replay ended or was interrupted.
         """
-        try:
-            current_queue_size = self._payload.imu._data_queue.qsize()
-        except NotImplementedError:
-            # Returns NotImplementedError on arm architecture (Raspberry Pi)
-            current_queue_size = "N/A"
 
         fetched_packets = len(self._payload.imu_data_packets)
 
         data_processor = self._payload.data_processor
-        apogee_predictor = self._payload.apogee_predictor
 
-        if data_processor._last_data_packet:
-            invalid_fields = data_processor._last_data_packet.invalid_fields
-            if invalid_fields:
-                invalid_fields = f"{RESET}{R}{invalid_fields}{R}{RESET}"
-        else:
-            invalid_fields = "N/A"
 
         # Set the launch time if it hasn't been set yet:
         if not self._launch_time and self._payload.state.name == "MotorBurnState":
@@ -233,17 +216,3 @@ class FlightDisplay:
             case DisplayEndingType.TAKEOFF:
                 print(f"{R}{'=' * 13} ROCKET LAUNCHED {'=' * 14}{RESET}")
 
-    def prepare_process_dict(self) -> dict[str, psutil.Process]:
-        """
-        Prepares a dictionary of processes to monitor CPU usage for.
-        :return: A dictionary of process names and their corresponding psutil.Process objects.
-        """
-        all_processes = {}
-        imu_process = self._payload.imu._data_fetch_process
-        log_process = self._payload.logger._log_process
-        current_process = multiprocessing.current_process()
-        for p in [imu_process, log_process, current_process]:
-            # psutil allows us to monitor CPU usage of a process, along with low level information
-            # which we are not using.
-            all_processes[p.name] = psutil.Process(p.pid)
-        return all_processes

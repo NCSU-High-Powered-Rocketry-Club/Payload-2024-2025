@@ -16,15 +16,11 @@ from payload.constants import (
     RAW_DATA_PACKET_SAMPLING_RATE,
     STOP_SIGNAL,
 )
-from payload.data_handling.imu_data_packet import (
-    EstimatedDataPacket,
-    RawDataPacket,
-)
-from payload.hardware.base_imu import BaseIMU
+from payload.data_handling.imu_data_packet import IMUDataPacket
 from payload.utils import get_all_from_queue
 
 
-class MockIMU(BaseIMU):
+class MockIMU:
     """
     A mock implementation of the IMU for testing purposes. It doesn't interact with any hardware
     and returns data read from a previous log file.

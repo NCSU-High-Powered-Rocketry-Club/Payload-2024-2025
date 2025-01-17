@@ -25,22 +25,18 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-IMU_PORT = "/dev/ttyACM0"
-"""The port that the IMU is connected to. This is typically the default port where the IMU connects
-to the Raspberry Pi. "/dev/ttyACM0" corresponds to the first USB-serial device recognized by the
-system."""
+SERIAL_PORT = "COM8"
+"""The port that the Arduino is connected to. This is typically the default port where the IMU
+connects to the Raspberry Pi."""
+BAUD_RATE = 115200
+"""The baud rate of the channel"""
+PACKET_BYTE_SIZE = 80
+"""Size of the data packet being sent from the Arduino in bytes"""
 
-# The frequency at which the IMU sends data packets, in seconds
 RAW_DATA_PACKET_SAMPLING_RATE = 1 / 1000
 """The frequency at which the IMU sends raw data packets, this is 1kHz"""
 EST_DATA_PACKET_SAMPLING_RATE = 1 / 500
 """The frequency at which the IMU sends estimated data packets, this is 500Hz"""
-
-# The "IDs" of the data packets that the IMU sends.
-ESTIMATED_DESCRIPTOR_SET = 130
-"""The ID of the estimated data packet that the IMU sends"""
-RAW_DESCRIPTOR_SET = 128
-"""The ID of the raw data packet that the IMU sends"""
 
 # This is used by all queues to keep things consistent:
 MAX_FETCHED_PACKETS = 15

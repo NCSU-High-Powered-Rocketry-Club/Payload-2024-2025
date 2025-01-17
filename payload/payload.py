@@ -4,7 +4,6 @@ from collections import deque
 from typing import TYPE_CHECKING
 
 from payload.data_handling.data_processor import IMUDataProcessor
-from payload.data_handling.imu_data_packet import EstimatedDataPacket
 from payload.data_handling.logger import Logger
 from payload.hardware.imu import IMU
 from payload.state import StandbyState, State
@@ -56,28 +55,8 @@ class PayloadContext:
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
-        self.shutdown_requested = False
         self.imu_data_packets: deque[IMUDataPacket] = deque()
         self.processed_data_packets: list[ProcessedDataPacket] = []
-        self.est_data_packets: list[EstimatedDataPacket] = []
-
-    def start(self) -> None:
-        """
-        Starts the IMU and logger processes. This is called before the main while loop starts.
-        """
-        self.imu.start()
-        self.logger.start()
-
-    def stop(self) -> None:
-        """
-        Handles shutting down the payload. This will cause the main loop to break. It stops the IMU
-        and stops the logger.
-        """
-        if self.shutdown_requested:
-            return
-        self.imu.stop()
-        self.logger.stop()
-        self.shutdown_requested = True
 
     def update(self) -> None:
         """
@@ -89,27 +68,18 @@ class PayloadContext:
         # *may* not be the most recent data. But we want continuous data for state and logging
         # purposes, so we don't need to worry about that, as long as we're not too behind on
         # processing
-        self.imu_data_packets = self.imu.get_imu_data_packets()
+        self.imu_data_packets = self.imu.fetch_data()
 
         # This happens quite often, on our PC's since they are much faster than the Pi.
         if not self.imu_data_packets:
             return
-
-        # Split the data packets into estimated and raw data packets for use in processing and
-        # logging
-        self.est_data_packets = [
-            data_packet
-            for data_packet in self.imu_data_packets
-            if isinstance(data_packet, EstimatedDataPacket)
-        ]
 
         # Update the processed data with the new data packets. We only care about EstDataPackets
         self.data_processor.update(self.est_data_packets)
 
         # Get the processed data packets from the data processor, this will have the same length
         # as the number of EstimatedDataPackets in data_packets
-        if self.est_data_packets:
-            self.processed_data_packets = self.data_processor.get_processed_data_packets()
+        self.processed_data_packets = self.data_processor.get_processed_data_packets()
 
         # Update the state machine based on the latest processed data
         self.state.update()

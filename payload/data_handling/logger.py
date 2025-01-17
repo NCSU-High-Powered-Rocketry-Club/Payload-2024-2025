@@ -17,7 +17,7 @@ from payload.constants import (
     MAX_GET_TIMEOUT_SECONDS,
     STOP_SIGNAL,
 )
-from payload.data_handling.imu_data_packet import EstimatedDataPacket, IMUDataPacket
+from payload.data_handling.imu_data_packet import IMUDataPacket
 from payload.data_handling.logged_data_packet import LoggedDataPacket
 from payload.data_handling.processed_data_packet import ProcessedDataPacket
 from payload.utils import modify_multiprocessing_queue_windows
@@ -138,7 +138,7 @@ class Logger:
             logged_fields.update(imu_data_packet_dict)
 
             # Get the processed data packet fields:
-            if isinstance(imu_data_packet, EstimatedDataPacket):
+            if isinstance(imu_data_packet, IMUDataPacket):
                 # Convert the processed data packet to a dictionary. Unknown types such as numpy
                 # float64 are converted to strings with 8 decimal places (that's enc_hook)
                 processed_data_packet_dict: dict[str, float] = to_builtins(

@@ -8,7 +8,7 @@ from payload.constants import (
     ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
     GRAVITY_METERS_PER_SECOND_SQUARED,
 )
-from payload.data_handling.imu_data_packet import EstimatedDataPacket
+from payload.data_handling.imu_data_packet import IMUDataPacket
 from payload.data_handling.processed_data_packet import ProcessedDataPacket
 from payload.utils import deadband
 
@@ -49,10 +49,10 @@ class IMUDataProcessor:
         self._previous_vertical_velocity: np.float64 = np.float64(0.0)
         self._initial_altitude: np.float64 | None = None
         self._current_altitudes: npt.NDArray[np.float64] = np.array([0.0])
-        self._last_data_packet: EstimatedDataPacket | None = None
+        self._last_data_packet: IMUDataPacket | None = None
         self._current_orientation_quaternions: R | None = None
         self._rotated_accelerations: npt.NDArray[np.float64] = np.array([0.0])
-        self._data_packets: list[EstimatedDataPacket] = []
+        self._data_packets: list[IMUDataPacket] = []
         self._time_differences: npt.NDArray[np.float64] = np.array([0.0])
 
     def __str__(self) -> str:
@@ -101,11 +101,11 @@ class IMUDataProcessor:
         except AttributeError:  # If we don't have a last data packet
             return 0
 
-    def update(self, data_packets: list[EstimatedDataPacket]) -> None:
+    def update(self, data_packets: list[IMUDataPacket]) -> None:
         """
         Updates the data points to process. This will recompute all information such as altitude,
         velocity, etc.
-        :param data_packets: A list of EstimatedDataPacket objects to process
+        :param data_packets: A list of IMUDataPacket objects to process
         """
         # If the data points are empty, we don't want to try to process anything
         if not data_packets:
