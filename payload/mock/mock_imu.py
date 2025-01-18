@@ -16,7 +16,6 @@ from payload.constants import (
     RAW_DATA_PACKET_SAMPLING_RATE,
     STOP_SIGNAL,
 )
-from payload.data_handling.imu_data_packet import IMUDataPacket
 from payload.utils import get_all_from_queue
 
 

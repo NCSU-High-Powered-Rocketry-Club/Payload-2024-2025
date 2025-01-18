@@ -4,7 +4,7 @@ import struct
 import serial
 
 from payload.constants import PACKET_BYTE_SIZE
-from payload.data_handling.imu_data_packet import IMUDataPacket
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 
 
 class IMU:

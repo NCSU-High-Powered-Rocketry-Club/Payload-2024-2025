@@ -8,7 +8,7 @@ from payload.constants import (
     ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
     GRAVITY_METERS_PER_SECOND_SQUARED,
 )
-from payload.data_handling.imu_data_packet import IMUDataPacket
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.processed_data_packet import ProcessedDataPacket
 from payload.utils import deadband
 

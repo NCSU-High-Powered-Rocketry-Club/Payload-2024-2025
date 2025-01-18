@@ -3,7 +3,6 @@
 import csv
 import multiprocessing
 import signal
-import sys
 from collections import deque
 from pathlib import Path
 from typing import Any, Literal
@@ -11,13 +10,12 @@ from typing import Any, Literal
 from msgspec import to_builtins
 
 from payload.constants import (
-    BUFFER_SIZE_IN_BYTES,
     IDLE_LOG_CAPACITY,
     LOG_BUFFER_SIZE,
     MAX_GET_TIMEOUT_SECONDS,
     STOP_SIGNAL,
 )
-from payload.data_handling.imu_data_packet import IMUDataPacket
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.logged_data_packet import LoggedDataPacket
 from payload.data_handling.processed_data_packet import ProcessedDataPacket
 from payload.utils import modify_multiprocessing_queue_windows
