@@ -30,7 +30,7 @@ SERIAL_PORT = "COM8"
 connects to the Raspberry Pi."""
 BAUD_RATE = 115200
 """The baud rate of the channel"""
-PACKET_BYTE_SIZE = 80
+PACKET_BYTE_SIZE = 84
 """Size of the data packet being sent from the Arduino in bytes"""
 
 RAW_DATA_PACKET_SAMPLING_RATE = 1 / 1000
@@ -95,7 +95,7 @@ sure we don't lose data"""
 # Arbitrarily set values for transition between states:
 
 # ----------------- Standby to MotorBurn ----------------
-ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.35
+ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 """We integrate our acceleration to get velocity, but because IMU has some noise, and other things
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""

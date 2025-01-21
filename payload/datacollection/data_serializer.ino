@@ -27,6 +27,7 @@ struct DataPacket {
   float voltage;
   float temperature;
   float pressure;
+  float altitude;
   float comp_accel_x, comp_accel_y, comp_accel_z;
   float gyro_x, gyro_y, gyro_z;
   float magnetic_x, magnetic_y, magnetic_z;
@@ -36,7 +37,6 @@ struct DataPacket {
 
 void setup() {
   // Start serial communication
-  Serial.begin(115200);
   delay(3000);  // Allow time for the Serial Monitor to initialize
 
   Wire.begin();
@@ -46,21 +46,24 @@ void setup() {
  !dps_310.begin_I2C();
 
   // Initialize BNO085
-  if (!bno.begin_I2C()) {
-    while(1);
-  } else {
-    bno.enableReport(BNO_REPORT_ACCELEROMETER, 100);
-    bno.enableReport(BNO_REPORT_GYROSCOPE, 100);
-    bno.enableReport(BNO_REPORT_MAGNETOMETER, 20);
-    bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 100);
+  while (!bno.begin_I2C()) {
+      delay(1000); // Wait for 1 second before retrying
   }
+
+  // If initialization succeeds, enable reports
+  bno.enableReport(BNO_REPORT_ACCELEROMETER, 40);
+  bno.enableReport(BNO_REPORT_GYROSCOPE, 40);
+  bno.enableReport(BNO_REPORT_MAGNETOMETER, 20);
+  bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 40);
+
+
   // Initialize GPS
   while (my_GNSS.begin() == false) {
     delay(1000);
   }
-
   my_GNSS.setI2COutput(COM_TYPE_UBX);  //Set the I2C port to output UBX only
   my_GNSS.setNavigationFrequency(60);
+  Serial.begin(115200);
 }
 
 struct DataPacket collect(struct DataPacket packet) {
@@ -111,6 +114,8 @@ struct DataPacket collect(struct DataPacket packet) {
           break; // Ignore other reports
       }
     }
+    // Serial.print(executed_cases);
+    // Serial.println(" "+all_cases_executed);
   }
   return packet;
 }
@@ -124,6 +129,7 @@ void loop() {
   if (dps_310.getEvents(&temp_event, &pressure_event)) {
     data.temperature = float(temp_event.temperature);
     data.pressure = float(pressure_event.pressure);
+    data.altitude = dps_310.readAltitude();
   } else {
     data.temperature = 0.0;
     data.pressure = 0.0;
@@ -165,6 +171,12 @@ void loop() {
   // Serial.print("GPS Long: "); Serial.println(data.gps_long);
   // Serial.print("GPS Alt: "); Serial.println(data.gps_alt);
   // Serial.println("==================");
-
-  Serial.write((byte*)&data, sizeof(data));
+  //Serial.println(Serial.availableForWrite());
+  if (Serial.availableForWrite() >= sizeof(data)) {
+    Serial.write('\n');
+    Serial.write((byte*)&data, sizeof(data));
+  } else {
+    Serial.println(Serial.availableForWrite());
+  }
+  
 }

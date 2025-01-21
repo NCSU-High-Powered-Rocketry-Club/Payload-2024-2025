@@ -135,7 +135,7 @@ class IMUDataProcessor:
     def get_processed_data_packets(self) -> list[ProcessedDataPacket]:
         """
         Processes the data points and returns a deque of ProcessedDataPacket objects. The length
-        of the deque should be the same as the length of the list of estimated data packets most
+        of the deque should be the same as the length of the list of data packets most
         recently passed in by update()
 
         :return: A deque of ProcessedDataPacket objects.
@@ -163,7 +163,7 @@ class IMUDataProcessor:
         # This is us getting the rocket's initial altitude from the mean of the first data packets
         self._initial_altitude = np.mean(
             np.array(
-                [data_packet.gpsAltitude for data_packet in self._data_packets],
+                [data_packet.pressureAlt for data_packet in self._data_packets],
             )
         )
 
@@ -190,7 +190,7 @@ class IMUDataProcessor:
         # Get the pressure altitudes from the data points and zero out the initial altitude
         return np.array(
             [
-                data_packet.gpsAltitude - self._initial_altitude
+                data_packet.pressureAlt - self._initial_altitude
                 for data_packet in self._data_packets
             ],
         )
@@ -232,7 +232,6 @@ class IMUDataProcessor:
             # regardless of orientation. For simplicity, we multiply by -1 so that acceleration
             # during motor burn is positive, and acceleration due to drag force during coast phase
             # is negative.
-            print(rotated_accel)
             rotated_accelerations[i] = rotated_accel[2]
 
         # Update the class attribute with the latest quaternion orientation

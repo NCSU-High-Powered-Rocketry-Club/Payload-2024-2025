@@ -4,7 +4,7 @@ and run the main loop."""
 import argparse
 import time
 
-from payload.constants import BAUD_RATE, SERIAL_PORT, LOGS_PATH
+from payload.constants import BAUD_RATE, LOGS_PATH, SERIAL_PORT
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.imu import IMU
@@ -13,6 +13,7 @@ from payload.mock.mock_imu import MockIMU
 from payload.mock.mock_logger import MockLogger
 from payload.payload import PayloadContext
 from payload.utils import arg_parser
+
 
 def run_real_flight() -> None:
     """Entry point for the application to run the real flight. Entered when run with
@@ -82,6 +83,7 @@ def run_flight_loop(
             flight_display.update_display()
     except KeyboardInterrupt:
         flight_display.end_mock_interrupted.set()
+        flight_display.update_display()
         payload.logger.stop()
 
 
