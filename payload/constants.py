@@ -62,6 +62,9 @@ IMU_TIMEOUT_SECONDS = 3.0
 it is considered to have timed out. This is used to prevent the program from deadlocking if the IMU
 stops sending data."""
 
+FREQUENCY = 50
+"""The frequency at which the IMU sends data packets, this is 50Hz"""
+
 # -------------------------------------------------------
 # Logging Configuration
 # -------------------------------------------------------
