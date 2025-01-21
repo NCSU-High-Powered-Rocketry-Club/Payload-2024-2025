@@ -1,16 +1,16 @@
-"""Module for describing the data packets from the IMU"""
+"""Module for describing the data packet created for the IMU"""
 
 import msgspec
 
 
 class IMUDataPacket(msgspec.Struct):
     """
-    Base class representing a collection of data packets from the IMU.
+    This class represents all the data we receive from the IMU.
     """
 
-    timestamp: int  # in miliseconds
+    timestamp: int  # In milliseconds
     voltage: float | None = None
-    # temperature in celcius
+    # temperature in celsius
     ambientTemperature: float | None = None
     # pressure in mbar
     ambientPressure: float | None = None
