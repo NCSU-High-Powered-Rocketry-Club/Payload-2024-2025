@@ -15,6 +15,12 @@ class BaseIMU(ABC):
     IMUDataPacket that can be fetched with the fetch_data method.
     """
 
+    def stop(self) -> None:
+        """
+        Stops the IMU.
+        """
+        pass
+
     def fetch_data(self) -> IMUDataPacket:
         """
         Makes a request to the IMU for the next data packet and returns it.
@@ -45,6 +51,13 @@ class IMU(BaseIMU):
         unpacked_data = struct.unpack("<"+"f"*(PACKET_BYTE_SIZE//4), binary_packet)
         return IMUDataPacket(*unpacked_data)
 
+    def stop(self) -> None:
+        """
+        Stops the IMU.
+        """
+        # TODO: IDK if this is how you do it or not this was copilot lol
+        self._serial.close()
+
     def fetch_data(self) -> IMUDataPacket:
         """
         Makes a request to the Arduino for the next data packet and returns it.
@@ -56,4 +69,3 @@ class IMU(BaseIMU):
         serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
         print(serialized_data_packet)
         return IMU._process_packet_data(serialized_data_packet)
-

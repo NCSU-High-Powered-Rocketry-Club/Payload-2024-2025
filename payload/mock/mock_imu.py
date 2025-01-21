@@ -17,6 +17,12 @@ class MockIMU(BaseIMU):
         self._data = pd.read_csv(log_file_path)
         self._current_index = 0
 
+    def stop(self) -> None:
+        """
+        Stops the IMU.
+        """
+        pass
+
     def fetch_data(self) -> IMUDataPacket:
         """
         Returns the next row of the CSV as an IMUDataPacket. Raises an exception if no more data is
