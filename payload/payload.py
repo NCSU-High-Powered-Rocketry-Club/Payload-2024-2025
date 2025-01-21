@@ -26,7 +26,7 @@ class PayloadContext:
     __slots__ = (
         "data_processor",
         "imu",
-        "imu_data_packets",
+        "imu_data_packet",
         "logger",
         "processed_data_packets",
         "shutdown_requested",
@@ -78,10 +78,11 @@ class PayloadContext:
         do different things. It is what controls the payload and chooses when to move to the next
         state.
         """
-        # get_imu_data_packet() gets data packets from the IMU
+        # We only get one data packet at a time from the IMU as it runs very slowly
         self.imu_data_packet = self.imu.fetch_data()
 
-        # This happens quite often, on our PC's since they are much faster than the Pi.
+        # If we don't have a data packet, return early
+        # TODO: we might want to handle this differently and let the states decide what to do
         if not self.imu_data_packet:
             return
 

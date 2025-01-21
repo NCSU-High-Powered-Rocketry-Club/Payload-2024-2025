@@ -1,12 +1,31 @@
 """Module for interacting with the IMU (Inertial measurement unit) on the rocket."""
 import struct
 import time
+from abc import ABC
 
 import serial
 
 from payload.constants import PACKET_BYTE_SIZE
-from payload.data_handling.imu_data_packet import IMUDataPacket
-from payload.hardware.base_imu import BaseIMU
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
+
+
+class BaseIMU(ABC):
+    """
+    Represents the IMU on the rocket. This class will read data and package it into an
+    IMUDataPacket that can be fetched with the fetch_data method.
+    """
+
+    def stop(self) -> None:
+        """
+        Stops the IMU.
+        """
+        pass
+
+    def fetch_data(self) -> IMUDataPacket:
+        """
+        Makes a request to the IMU for the next data packet and returns it.
+        """
+        pass
 
 
 class IMU(BaseIMU):
@@ -23,7 +42,7 @@ class IMU(BaseIMU):
         self._serial = serial.Serial(port, baud_rate, timeout=10)
 
     @staticmethod
-    def _process_packet_data(binary_packet) -> None:
+    def _process_packet_data(binary_packet) -> IMUDataPacket:
         """
         Process the data points in the unpacked packet and puts into an IMUDataPacket.
         :param unpacked_packet: The serialized data packet containing multiple data points.
@@ -32,9 +51,16 @@ class IMU(BaseIMU):
         unpacked_data = struct.unpack("<"+"f"*(PACKET_BYTE_SIZE//4), binary_packet)
         return IMUDataPacket(*unpacked_data)
 
-    def fetch_data(self) -> None:
+    def stop(self) -> None:
         """
-        Continuously fetch data packets from the IMU and process them.
+        Stops the IMU.
+        """
+        # TODO: IDK if this is how you do it or not this was copilot lol
+        self._serial.close()
+
+    def fetch_data(self) -> IMUDataPacket:
+        """
+        Makes a request to the Arduino for the next data packet and returns it.
         """
         while self._serial.in_waiting < PACKET_BYTE_SIZE:
             # print(self._serial.in_waiting)
@@ -43,4 +69,3 @@ class IMU(BaseIMU):
         serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
         print(serialized_data_packet)
         return IMU._process_packet_data(serialized_data_packet)
-
