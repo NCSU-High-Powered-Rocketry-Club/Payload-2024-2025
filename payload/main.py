@@ -38,7 +38,7 @@ def run_flight(args: argparse.Namespace) -> None:
     flight_display = FlightDisplay(payload, mock_time_start, args)
 
     # Run the main flight loop
-    run_flight_loop(payload, flight_display)
+    run_flight_loop(payload, flight_display, args.mock)
 
 
 def create_components(
@@ -67,7 +67,7 @@ def create_components(
 
 
 def run_flight_loop(
-    payload: PayloadContext, flight_display: FlightDisplay
+    payload: PayloadContext, flight_display: FlightDisplay, is_mock: bool
 ) -> None:
     """
     Main flight control loop that runs until shutdown is requested or interrupted.
@@ -78,12 +78,25 @@ def run_flight_loop(
     try:
         while True:
             # Update the state machine
-            payload.update()
-            flight_display.update_display()
+            payload.start()
+            flight_display.start()
+
+            # Stop the replay when the data is exhausted
+            if is_mock and not payload.imu.is_running:
+                break
+
+    # handle user interrupt gracefully
     except KeyboardInterrupt:
-        flight_display.end_mock_interrupted.set()
-        flight_display.update_display()
-        payload.logger.stop()
+        if is_mock:
+            flight_display.end_mock_interrupted.set()
+    else:  # This is run if we have landed and the program is not interrupted (see state.py)
+        if is_mock:
+            # Stop the mock replay naturally if not interrupted
+            flight_display.end_mock_natural.set()
+    finally:
+        # Stop the display and airbrakes
+        flight_display.stop()
+        payload.stop()
 
 
 if __name__ == "__main__":

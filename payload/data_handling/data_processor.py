@@ -21,7 +21,7 @@ class IMUDataProcessor:
     """
 
     __slots__ = (
-        "_current_altitudes",
+        "_current_altitude",
         "_current_orientation_quaternions",
         "_data_packet",
         "_initial_altitude",
@@ -29,9 +29,9 @@ class IMUDataProcessor:
         "_max_altitude",
         "_max_vertical_velocity",
         "_previous_vertical_velocity",
-        "_rotated_accelerations",
-        "_time_differences",
-        "_vertical_velocities",
+        "_rotated_acceleration",
+        "_time_difference",
+        "_vertical_velocity",
     )
 
     def __init__(self):
@@ -44,16 +44,16 @@ class IMUDataProcessor:
         maximum velocity of the rocket.
         """
         self._max_altitude: np.float64 = np.float64(0.0)
-        self._vertical_velocities: npt.NDArray[np.float64] = np.array([0.0])
+        self._vertical_velocity: np.float64 = np.float64(0.0)
         self._max_vertical_velocity: np.float64 = np.float64(0.0)
         self._previous_vertical_velocity: np.float64 = np.float64(0.0)
         self._initial_altitude: np.float64 | None = None
-        self._current_altitudes: npt.NDArray[np.float64] = np.array([0.0])
+        self._current_altitude: np.float64 = np.float64(0.0)
         self._last_data_packet: IMUDataPacket | None = None
         self._current_orientation_quaternions: R | None = None
-        self._rotated_accelerations: npt.NDArray[np.float64] = np.array([0.0])
+        self._rotated_acceleration: np.float64 = np.float64(0.0)
         self._data_packet: IMUDataPacket | None = None
-        self._time_differences: npt.NDArray[np.float64] = np.array([0.0])
+        self._time_difference: np.float64 = np.float64(0.0)
 
     def __str__(self) -> str:
         return (
@@ -74,14 +74,14 @@ class IMUDataProcessor:
 
     @property
     def current_altitude(self) -> float:
-        """Returns the altitudes of the rocket (zeroed out) from the data points, in meters."""
-        return float(self._current_altitudes[-1])
+        """Returns the altitude of the rocket (zeroed out) from the data points, in meters."""
+        return float(self._current_altitude)
 
     @property
     def vertical_velocity(self) -> float:
         """The current vertical velocity of the rocket in m/s. Calculated by integrating the
-        linear acceleration."""
-        return float(self._vertical_velocities[-1])
+        compensated acceleration."""
+        return float(self._vertical_velocities)
 
     @property
     def max_vertical_velocity(self) -> float:
@@ -89,9 +89,9 @@ class IMUDataProcessor:
         return float(self._max_vertical_velocity)
 
     @property
-    def average_vertical_acceleration(self) -> float:
-        """The average vertical acceleration of the rocket in m/s^2."""
-        return float(np.mean(self._rotated_accelerations))
+    def vertical_acceleration(self) -> float:
+        """The vertical acceleration of the rocket in m/s^2."""
+        return float(self._rotated_acceleration)
 
     @property
     def current_timestamp(self) -> int:
