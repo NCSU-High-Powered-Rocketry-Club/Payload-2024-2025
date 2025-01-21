@@ -97,7 +97,7 @@ class MockIMU:
             converters={"invalid_fields": MockIMU._convert_invalid_fields},
         ):
             chunk["time_diff"] = chunk["timestamp"].diff()
-            buffer_end_index = chunk[chunk["time_diff"] > 1e9].index
+            buffer_end_index = chunk[chunk["time_diff"] > 1e3].index
             if not buffer_end_index.empty:
                 return buffer_end_index[0]
         return 0

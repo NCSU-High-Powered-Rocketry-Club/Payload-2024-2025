@@ -75,11 +75,15 @@ def run_flight_loop(
     :param flight_display: Display interface for flight data.
     :param is_mock: Whether running in mock replay mode.
     """
-    flight_display.start()
+    try:
+        while True:
+            # Update the state machine
+            payload.update()
+            flight_display.update_display()
+    except KeyboardInterrupt:
+        flight_display.end_mock_interrupted.set()
+        payload.logger.stop()
 
-    while True:
-        # Update the state machine
-        payload.update()
 
 if __name__ == "__main__":
     args = arg_parser()

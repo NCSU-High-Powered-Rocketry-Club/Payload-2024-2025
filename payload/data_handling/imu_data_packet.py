@@ -5,7 +5,7 @@ import msgspec
 
 class IMUDataPacket(msgspec.Struct):
     """
-    Base class representing a collection of data packets from the IMU.
+    Class representing a collection of data packets from the IMU.
     """
 
     timestamp: int  # in miliseconds
@@ -14,6 +14,7 @@ class IMUDataPacket(msgspec.Struct):
     ambientTemperature: float | None = None
     # pressure in mbar
     ambientPressure: float | None = None
+    pressureAlt: float | None = None
     # estCompensatedAccel units are in m/s^2, including gravity
     estCompensatedAccelX: float | None = None
     estCompensatedAccelY: float | None = None

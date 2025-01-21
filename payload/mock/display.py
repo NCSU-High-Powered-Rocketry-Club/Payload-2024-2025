@@ -35,14 +35,11 @@ class FlightDisplay:
     __slots__ = (
         "_args",
         "_coast_time",
-        "_cpu_thread",
-        "_cpu_usages",
         "_launch_file",
         "_launch_time",
         "_mock",
         "_payload",
         "_processes",
-        "_running",
         "_start_time",
         "_thread_target",
         "_verbose",
@@ -63,13 +60,9 @@ class FlightDisplay:
         self._args = args
         self._launch_time: int = 0  # Launch time from MotorBurnState
         self._coast_time: int = 0  # Coast time from CoastState
-        self._cpu_usages: dict[str, float] | None = None
         # daemon threads are killed when the main thread exits.
         self._thread_target = threading.Thread(
             target=self.update_display, daemon=True, name="Real Time Display Thread"
-        )
-        self._cpu_thread = threading.Thread(
-            target=self.update_cpu_usage, daemon=True, name="CPU Usage Thread"
         )
         # Create events to signal the end of the replay.
         self.end_mock_natural = threading.Event()
@@ -81,38 +74,6 @@ class FlightDisplay:
         except AttributeError:  # If it failed, that means we are running a real flight!
             self._launch_file = "N/A"
 
-    def start(self) -> None:
-        """Starts the display and cpu monitoring thread. Also prepares the processes for monitoring
-        in the replay. This should only be done *after* payload.start() is called, because we
-        need the process IDs.
-        """
-        self._running = True
-        self._cpu_thread.start()
-        self._thread_target.start()
-
-    def stop(self) -> None:
-        """Stops the display thread. Similar to start(), this must be called *before*
-        payload.stop() is called to prevent psutil from raising a NoSuchProcess exception.
-        """
-        self._running = False
-        self._cpu_thread.join()
-        self._thread_target.join()
-
-    def update_cpu_usage(self, interval: float = 0.3) -> None:
-        """Update CPU usage for each monitored process every `interval` seconds. This is run in
-        another thread because polling for CPU usage is a blocking operation."""
-        cpu_count = psutil.cpu_count()
-        while self._running:
-            for name, process in self._processes.items():
-                # interval=None is not recommended and can be inaccurate.
-                # We normalize the CPU usage by the number of CPUs to get average cpu usage,
-                # otherwise it's usually > 100%.
-                try:
-                    self._cpu_usages[name] = process.cpu_percent(interval=interval) / cpu_count
-                except psutil.NoSuchProcess:
-                    # The process has ended, so we set the CPU usage to 0.
-                    self._cpu_usages[name] = 0.0
-
     def update_display(self) -> None:
         """
         Updates the display with real-time data. Runs in another thread. Automatically stops when
@@ -121,16 +82,7 @@ class FlightDisplay:
         # Don't print the flight data if we are in debug mode
         if self._args.debug:
             return
-
-        # Update the display as long as the program is running:
-        while self._running:
-            self._update_display()
-
-            # If we are running a real flight, we will stop the display when the rocket takes off:
-            if not self._args.mock and self._payload.state.name == "MotorBurnState":
-                self._update_display(DisplayEndingType.TAKEOFF)
-                break
-
+        self._update_display()
         # The program has ended, so we print the final display, depending on how it ended:
         if self.end_mock_natural.is_set():
             self._update_display(DisplayEndingType.NATURAL)
@@ -158,7 +110,7 @@ class FlightDisplay:
         if self._launch_time:
             time_since_launch = (
                 self._payload.data_processor.current_timestamp - self._launch_time
-            ) * 1e-9
+            ) * 1e-4
         else:
             time_since_launch = 0
 
@@ -182,23 +134,11 @@ class FlightDisplay:
             output.extend(
                 [
                     f"{Y}{'=' * 18} DEBUG INFO {'=' * 17}{RESET}",
-                    f"IMU Data Queue Size:             {G}{current_queue_size:<10}{RESET} {R}packets{RESET}",  # noqa: E501
                     f"Fetched packets:                 {G}{fetched_packets:<10}{RESET} {R}packets{RESET}",  # noqa: E501
                     f"Log buffer size:                 {G}{len(self._payload.logger._log_buffer):<10}{RESET} {R}packets{RESET}",  # noqa: E501
-                    f"Invalid fields:                  {G}{invalid_fields}{G}{RESET}",
                     f"{Y}{'=' * 13} REAL TIME CPU LOAD {'=' * 14}{RESET}",
                 ]
             )
-
-            # Add CPU usage data with color coding
-            for name, cpu_usage in self._cpu_usages.items():
-                if cpu_usage < 50:
-                    cpu_color = G
-                elif cpu_usage < 75:
-                    cpu_color = Y
-                else:
-                    cpu_color = R
-                output.append(f"{name:<25}    {cpu_color}CPU Usage: {cpu_usage:>6.2f}% {RESET}")
 
         # Print the output
         print("\n".join(output))

@@ -28,7 +28,7 @@ class IMU:
         """
         # Iterate through each data point in the packet.
         unpacked_data = struct.unpack("<"+"f"*(PACKET_BYTE_SIZE//4), binary_packet)
-        return IMUDataPacket(**unpacked_data)
+        return IMUDataPacket(*unpacked_data)
 
     def fetch_data(self) -> None:
         """

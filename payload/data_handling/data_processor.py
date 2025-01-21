@@ -95,7 +95,7 @@ class IMUDataProcessor:
 
     @property
     def current_timestamp(self) -> int:
-        """The timestamp of the last data packet in nanoseconds."""
+        """The timestamp of the last data packet in milliseconds."""
         try:
             return self._last_data_packet.timestamp
         except AttributeError:  # If we don't have a last data packet
@@ -163,7 +163,7 @@ class IMUDataProcessor:
         # This is us getting the rocket's initial altitude from the mean of the first data packets
         self._initial_altitude = np.mean(
             np.array(
-                [data_packet.estPressureAlt for data_packet in self._data_packets],
+                [data_packet.gpsAltitude for data_packet in self._data_packets],
             )
         )
 
@@ -190,7 +190,7 @@ class IMUDataProcessor:
         # Get the pressure altitudes from the data points and zero out the initial altitude
         return np.array(
             [
-                data_packet.estPressureAlt - self._initial_altitude
+                data_packet.gpsAltitude - self._initial_altitude
                 for data_packet in self._data_packets
             ],
         )
@@ -232,7 +232,8 @@ class IMUDataProcessor:
             # regardless of orientation. For simplicity, we multiply by -1 so that acceleration
             # during motor burn is positive, and acceleration due to drag force during coast phase
             # is negative.
-            rotated_accelerations[i] = -rotated_accel[2]
+            print(rotated_accel)
+            rotated_accelerations[i] = rotated_accel[2]
 
         # Update the class attribute with the latest quaternion orientation
         self._current_orientation_quaternions = current_orientation
@@ -283,7 +284,7 @@ class IMUDataProcessor:
         # packet from the previous loop, and the first data packet from the current loop
         return np.diff(
             [
-                data_packet.timestamp * 1e-9
+                data_packet.timestamp * 1e-3
                 for data_packet in [self._last_data_packet, *self._data_packets]
             ]
         )
