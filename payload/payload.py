@@ -54,7 +54,7 @@ class PayloadContext:
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
-        self.imu_data_packets: deque[IMUDataPacket] = deque()
+        self.imu_data_packet: IMUDataPacket | None = None
         self.processed_data_packets: list[ProcessedDataPacket] = []
         logger.start()
 
@@ -78,22 +78,18 @@ class PayloadContext:
         do different things. It is what controls the payload and chooses when to move to the next
         state.
         """
-        # get_imu_data_packets() gets from the "first" item in the queue, i.e, the set of data
-        # *may* not be the most recent data. But we want continuous data for state and logging
-        # purposes, so we don't need to worry about that, as long as we're not too behind on
-        # processing
-        self.imu_data_packets = [self.imu.fetch_data()]
+        # get_imu_data_packet() gets data packets from the IMU
+        self.imu_data_packet = self.imu.fetch_data()
 
         # This happens quite often, on our PC's since they are much faster than the Pi.
-        if not self.imu_data_packets:
+        if not self.imu_data_packet:
             return
 
-        # Update the processed data with the new data packets. We only care about EstDataPackets
-        self.data_processor.update(self.imu_data_packets)
+        # Update the processed data with the new data packet.
+        self.data_processor.update(self.imu_data_packet)
 
-        # Get the processed data packets from the data processor, this will have the same length
-        # as the number of EstimatedDataPackets in data_packets
-        self.processed_data_packets = self.data_processor.get_processed_data_packets()
+        # Get the processed data packet from the data processor
+        self.processed_data_packet = self.data_processor.get_processed_data_packet()
 
         # Update the state machine based on the latest processed data
         self.state.update()
@@ -101,6 +97,6 @@ class PayloadContext:
         # Logs the current state, extension, IMU data, and processed data
         self.logger.log(
             self.state.name,
-            self.imu_data_packets,
-            self.processed_data_packets,
+            self.imu_data_packet,
+            self.processed_data_packet,
         )
