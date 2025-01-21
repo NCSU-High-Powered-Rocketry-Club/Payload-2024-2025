@@ -76,11 +76,11 @@ def run_flight_loop(
     :param is_mock: Whether running in mock replay mode.
     """
     try:
+        payload.start()
+        flight_display.start()
         while True:
             # Update the state machine
-            payload.start()
-            flight_display.start()
-
+            payload.update()
             # Stop the replay when the data is exhausted
             if is_mock and not payload.imu.is_running:
                 break

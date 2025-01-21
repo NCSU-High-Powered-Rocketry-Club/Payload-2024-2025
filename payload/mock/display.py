@@ -1,12 +1,10 @@
 """File to handle the display of real-time flight data in the terminal."""
 
 import argparse
-import multiprocessing
 import threading
 import time
 from typing import TYPE_CHECKING
 
-import psutil
 from colorama import Fore, Style, init
 
 from payload.constants import DisplayEndingType

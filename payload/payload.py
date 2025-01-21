@@ -9,7 +9,7 @@ from payload.hardware.imu import IMU
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
-    from payload.data_handling.processed_data_packet import ProcessedDataPacket
+    from payload.data_handling.data_packets.processed_data_packet import ProcessedDataPacket
     from payload.hardware.imu import IMUDataPacket
 
 
@@ -54,23 +54,26 @@ class PayloadContext:
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
+        self.shutdown_requested = False
         self.imu_data_packet: IMUDataPacket | None = None
         self.processed_data_packets: list[ProcessedDataPacket] = []
-        logger.start()
 
     def start(self) -> None:
         """
-        Starts the IMU and logger processes. This is called before the main while loop starts.
+        Starts logger processes. This is called before the main while loop starts.
         """
-        self.imu.start()
         self.logger.start()
 
     def stop(self) -> None:
         """
-        Handles shutting down the airbrakes. This will cause the main loop to break. It retracts
-        the airbrakes, stops the IMU, and stops the logger.
+        Handles shutting down the payload. This will cause the main loop to break. It stops the IMU
+        and stops the logger.
         """
-
+        if self.shutdown_requested:
+            return
+        self.imu.stop()
+        self.logger.stop()
+        self.shutdown_requested = True
 
     def update(self) -> None:
         """
