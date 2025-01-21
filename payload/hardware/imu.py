@@ -1,5 +1,6 @@
 """Module for interacting with the IMU (Inertial measurement unit) on the rocket."""
 import struct
+import time
 
 import serial
 
@@ -28,12 +29,17 @@ class IMU:
         """
         # Iterate through each data point in the packet.
         unpacked_data = struct.unpack("<"+"f"*(PACKET_BYTE_SIZE//4), binary_packet)
-        return IMUDataPacket(**unpacked_data)
+        return IMUDataPacket(*unpacked_data)
 
     def fetch_data(self) -> None:
         """
         Continuously fetch data packets from the IMU and process them.
         """
+        while self._serial.in_waiting < PACKET_BYTE_SIZE:
+            # print(self._serial.in_waiting)
+            time.sleep(0.001)
+        # print(self._serial.in_waiting)
         serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
+        print(serialized_data_packet)
         return IMU._process_packet_data(serialized_data_packet)
 

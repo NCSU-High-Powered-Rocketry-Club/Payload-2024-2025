@@ -25,7 +25,6 @@ class PayloadContext:
 
     __slots__ = (
         "data_processor",
-        "est_data_packets",
         "imu",
         "imu_data_packets",
         "logger",
@@ -57,6 +56,7 @@ class PayloadContext:
         self.state: State = StandbyState(self)
         self.imu_data_packets: deque[IMUDataPacket] = deque()
         self.processed_data_packets: list[ProcessedDataPacket] = []
+        logger.start()
 
     def update(self) -> None:
         """
@@ -68,14 +68,14 @@ class PayloadContext:
         # *may* not be the most recent data. But we want continuous data for state and logging
         # purposes, so we don't need to worry about that, as long as we're not too behind on
         # processing
-        self.imu_data_packets = self.imu.fetch_data()
+        self.imu_data_packets = [self.imu.fetch_data()]
 
         # This happens quite often, on our PC's since they are much faster than the Pi.
         if not self.imu_data_packets:
             return
 
         # Update the processed data with the new data packets. We only care about EstDataPackets
-        self.data_processor.update(self.est_data_packets)
+        self.data_processor.update(self.imu_data_packets)
 
         # Get the processed data packets from the data processor, this will have the same length
         # as the number of EstimatedDataPackets in data_packets

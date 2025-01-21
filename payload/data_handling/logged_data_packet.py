@@ -13,41 +13,26 @@ class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields 
 
     # IMU Data Packet Fields
     timestamp: int
-    invalid_fields: list[str] | None
-
-    # Raw Data Packet Fields
-    scaledAccelX: float | None
-    scaledAccelY: float | None
-    scaledAccelZ: float | None
-    scaledGyroX: float | None
-    scaledGyroY: float | None
-    scaledGyroZ: float | None
-    deltaVelX: float | None
-    deltaVelY: float | None
-    deltaVelZ: float | None
-    deltaThetaX: float | None
-    deltaThetaY: float | None
-    deltaThetaZ: float | None
-    scaledAmbientPressure: float | None
-
-    # Estimated Data Packet Fields
+    voltage: float | None
+    ambientTemperature: float | None
+    ambientPressure: float | None
+    pressureAlt: float | None
+    estCompensatedAccelX: float | None
+    estCompensatedAccelY: float | None
+    estCompensatedAccelZ: float | None
+    estAngularRateX: float | None
+    estAngularRateY: float | None
+    estAngularRateZ: float | None
+    magneticFieldX: float | None
+    magneticFieldY: float | None
+    magneticFieldZ: float | None
     estOrientQuaternionW: float | None
     estOrientQuaternionX: float | None
     estOrientQuaternionY: float | None
     estOrientQuaternionZ: float | None
-    estPressureAlt: float | None
-    estAngularRateX: float | None
-    estAngularRateY: float | None
-    estAngularRateZ: float | None
-    estCompensatedAccelX: float | None
-    estCompensatedAccelY: float | None
-    estCompensatedAccelZ: float | None
-    estLinearAccelX: float | None
-    estLinearAccelY: float | None
-    estLinearAccelZ: float | None
-    estGravityVectorX: float | None
-    estGravityVectorY: float | None
-    estGravityVectorZ: float | None
+    gpsLatitude: float | None
+    gpsLongitude: float | None
+    gpsAltitude: float | None
 
     # Processed Data Packet Fields
     current_altitude: float | None
