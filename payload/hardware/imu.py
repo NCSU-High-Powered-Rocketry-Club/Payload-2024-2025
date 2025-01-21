@@ -1,6 +1,7 @@
 """Module for interacting with the IMU (Inertial measurement unit) on the rocket."""
 import struct
 import time
+from abc import ABC
 
 import serial
 
@@ -8,7 +9,20 @@ from payload.constants import PACKET_BYTE_SIZE
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 
 
-class IMU:
+class BaseIMU(ABC):
+    """
+    Represents the IMU on the rocket. This class will read data and package it into an
+    IMUDataPacket that can be fetched with the fetch_data method.
+    """
+
+    def fetch_data(self) -> IMUDataPacket:
+        """
+        Makes a request to the IMU for the next data packet and returns it.
+        """
+        pass
+
+
+class IMU(BaseIMU):
     """
     Represents the IMU on the rocket. This is used to interact with the data collected by the
     Arduino.
@@ -33,7 +47,7 @@ class IMU:
 
     def fetch_data(self) -> IMUDataPacket:
         """
-        Continuously fetch data packets from the IMU and process them.
+        Makes a request to the Arduino for the next data packet and returns it.
         """
         while self._serial.in_waiting < PACKET_BYTE_SIZE:
             # print(self._serial.in_waiting)

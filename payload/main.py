@@ -53,7 +53,6 @@ def create_components(
     if args.mock:
         # Replace hardware with mock objects for mock replay
         imu = MockIMU(
-            real_time_replay=not args.fast_replay,
             log_file_path=args.path,
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)

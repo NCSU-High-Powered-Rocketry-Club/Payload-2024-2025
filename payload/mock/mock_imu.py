@@ -1,9 +1,10 @@
 """Module for simulating interacting with the IMU (Inertial measurement unit) on the rocket."""
 import pandas as pd
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
+from payload.hardware.imu import BaseIMU
 
 
-class MockIMU:
+class MockIMU(BaseIMU):
     """
     A mock implementation of the IMU for testing purposes. It reads data from a CSV file
     and returns one row at a time as an IMUDataPacket.
