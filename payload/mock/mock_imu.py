@@ -31,7 +31,6 @@ class MockIMU:
         self,
         real_time_replay: bool,
         log_file_path: Path | None = None,
-        start_after_log_buffer: bool = True,
     ):
         """
         Initializes the object that pretends to be an IMU for testing purposes by reading from a
@@ -42,8 +41,6 @@ class MockIMU:
         :param log_file_path: The path of the log file to read data from.
         :param real_time_replay: Whether to mimmick a real flight by sleeping for a set
         period, or run at full speed, e.g. for using it in the CI.
-        :param start_after_log_buffer: Whether to send the data packets only after the log buffer
-        was filled for Standby state.
         """
         self._log_file_path = log_file_path
         # Check if the launch data file exists:
@@ -54,65 +51,15 @@ class MockIMU:
             root_dir = Path(__file__).parent.parent.parent
             self._log_file_path = next(iter(Path(root_dir / "launch_data").glob("*.csv")))
 
-        # If it's not a real time replay, we limit how big the queue gets when doing an integration
-        # test, because we read the file much faster than update(), sometimes resulting thousands
-        # of data packets in the queue, which will obviously mess up data processing calculations.
-        # We limit it to 15 packets, which is more realistic for a real flight.
-        data_queue = multiprocessing.Queue(
-            maxsize=MAX_QUEUE_SIZE if real_time_replay else MAX_FETCHED_PACKETS
-        )
-
-        data_queue.get_many = partial(get_all_from_queue, data_queue)
-        # Starts the process that fetches data from the log file
-        data_fetch_process = multiprocessing.Process(
-            target=self._fetch_data_loop,
-            args=(self._log_file_path, real_time_replay, start_after_log_buffer),
-            name="Mock IMU Process",
-        )
-
-        super().__init__(data_fetch_process, data_queue)
-
-    @staticmethod
-    def _convert_invalid_fields(value) -> list:
-        """
-        Convert invalid fields to Python objects or None.
-        :param value: The value to convert.
-        :return: The converted value
-        """
-        return None if not value else ast.literal_eval(value)  # Convert string to list
-
-    @staticmethod
-    def _calculate_start_index(log_file_path: Path) -> int:
-        """
-        Calculate the start index based on log buffer size and time differences.
-        :param log_file_path: The path of the log file to read data from.
-        :return: The index where the log buffer ends.
-        """
-        # We read the file in small chunks because it is faster than reading the whole file at once
-        chunk_size = LOG_BUFFER_SIZE + 1
-        for chunk in pd.read_csv(
-            log_file_path,
-            chunksize=chunk_size,
-            converters={"invalid_fields": MockIMU._convert_invalid_fields},
-        ):
-            chunk["time_diff"] = chunk["timestamp"].diff()
-            buffer_end_index = chunk[chunk["time_diff"] > 1e3].index
-            if not buffer_end_index.empty:
-                return buffer_end_index[0]
-        return 0
-
     def _read_file(
-        self, log_file_path: Path, real_time_replay: bool, start_after_log_buffer: bool = False
+        self, log_file_path: Path, real_time_replay: bool
     ) -> None:
         """
         Reads the data from the log file and puts it into the shared queue.
         :param log_file_path: the name of the log file to read data from located in scripts/imu_data
-        :param real_time_replay: Whether to mimmick a real flight by sleeping for a set period,
+        :param real_time_replay: Whether to mimic a real flight by sleeping for a set period,
         or run at full speed, e.g. for using it in the CI.
-        :param start_after_log_buffer: Whether to send the data packets only after the log buffer
-        was filled for Standby state.
         """
-        start_index = self._calculate_start_index(log_file_path) if start_after_log_buffer else 0
 
         # Using pandas and itertuples to read the file:
         df_header = pd.read_csv(log_file_path, nrows=0)
@@ -160,22 +107,3 @@ class MockIMU:
                 end_time = time.time()
                 time.sleep(max(0.0, RAW_DATA_PACKET_SAMPLING_RATE - (end_time - start_time)))
 
-    def _fetch_data_loop(
-        self, log_file_path: Path, real_time_replay: bool, start_after_log_buffer: bool = False
-    ) -> None:
-        """
-        A wrapper function to suppress KeyboardInterrupt exceptions when reading the log file.
-        :param log_file_path: the name of the log file to read data from located in scripts/imu_data
-        :param real_time_replay: Whether to mimmick a real flight by sleeping for a set period,
-        or run at full speed.
-        :param start_after_log_buffer: Whether to send the data packets only after the log buffer
-        was filled for Standby state.
-        """
-        # Unfortunately, doing the signal handling isn't always reliable, so we need to wrap the
-        # function in a context manager to suppress the KeyboardInterrupt
-        with contextlib.suppress(KeyboardInterrupt):
-            self._read_file(log_file_path, real_time_replay, start_after_log_buffer)
-
-        # For the mock, once we're done reading the file, we say it is no longer running
-        self._running.value = False
-        self._data_queue.put(STOP_SIGNAL)

@@ -95,7 +95,7 @@ class FlightDisplay:
         :param end_type: Whether the replay ended or was interrupted.
         """
 
-        fetched_packets = len(self._payload.imu_data_packets)
+        fetched_packets = len(self._payload.imu_data_packet)
 
         data_processor = self._payload.data_processor
 

@@ -23,7 +23,7 @@ class IMUDataProcessor:
     __slots__ = (
         "_current_altitudes",
         "_current_orientation_quaternions",
-        "_data_packets",
+        "_data_packet",
         "_initial_altitude",
         "_last_data_packet",
         "_max_altitude",
@@ -52,7 +52,7 @@ class IMUDataProcessor:
         self._last_data_packet: IMUDataPacket | None = None
         self._current_orientation_quaternions: R | None = None
         self._rotated_accelerations: npt.NDArray[np.float64] = np.array([0.0])
-        self._data_packets: list[IMUDataPacket] = []
+        self._data_packet: IMUDataPacket | None = None
         self._time_differences: npt.NDArray[np.float64] = np.array([0.0])
 
     def __str__(self) -> str:
@@ -101,17 +101,17 @@ class IMUDataProcessor:
         except AttributeError:  # If we don't have a last data packet
             return 0
 
-    def update(self, data_packets: list[IMUDataPacket]) -> None:
+    def update(self, data_packet: IMUDataPacket) -> None:
         """
         Updates the data points to process. This will recompute all information such as altitude,
         velocity, etc.
-        :param data_packets: A list of IMUDataPacket objects to process
+        :param data_packet: A list of IMUDataPacket objects to process
         """
         # If the data points are empty, we don't want to try to process anything
-        if not data_packets:
+        if not data_packet:
             return
 
-        self._data_packets = data_packets
+        self._data_packet = data_packet
 
         # If we don't have a last data point, we can't calculate the time differences needed
         # for velocity calculation:
@@ -130,7 +130,7 @@ class IMUDataProcessor:
         self._max_altitude = max(self._current_altitudes.max(), self._max_altitude)
 
         # Store the last data point for the next update
-        self._last_data_packet = data_packets[-1]
+        self._last_data_packet = data_packet[-1]
 
     def get_processed_data_packets(self) -> list[ProcessedDataPacket]:
         """
@@ -147,7 +147,7 @@ class IMUDataProcessor:
                 vertical_acceleration=self._rotated_accelerations[i],
                 time_since_last_data_packet=self._time_differences[i],
             )
-            for i in range(len(self._data_packets))
+            for i in range(len(self._data_packet))
         ]
 
     def _first_update(self) -> None:
@@ -158,12 +158,12 @@ class IMUDataProcessor:
         """
         # Setting last data point as the first element, makes it so that the time diff
         # automatically becomes 0, and the velocity becomes 0
-        self._last_data_packet = self._data_packets[0]
+        self._last_data_packet = self._data_packet[0]
 
         # This is us getting the rocket's initial altitude from the mean of the first data packets
         self._initial_altitude = np.mean(
             np.array(
-                [data_packet.pressureAlt for data_packet in self._data_packets],
+                [data_packet.pressureAlt for data_packet in self._data_packet],
             )
         )
 
@@ -191,7 +191,7 @@ class IMUDataProcessor:
         return np.array(
             [
                 data_packet.pressureAlt - self._initial_altitude
-                for data_packet in self._data_packets
+                for data_packet in self._data_packet
             ],
         )
 
@@ -203,12 +203,12 @@ class IMUDataProcessor:
         :return: numpy list of rotated acceleration vector [x,y,z]
         """
         # We pre-allocate the space for our accelerations first
-        rotated_accelerations = np.zeros(len(self._data_packets))
+        rotated_accelerations = np.zeros(len(self._data_packet))
 
         current_orientation = self._current_orientation_quaternions
         # Iterates through the data points and time differences between the data points
-        for i in range(len(self._data_packets)):
-            data_packet = self._data_packets[i]
+        for i in range(len(self._data_packet)):
+            data_packet = self._data_packet[i]
             dt = self._time_differences[i]
             # Accelerations are in m/s^2
             x_accel = data_packet.estCompensatedAccelX
@@ -284,6 +284,6 @@ class IMUDataProcessor:
         return np.diff(
             [
                 data_packet.timestamp * 1e-3
-                for data_packet in [self._last_data_packet, *self._data_packets]
+                for data_packet in [self._last_data_packet, *self._data_packet]
             ]
         )

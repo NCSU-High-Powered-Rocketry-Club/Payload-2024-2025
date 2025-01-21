@@ -26,7 +26,7 @@ class PayloadContext:
     __slots__ = (
         "data_processor",
         "imu",
-        "imu_data_packets",
+        "imu_data_packet",
         "logger",
         "processed_data_packets",
         "shutdown_requested",
@@ -54,7 +54,7 @@ class PayloadContext:
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
-        self.imu_data_packets: deque[IMUDataPacket] = deque()
+        self.imu_data_packet: IMUDataPacket | None = None
         self.processed_data_packets: list[ProcessedDataPacket] = []
         logger.start()
 
@@ -64,18 +64,16 @@ class PayloadContext:
         do different things. It is what controls the payload and chooses when to move to the next
         state.
         """
-        # get_imu_data_packets() gets from the "first" item in the queue, i.e, the set of data
-        # *may* not be the most recent data. But we want continuous data for state and logging
-        # purposes, so we don't need to worry about that, as long as we're not too behind on
-        # processing
-        self.imu_data_packets = [self.imu.fetch_data()]
+        # We only get one data packet at a time from the IMU as it runs very slowly
+        self.imu_data_packet = self.imu.fetch_data()
 
-        # This happens quite often, on our PC's since they are much faster than the Pi.
-        if not self.imu_data_packets:
+        # If we don't have a data packet, return early
+        # TODO: we might want to handle this differently and let the states decide what to do
+        if not self.imu_data_packet:
             return
 
         # Update the processed data with the new data packets. We only care about EstDataPackets
-        self.data_processor.update(self.imu_data_packets)
+        self.data_processor.update(self.imu_data_packet)
 
         # Get the processed data packets from the data processor, this will have the same length
         # as the number of EstimatedDataPackets in data_packets
@@ -87,6 +85,6 @@ class PayloadContext:
         # Logs the current state, extension, IMU data, and processed data
         self.logger.log(
             self.state.name,
-            self.imu_data_packets,
+            self.imu_data_packet,
             self.processed_data_packets,
         )

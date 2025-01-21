@@ -22,7 +22,7 @@ class IMU:
         self._serial = serial.Serial(port, baud_rate, timeout=10)
 
     @staticmethod
-    def _process_packet_data(binary_packet) -> None:
+    def _process_packet_data(binary_packet) -> IMUDataPacket:
         """
         Process the data points in the unpacked packet and puts into an IMUDataPacket.
         :param unpacked_packet: The serialized data packet containing multiple data points.
@@ -31,7 +31,7 @@ class IMU:
         unpacked_data = struct.unpack("<"+"f"*(PACKET_BYTE_SIZE//4), binary_packet)
         return IMUDataPacket(*unpacked_data)
 
-    def fetch_data(self) -> None:
+    def fetch_data(self) -> IMUDataPacket:
         """
         Continuously fetch data packets from the IMU and process them.
         """
