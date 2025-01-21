@@ -39,10 +39,9 @@ class FlightDisplay:
         "_launch_time",
         "_mock",
         "_payload",
-        "_processes",
+        "_running",
         "_start_time",
         "_thread_target",
-        "_verbose",
         "end_mock_interrupted",
         "end_mock_natural",
     )
@@ -57,6 +56,7 @@ class FlightDisplay:
         init(autoreset=True)  # Automatically reset colors after each print
         self._payload = payload
         self._start_time = start_time
+        self._running = False
         self._args = args
         self._launch_time: int = 0  # Launch time from MotorBurnState
         self._coast_time: int = 0  # Coast time from CoastState
@@ -74,6 +74,20 @@ class FlightDisplay:
         except AttributeError:  # If it failed, that means we are running a real flight!
             self._launch_file = "N/A"
 
+    def start(self) -> None:
+        """
+        Starts the display.
+        """
+        self._running = True
+        self._thread_target.start()
+
+    def stop(self) -> None:
+        """
+        Stops the display thread.
+        """
+        self._running = False
+        self._thread_target.join()
+
     def update_display(self) -> None:
         """
         Updates the display with real-time data. Runs in another thread. Automatically stops when
@@ -82,7 +96,16 @@ class FlightDisplay:
         # Don't print the flight data if we are in debug mode
         if self._args.debug:
             return
-        self._update_display()
+
+        # Update the display as long as the program is running:
+        while self._running:
+            self._update_display()
+
+            # If we are running a real flight, we will stop the display when the rocket takes off:
+            if not self._args.mock and self._airbrakes.state.name == "MotorBurnState":
+                self._update_display(DisplayEndingType.TAKEOFF)
+                break
+
         # The program has ended, so we print the final display, depending on how it ended:
         if self.end_mock_natural.is_set():
             self._update_display(DisplayEndingType.NATURAL)
@@ -94,12 +117,7 @@ class FlightDisplay:
         Updates the display with real-time data.
         :param end_type: Whether the replay ended or was interrupted.
         """
-
-        fetched_packets = len(self._payload.imu_data_packets)
-
         data_processor = self._payload.data_processor
-
-
         # Set the launch time if it hasn't been set yet:
         if not self._launch_time and self._payload.state.name == "MotorBurnState":
             self._launch_time = self._payload.state.start_time_ns
@@ -110,7 +128,7 @@ class FlightDisplay:
         if self._launch_time:
             time_since_launch = (
                 self._payload.data_processor.current_timestamp - self._launch_time
-            ) * 1e-4
+            ) * 1e-3
         else:
             time_since_launch = 0
 
@@ -128,18 +146,6 @@ class FlightDisplay:
             f"Current height:            {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
         ]
-
-        # Adds additional info to the display if -v was specified
-        if self._args.verbose:
-            output.extend(
-                [
-                    f"{Y}{'=' * 18} DEBUG INFO {'=' * 17}{RESET}",
-                    f"Fetched packets:                 {G}{fetched_packets:<10}{RESET} {R}packets{RESET}",  # noqa: E501
-                    f"Log buffer size:                 {G}{len(self._payload.logger._log_buffer):<10}{RESET} {R}packets{RESET}",  # noqa: E501
-                    f"{Y}{'=' * 13} REAL TIME CPU LOAD {'=' * 14}{RESET}",
-                ]
-            )
-
         # Print the output
         print("\n".join(output))
 

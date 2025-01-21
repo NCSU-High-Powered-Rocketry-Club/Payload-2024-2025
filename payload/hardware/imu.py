@@ -6,9 +6,10 @@ import serial
 
 from payload.constants import PACKET_BYTE_SIZE
 from payload.data_handling.imu_data_packet import IMUDataPacket
+from payload.hardware.base_imu import BaseIMU
 
 
-class IMU:
+class IMU(BaseIMU):
     """
     Represents the IMU on the rocket. This is used to interact with the data collected by the
     Arduino.

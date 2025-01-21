@@ -58,6 +58,20 @@ class PayloadContext:
         self.processed_data_packets: list[ProcessedDataPacket] = []
         logger.start()
 
+    def start(self) -> None:
+        """
+        Starts the IMU and logger processes. This is called before the main while loop starts.
+        """
+        self.imu.start()
+        self.logger.start()
+
+    def stop(self) -> None:
+        """
+        Handles shutting down the airbrakes. This will cause the main loop to break. It retracts
+        the airbrakes, stops the IMU, and stops the logger.
+        """
+
+
     def update(self) -> None:
         """
         Called every loop iteration from the main process. Depending on the current state, it will

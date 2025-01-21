@@ -128,14 +128,6 @@ def arg_parser(mock_invocation: bool = False) -> argparse.Namespace:
         default=None,
     )
 
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Shows the display with much more data.",
-        action="store_true",
-        default=False,
-    )
-
     args = parser.parse_args()
 
     # Check if the user has passed any options that are only available in mock replay mode:
@@ -145,8 +137,5 @@ def arg_parser(mock_invocation: bool = False) -> argparse.Namespace:
             "options are only available in mock replay mode. Please pass `-m` or `--mock` "
             "to run in mock replay mode."
         )
-
-    if args.verbose and args.debug:
-        parser.error("The `--verbose` and `--debug` options cannot be used together.")
 
     return args
