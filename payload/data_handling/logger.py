@@ -111,7 +111,7 @@ class Logger:
     @staticmethod
     def _prepare_log_dict(
         state: str,
-        imu_data_packets: deque[IMUDataPacket],
+        imu_data_packet: IMUDataPacket,
         processed_data_packets: list[ProcessedDataPacket],
     ) -> list[LoggedDataPacket]:
         """
@@ -124,31 +124,30 @@ class Logger:
         logged_data_packets: list[LoggedDataPacket] = []
 
         index = 0  # Index to loop over processed data packets:
-        # Convert the imu data packets to a dictionary:
-        for imu_data_packet in imu_data_packets:
-            # Let's first add the state field:
-            logged_fields: LoggedDataPacket = {
-                "state": state,
-            }
-            # Convert the imu data packet to a dictionary
-            # Using to_builtins() is much faster than asdict() for some reason
-            imu_data_packet_dict: dict[str, int | float | list[str]] = to_builtins(imu_data_packet)
-            logged_fields.update(imu_data_packet_dict)
 
-            # Get the processed data packet fields:
-            if isinstance(imu_data_packet, IMUDataPacket):
-                # Convert the processed data packet to a dictionary. Unknown types such as numpy
-                # float64 are converted to strings with 8 decimal places (that's enc_hook)
-                processed_data_packet_dict: dict[str, float] = to_builtins(
-                    processed_data_packets[index], enc_hook=Logger._convert_unknown_type
-                )
-                # Let's drop the "time_since_last_data_packet" field:
-                processed_data_packet_dict.pop("time_since_last_data_packet", None)
-                logged_fields.update(processed_data_packet_dict)
+        # Let's first add the state field:
+        logged_fields: LoggedDataPacket = {
+            "state": state,
+        }
+        # Convert the imu data packet to a dictionary
+        # Using to_builtins() is much faster than asdict() for some reason
+        imu_data_packet_dict: dict[str, int | float | list[str]] = to_builtins(imu_data_packet)
+        logged_fields.update(imu_data_packet_dict)
 
-                index += 1
+        # Get the processed data packet fields:
+        if isinstance(imu_data_packet, ProcessedDataPacket):
+            # Convert the processed data packet to a dictionary. Unknown types such as numpy
+            # float64 are converted to strings with 8 decimal places (that's enc_hook)
+            processed_data_packet_dict: dict[str, float] = to_builtins(
+                processed_data_packets[index], enc_hook=Logger._convert_unknown_type
+            )
+            # Let's drop the "time_since_last_data_packet" field:
+            processed_data_packet_dict.pop("time_since_last_data_packet", None)
+            logged_fields.update(processed_data_packet_dict)
 
-            logged_data_packets.append(logged_fields)
+            index += 1
+
+        logged_data_packets.append(logged_fields)
 
         return logged_data_packets
 

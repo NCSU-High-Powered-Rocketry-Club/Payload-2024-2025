@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.imu import IMU
+from payload.hardware.base_imu import BaseIMU
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
@@ -28,14 +29,14 @@ class PayloadContext:
         "imu",
         "imu_data_packet",
         "logger",
-        "processed_data_packets",
+        "processed_data_packet",
         "shutdown_requested",
         "state",
     )
 
     def __init__(
         self,
-        imu: IMU,
+        imu: BaseIMU,
         logger: Logger,
         data_processor: IMUDataProcessor,
     ) -> None:
@@ -48,15 +49,15 @@ class PayloadContext:
         :param logger: The logger object that logs data to a CSV file.
         :param data_processor: The data processor object that processes IMU data on a higher level.
         """
-        self.imu = imu
-        self.logger = logger
-        self.data_processor = data_processor
+        self.imu: BaseIMU = imu
+        self.logger: Logger = logger
+        self.data_processor: IMUDataProcessor = data_processor
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
         self.shutdown_requested = False
         self.imu_data_packet: IMUDataPacket | None = None
-        self.processed_data_packets: list[ProcessedDataPacket] = []
+        self.processed_data_packet: ProcessedDataPacket | None = None
 
     def start(self) -> None:
         """

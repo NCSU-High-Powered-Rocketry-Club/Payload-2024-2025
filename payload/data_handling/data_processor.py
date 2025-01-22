@@ -122,9 +122,7 @@ class IMUDataProcessor:
 
         self._rotated_acceleration = self._calculate_rotated_acceleration()
         self._vertical_velocity = self._calculate_vertical_velocity()
-        self._max_vertical_velocity = max(
-            self._vertical_velocity, self._max_vertical_velocity
-        )
+        self._max_vertical_velocity = max(self._vertical_velocity, self._max_vertical_velocity)
 
         self._current_altitude = self._calculate_current_altitude()
         self._max_altitude = max(self._current_altitude, self._max_altitude)
@@ -132,18 +130,18 @@ class IMUDataProcessor:
         # Store the last data point for the next update
         self._last_data_packet = data_packet
 
-    def get_processed_data_packet(self) -> list[ProcessedDataPacket]:
+    def get_processed_data_packet(self) -> ProcessedDataPacket:
         """
         Processes the data points and returns a ProcessedDataPacket object.
 
         :return: A ProcessedDataPacket object.
         """
         return ProcessedDataPacket(
-                current_altitude=self._current_altitude,
-                vertical_velocity=self._vertical_velocity,
-                vertical_acceleration=self._rotated_acceleration,
-                time_since_last_data_packet=self._time_difference,
-            )
+            current_altitude=self._current_altitude,
+            vertical_velocity=self._vertical_velocity,
+            vertical_acceleration=self._rotated_acceleration,
+            time_since_last_data_packet=self._time_difference,
+        )
 
     def _first_update(self) -> None:
         """
@@ -173,18 +171,13 @@ class IMUDataProcessor:
             scalar_first=True,  # This means the order is w, x, y, z.
         )
 
-    def _calculate_current_altitude(self) -> npt.NDArray[np.float64]:
+    def _calculate_current_altitude(self) -> np.float64:
         """
-        Calculates the current altitudes, by zeroing out the initial altitude.
-        :return: A numpy array of the current altitudes of the rocket at each data point
+        Calculates the current altitude, by zeroing out the initial altitude.
+        :return: the current altitude of the rocket
         """
-        # Get the pressure altitudes from the data points and zero out the initial altitude
-        return np.array(
-            [
-                data_packet.pressureAlt - self._initial_altitude
-                for data_packet in self._data_packet
-            ],
-        )
+        # Get the pressure altitude from the data points and zero out the initial altitude
+        return self._data_packet.pressureAlt - self._initial_altitude
 
     def _calculate_rotated_acceleration(self) -> np.float64:
         """
@@ -207,7 +200,7 @@ class IMUDataProcessor:
         # scipy docs for more info: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html
         # Calculate the delta quaternion from the angular rates
         dt = self._time_difference
-        delta_rotation = R.from_rotvec([gyro_x * dt, gyro_y * dt, gyro_z * dt])
+        delta_rotation = R.from_rotvec(np.array([gyro_x * dt, gyro_y * dt, gyro_z * dt]))
 
         # Update the current orientation by applying the delta rotation
         current_orientation = current_orientation * delta_rotation
@@ -218,7 +211,7 @@ class IMUDataProcessor:
         self._current_orientation_quaternions = current_orientation
         # Vertical acceleration will always be the 3rd element of the rotated vector,
         # regardless of orientation.
-        return rotated_accel[2]
+        return -rotated_accel[2]
 
     def _calculate_vertical_velocity(self) -> npt.NDArray[np.float64]:
         """
@@ -229,12 +222,14 @@ class IMUDataProcessor:
         # Gets the vertical acceleration from the rotated vertical acceleration. gravity needs to be
         # subtracted from vertical acceleration, Then deadbanded.
         vertical_acceleration = deadband(
-                    self._rotated_acceleration - GRAVITY_METERS_PER_SECOND_SQUARED,
-                    ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
-                )
+            self._rotated_acceleration - GRAVITY_METERS_PER_SECOND_SQUARED,
+            ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
+        )
 
         # Integrate the acceleration to get the velocity
-        vertical_velocity = self._previous_vertical_velocity + vertical_acceleration * self._time_difference
+        vertical_velocity = (
+            self._previous_vertical_velocity + vertical_acceleration * self._time_difference
+        )
 
         # Store the last calculated velocity vector
         self._previous_vertical_velocity = vertical_velocity
@@ -251,4 +246,4 @@ class IMUDataProcessor:
         """
         # calculate the time difference between the data packets
         # We are converting from ms to s, since we don't want to have a velocity in m/ms^2
-        return np.diff([self._last_data_packet.timestamp, self._data_packet.timestamp])
+        return np.diff([self._last_data_packet.timestamp, self._data_packet.timestamp])[0]

@@ -1,4 +1,5 @@
 """Module for interacting with the IMU (Inertial measurement unit) on the rocket."""
+
 import struct
 import time
 from abc import ABC
@@ -7,31 +8,15 @@ import serial
 
 from payload.constants import PACKET_BYTE_SIZE
 from payload.data_handling.data_packets.imu_data_packet import IMUDataPacket
+from payload.hardware.base_imu import BaseIMU
 
-
-class BaseIMU(ABC):
-    """
-    Represents the IMU on the rocket. This class will read data and package it into an
-    IMUDataPacket that can be fetched with the fetch_data method.
-    """
-
-    def stop(self) -> None:
-        """
-        Stops the IMU.
-        """
-        pass
-
-    def fetch_data(self) -> IMUDataPacket | None:
-        """
-        Makes a request to the IMU for the next data packet and returns it.
-        """
-        pass
 
 class IMU(BaseIMU):
     """
     Represents the IMU on the rocket. This is used to interact with the data collected by the
     Arduino.
     """
+
     def __init__(self, port: str, baud_rate: int) -> None:
         """
         Initializes the object that interacts with the Arduino connected to the pi.
@@ -47,10 +32,10 @@ class IMU(BaseIMU):
         :param binary_packet: The serialized data packet containing multiple data points.
         """
         # Iterate through each data point in the packet.
-        unpacked_data = struct.unpack("<"+"f"*(PACKET_BYTE_SIZE//4), binary_packet)
+        unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
         return IMUDataPacket(*unpacked_data)
 
-    def fetch_data(self) -> IMUDataPacket | None:
+    def _fetch_data(self) -> IMUDataPacket | None:
         """
         Continuously fetch data packets from the IMU and process them.
         """

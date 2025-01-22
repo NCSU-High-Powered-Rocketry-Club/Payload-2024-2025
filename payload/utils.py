@@ -24,6 +24,7 @@ def get_always_list(self, *args, **kwargs) -> list:
         return fetched
     return [fetched]
 
+
 def modify_multiprocessing_queue_windows(obj: "multiprocessing.Queue") -> None:
     """Initializes the multiprocessing queue on Windows by adding the missing methods from the
     faster_fifo library. Modifies `obj` in place.

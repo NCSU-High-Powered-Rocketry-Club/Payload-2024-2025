@@ -9,7 +9,6 @@ from ..spaceducks.shared.utils import readline
 
 
 class XbeeInterface:
-
     def __init__(self, port: str, callback: Callable[[MESSAGE_TYPES], None]) -> None:
         self.xbee = serial.Serial(port)
         self.encoder = msgspec.msgpack.Encoder()

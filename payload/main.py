@@ -58,7 +58,7 @@ def create_components(
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
     else:
         # Use real hardware components
-        imu = IMU(SERIAL_PORT,BAUD_RATE)
+        imu = IMU(SERIAL_PORT, BAUD_RATE)
         logger = Logger(LOGS_PATH)
 
     # Initialize data processing
@@ -66,9 +66,7 @@ def create_components(
     return imu, logger, data_processor
 
 
-def run_flight_loop(
-    payload: PayloadContext, flight_display: FlightDisplay, is_mock: bool
-) -> None:
+def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, is_mock: bool) -> None:
     """
     Main flight control loop that runs until shutdown is requested or interrupted.
     :param payload: The payload context managing the state machine.

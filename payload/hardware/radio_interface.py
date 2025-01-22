@@ -17,7 +17,6 @@ import subprocess
 
 
 class RFInterface:
-
     # Name of the file to save our audio as
     AUDIO_FILE_NAME = "sensor_audio.wav"
 

@@ -159,7 +159,7 @@ class FreeFallState(State):
         # If our altitude is around 0, and we have an acceleration spike, we have landed
         if (
             data.current_altitude <= GROUND_ALTITUDE_METERS
-            and data.average_vertical_acceleration >= LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED
+            and data.vertical_acceleration >= LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED
         ):
             self.next_state()
 

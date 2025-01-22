@@ -4,7 +4,8 @@ import pandas as pd
 
 from payload.constants import FREQUENCY
 from payload.data_handling.data_packets.imu_data_packet import IMUDataPacket
-from payload.hardware.imu import BaseIMU
+from payload.hardware.base_imu import BaseIMU
+
 
 class MockIMU(BaseIMU):
     """
@@ -12,7 +13,7 @@ class MockIMU(BaseIMU):
     and returns one row at a time as an IMUDataPacket at a fixed rate of 50Hz.
     """
 
-    __slots__ = ("_log_file_path", "_last_fetch_time", "_current_index")
+    __slots__ = ("_log_file_path", "_last_fetch_time", "_current_index", "is_running", "_df",)
 
     def __init__(self, log_file_path: Path | None = None) -> None:
         """
@@ -26,12 +27,29 @@ class MockIMU(BaseIMU):
         self._data = pd.read_csv(self._log_file_path)
         self._current_index = 0
         self._last_fetch_time = 0  # Initialize last fetch time
+        self.is_running = True
+
+        # Using pandas and itertuples to read the header:
+        df_header = pd.read_csv(self._log_file_path, nrows=0)
+        # Get the columns that are common between the data packet and the log file, since we only
+        # care about those
+        self._valid_columns = list(
+            (set(IMUDataPacket.__struct_fields__))
+            & set(df_header.columns)
+        )
+        self._df = pd.read_csv(
+            self._log_file_path,
+            engine="c",
+            usecols=self._valid_columns,
+        )
+
 
     def stop(self) -> None:
         """Stops the IMU."""
+        self.is_running = False
         pass
 
-    def fetch_data(self) -> IMUDataPacket | None:
+    def _fetch_data(self) -> IMUDataPacket | None:
         """
         Returns the next row of the CSV as an IMUDataPacket at a rate of 50Hz.
         If called too soon, it returns None.
@@ -46,9 +64,10 @@ class MockIMU(BaseIMU):
         if self._current_index >= len(self._data):
             raise StopIteration("No more data available in the CSV file.")
 
-        row = self._data.iloc[self._current_index]
+        row = self._df.iloc[self._current_index]
+        row_dict = {k: v for k, v in row.items() if pd.notna(v)}
         self._current_index += 1
-
         self._last_fetch_time = current_time
         # Converts a row in the CSV to an IMUDataPacket
-        return IMUDataPacket(**row.to_dict())
+        return IMUDataPacket(**row_dict)
+
