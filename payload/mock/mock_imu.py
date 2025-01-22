@@ -1,9 +1,12 @@
+"""Module for simulating interacting with the IMU (Inertial measurement unit) on the rocket."""
+
 import time
 from pathlib import Path
+
 import pandas as pd
 
 from payload.constants import FREQUENCY
-from payload.data_handling.data_packets.imu_data_packet import IMUDataPacket
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.hardware.base_imu import BaseIMU
 
 
@@ -13,7 +16,7 @@ class MockIMU(BaseIMU):
     and returns one row at a time as an IMUDataPacket at a fixed rate of 50Hz.
     """
 
-    __slots__ = ("_log_file_path", "_last_fetch_time", "_current_index", "_df", "is_running")
+    __slots__ = ("_current_index", "_df", "_last_fetch_time", "_log_file_path", "is_running")
 
     def __init__(self, log_file_path: Path | None = None) -> None:
         """
@@ -35,16 +38,12 @@ class MockIMU(BaseIMU):
         df_header = pd.read_csv(self._log_file_path, nrows=0)
         # Get the columns that are common between the data packet and the log file, since we only
         # care about those
-        self._valid_columns = list(
-            (set(IMUDataPacket.__struct_fields__))
-            & set(df_header.columns)
-        )
+        self._valid_columns = list((set(IMUDataPacket.__struct_fields__)) & set(df_header.columns))
         self._df = pd.read_csv(
             self._log_file_path,
             engine="c",
             usecols=self._valid_columns,
         )
-
 
     def stop(self) -> None:
         """Stops the IMU."""

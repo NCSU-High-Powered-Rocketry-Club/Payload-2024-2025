@@ -1,10 +1,12 @@
-import serial
-import threading
-import msgspec
-from ..spaceducks.shared.state import MESSAGE_TYPES
-import time
 import logging
-from typing import Callable
+import threading
+import time
+from collections.abc import Callable
+
+import msgspec
+import serial
+
+from ..spaceducks.shared.state import MESSAGE_TYPES
 from ..spaceducks.shared.utils import readline
 
 

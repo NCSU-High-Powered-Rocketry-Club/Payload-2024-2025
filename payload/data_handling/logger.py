@@ -15,9 +15,9 @@ from payload.constants import (
     MAX_GET_TIMEOUT_SECONDS,
     STOP_SIGNAL,
 )
-from payload.data_handling.data_packets.imu_data_packet import IMUDataPacket
-from payload.data_handling.data_packets.logged_data_packet import LoggedDataPacket
-from payload.data_handling.data_packets.processed_data_packet import ProcessedDataPacket
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
+from payload.data_handling.packets.logged_data_packet import LoggedDataPacket
+from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
 from payload.utils import modify_multiprocessing_queue_windows
 
 

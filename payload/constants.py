@@ -1,6 +1,6 @@
 """Contains the constants used in the payload module"""
 
-from enum import Enum, StrEnum
+from enum import StrEnum
 from pathlib import Path
 
 # -------------------------------------------------------

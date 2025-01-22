@@ -9,13 +9,6 @@ if TYPE_CHECKING:
     import multiprocessing
 
 
-def get_all_from_queue(self, *args, **kwargs) -> list:
-    """Used to get all the items from a queue at once. Only relevant if you are running the mock
-    replay on Windows, as the multiprocessing.Queue doesn't have a `get_many` method"""
-    kwargs.pop("max_messages_to_get", None)  # Argument only used in the Linux version
-    return [self.get(*args, **kwargs) for _ in range(self.qsize())]
-
-
 def get_always_list(self, *args, **kwargs) -> list:
     """Used to get items from the queue, and always returns a list. Only relevant on Windows,
     as the multiprocessing.Queue doesn't have a `get_many` method"""
@@ -35,30 +28,9 @@ def modify_multiprocessing_queue_windows(obj: "multiprocessing.Queue") -> None:
     obj.put_many = obj.put
 
 
-def convert_to_milliseconds(timestamp_str: str) -> int | None:
-    """Converts seconds to milliseconds, if it isn't already in milliseconds."""
-    try:
-        # check if value is already in milliseconds:
-        return int(timestamp_str)
-    except ValueError:
-        try:
-            timestamp_float = float(timestamp_str)
-            return int(timestamp_float * 1e3)  # return the value in milliseconds
-        except ValueError:
-            return None
-
-
-def convert_to_seconds(timestamp: float) -> float | None:
+def convert_milliseconds_to_seconds(timestamp: float) -> float | None:
     """Converts milliseconds to seconds"""
     return timestamp / 1e3
-
-
-def convert_str_to_float(value: str) -> float | None:
-    """Converts a value to a float, returning None if the conversion fails."""
-    try:
-        return float(value)  # Attempt to convert to float
-    except (ValueError, TypeError):
-        return None  # Return None if the conversion fails
 
 
 def deadband(input_value: float, threshold: float) -> float:

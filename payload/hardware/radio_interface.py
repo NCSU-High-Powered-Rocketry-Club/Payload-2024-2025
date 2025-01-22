@@ -6,14 +6,13 @@ if TYPE_CHECKING:
     from .xbee_interface import XbeeInterface
 
 
-from ..spaceducks.shared.state import Message, FlightStats
+import logging
+import subprocess
 
 import sounddevice as sd
 import soundfile as sf
 
-import logging
-import time
-import subprocess
+from ..spaceducks.shared.state import FlightStats, Message
 
 
 class RFInterface:
@@ -31,7 +30,7 @@ class RFInterface:
             "espeak",
             "-w",
             f"{self.AUDIO_FILE_NAME}",
-            f'"This is {self.callsign} for Student Launch. {str(data)} This is {self.callsign}. "',
+            f'"This is {self.callsign} for Student Launch. {data!s} This is {self.callsign}. "',
         )
 
         self.xbee.send_data(Message("Beginning transmission..."))

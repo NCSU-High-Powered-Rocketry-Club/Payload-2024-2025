@@ -11,7 +11,7 @@ from payload.constants import (
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
 )
-from payload.utils import convert_to_seconds
+from payload.utils import convert_milliseconds_to_seconds
 
 if TYPE_CHECKING:
     from payload.payload import payloadContext
@@ -164,7 +164,10 @@ class FreeFallState(State):
             self.next_state()
 
         # If we have been in free fall for too long, we move to the landed state
-        if convert_to_seconds(data.current_timestamp - self.start_time_ns) >= MAX_FREE_FALL_SECONDS:
+        if (
+            convert_milliseconds_to_seconds(data.current_timestamp - self.start_time_ns)
+            >= MAX_FREE_FALL_SECONDS
+        ):
             self.next_state()
 
     def next_state(self):

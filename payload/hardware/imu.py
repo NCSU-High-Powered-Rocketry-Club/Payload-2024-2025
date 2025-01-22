@@ -1,13 +1,11 @@
 """Module for interacting with the IMU (Inertial measurement unit) on the rocket."""
 
 import struct
-import time
-from abc import ABC
 
 import serial
 
 from payload.constants import PACKET_BYTE_SIZE
-from payload.data_handling.data_packets.imu_data_packet import IMUDataPacket
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.hardware.base_imu import BaseIMU
 
 
