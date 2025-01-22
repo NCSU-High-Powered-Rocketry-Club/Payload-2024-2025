@@ -74,7 +74,7 @@ class Logger:
         # the back and pop from front, meaning that things will be logged in the order they were
         # added.
         # Signals (like stop) are sent as strings, but data is sent as dictionaries
-        self._log_queue: multiprocessing.Queue[list[LoggedDataPacket] | Literal["STOP"]] = (
+        self._log_queue: multiprocessing.Queue[LoggedDataPacket | Literal["STOP"]] = (
             multiprocessing.Queue()
         )
         modify_multiprocessing_queue_windows(self._log_queue)
@@ -112,44 +112,33 @@ class Logger:
     def _prepare_log_dict(
         state: str,
         imu_data_packet: IMUDataPacket,
-        processed_data_packets: list[ProcessedDataPacket],
-    ) -> list[LoggedDataPacket]:
+        processed_data_packet: ProcessedDataPacket,
+    ) -> LoggedDataPacket:
         """
         Creates a data packet dictionary representing a row of data to be logged.
         :param state: The current state of the payload.
-        :param imu_data_packets: The IMU data packets to log.
-        :param processed_data_packets: The processed data packets to log.
-        :return: A deque of LoggedDataPacket objects.
+        :param imu_data_packet: The IMU data packet to log.
+        :param processed_data_packet: The processed data packet to log.
+        :return: The dictionary representing what will be logged.
         """
-        logged_data_packets: list[LoggedDataPacket] = []
 
-        index = 0  # Index to loop over processed data packets:
-
-        # Let's first add the state field:
-        logged_fields: LoggedDataPacket = {
+        # Let's first add the state field (This might be expanded into a context data pack like in
+        # airbrakes code):
+        logged_data_packet: LoggedDataPacket = {
             "state": state,
         }
         # Convert the imu data packet to a dictionary
         # Using to_builtins() is much faster than asdict() for some reason
-        imu_data_packet_dict: dict[str, int | float | list[str]] = to_builtins(imu_data_packet)
-        logged_fields.update(imu_data_packet_dict)
+        imu_data_packet_dict: dict[str, int | float] = to_builtins(imu_data_packet)
+        logged_data_packet.update(imu_data_packet_dict)
 
-        # Get the processed data packet fields:
-        if isinstance(imu_data_packet, ProcessedDataPacket):
-            # Convert the processed data packet to a dictionary. Unknown types such as numpy
-            # float64 are converted to strings with 8 decimal places (that's enc_hook)
-            processed_data_packet_dict: dict[str, float] = to_builtins(
-                processed_data_packets[index], enc_hook=Logger._convert_unknown_type
-            )
-            # Let's drop the "time_since_last_data_packet" field:
-            processed_data_packet_dict.pop("time_since_last_data_packet", None)
-            logged_fields.update(processed_data_packet_dict)
+        # Convert the processed data packet to a dictionary
+        processed_data_packet_dict: dict[str, float] = to_builtins(
+            processed_data_packet
+        )
+        logged_data_packet.update(processed_data_packet_dict)
 
-            index += 1
-
-        logged_data_packets.append(logged_fields)
-
-        return logged_data_packets
+        return logged_data_packet
 
     def start(self) -> None:
         """
@@ -161,8 +150,6 @@ class Logger:
         """
         Stops the logging process. It will finish logging the current message and then stop.
         """
-        # Log the buffer before stopping the process
-        self._log_the_buffer()
         self._log_queue.put(STOP_SIGNAL)  # Put the stop signal in the queue
         # Waits for the process to finish before stopping it
         self._log_process.join()
@@ -170,52 +157,25 @@ class Logger:
     def log(
         self,
         state: str,
-        imu_data_packets: deque[IMUDataPacket],
-        processed_data_packets: list[ProcessedDataPacket],
+        imu_data_packet: IMUDataPacket,
+        processed_data_packet: ProcessedDataPacket,
     ) -> None:
         """
         Logs the current state and IMU data to the CSV file.
         :param state: The current state of the payload.
-        :param imu_data_packets: The IMU data packets to log.
-        :param processed_data_packets: The processed data packets to log.
+        :param imu_data_packet: The IMU data packets to log.
+        :param processed_data_packet: The processed data packets to log.
         """
         # We only want the first letter of the state to save space
         state_letter = state[0]
         # We are populating a dictionary with the fields of the logged data packet
-        logged_data_packets: list[LoggedDataPacket] = Logger._prepare_log_dict(
+        logged_data_packet = Logger._prepare_log_dict(
             state_letter,
-            imu_data_packets,
-            processed_data_packets,
+            imu_data_packet,
+            processed_data_packet,
         )
 
-        # If we are in Standby or Landed State, we need to buffer the data packets:
-        if state in self.LOG_BUFFER_STATES:
-            # Determine how many packets to log and buffer
-            log_capacity = max(0, IDLE_LOG_CAPACITY - self._log_counter)
-            to_log = logged_data_packets[:log_capacity]
-            to_buffer = logged_data_packets[log_capacity:]
-
-            # Update counter and handle logging/buffering
-            self._log_counter += len(to_log)
-            if to_log:
-                self._log_queue.put_many(to_log)
-            if to_buffer:
-                self._log_buffer.extend(to_buffer)
-        else:
-            # If we are not in Standby or Landed State, we should log the buffer if it's not empty:
-            if self._log_buffer:
-                self._log_the_buffer()
-
-            # Reset the counter for other states
-            self._log_counter = 0
-            self._log_queue.put_many(logged_data_packets)
-
-    def _log_the_buffer(self):
-        """
-        Adds the log buffer to the queue, so it can be logged to file.
-        """
-        self._log_queue.put_many(list(self._log_buffer))
-        self._log_buffer.clear()
+        self._log_queue.put(logged_data_packet)
 
     # ------------------------ ALL METHODS BELOW RUN IN A SEPARATE PROCESS -------------------------
     @staticmethod
