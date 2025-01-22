@@ -23,6 +23,9 @@ class IMU(BaseIMU):
         """
         self._serial = serial.Serial(port, baud_rate, timeout=10)
 
+    def stop(self):
+        """stops the IMU process."""
+
     @staticmethod
     def _process_packet_data(binary_packet) -> IMUDataPacket:
         """
@@ -31,6 +34,7 @@ class IMU(BaseIMU):
         """
         # Iterate through each data point in the packet.
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
+        print(unpacked_data[0:2])
         return IMUDataPacket(*unpacked_data)
 
     def fetch_data(self) -> IMUDataPacket | None:
