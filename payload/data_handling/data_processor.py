@@ -8,9 +8,9 @@ from payload.constants import (
     ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
     GRAVITY_METERS_PER_SECOND_SQUARED,
 )
-from payload.data_handling.data_packets.imu_data_packet import IMUDataPacket
-from payload.data_handling.data_packets.processed_data_packet import ProcessedDataPacket
-from payload.utils import deadband
+from payload.data_handling.packets.imu_data_packet import IMUDataPacket
+from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
+from payload.utils import convert_milliseconds_to_seconds, deadband
 
 
 class IMUDataProcessor:
@@ -107,7 +107,7 @@ class IMUDataProcessor:
         velocity, etc.
         :param data_packet: An IMUDataPacket object to process
         """
-        # If the data points are empty, we don't want to try to process anything
+        # If we don't have a data packet, return early
         if not data_packet:
             return
 
@@ -246,4 +246,8 @@ class IMUDataProcessor:
         """
         # calculate the time difference between the data packets
         # We are converting from ms to s, since we don't want to have a velocity in m/ms^2
-        return np.diff([self._last_data_packet.timestamp, self._data_packet.timestamp])[0]
+        return np.float64(
+            convert_milliseconds_to_seconds(
+                self._data_packet.timestamp - self._last_data_packet.timestamp
+            )
+        )

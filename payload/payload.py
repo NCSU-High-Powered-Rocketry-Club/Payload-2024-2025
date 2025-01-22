@@ -1,16 +1,14 @@
 """Module which provides a high level interface to the payload system on the rocket."""
 
-from collections import deque
 from typing import TYPE_CHECKING
 
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
-from payload.hardware.imu import IMU
 from payload.hardware.base_imu import BaseIMU
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
-    from payload.data_handling.data_packets.processed_data_packet import ProcessedDataPacket
+    from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
     from payload.hardware.imu import IMUDataPacket
 
 

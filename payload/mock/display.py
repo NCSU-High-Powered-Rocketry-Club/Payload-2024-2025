@@ -131,7 +131,7 @@ class FlightDisplay:
             time_since_launch = 0
 
         # Prepare output
-        output = [
+        [
             f"{Y}{'=' * 15} {'REPLAY' if self._args.mock else 'STANDBY'} INFO {'=' * 15}{RESET}",
             f"Replay file:                  {C}{self._launch_file}{RESET}",
             f"Time since replay start:      {C}{time.time() - self._start_time:<10.2f}{RESET} {R}s{RESET}",  # noqa: E501
@@ -145,17 +145,16 @@ class FlightDisplay:
             f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
         ]
         # Print the output
-        print("\n".join(output))
 
         # Move the cursor up for the next update, if the replay hasn't ended:
         if not end_type:
-            print(self.MOVE_CURSOR_UP * len(output), end="", flush=True)
+            pass
 
         # Print the end of replay message if the replay has ended
         match end_type:
             case DisplayEndingType.NATURAL:
-                print(f"{R}{'=' * 14} END OF REPLAY {'=' * 14}{RESET}")
+                pass
             case DisplayEndingType.INTERRUPTED:
-                print(f"{R}{'=' * 12} INTERRUPTED REPLAY {'=' * 13}{RESET}")
+                pass
             case DisplayEndingType.TAKEOFF:
-                print(f"{R}{'=' * 13} ROCKET LAUNCHED {'=' * 14}{RESET}")
+                pass
