@@ -18,6 +18,9 @@ Adafruit_BNO08x bno = Adafruit_BNO08x();
 #define BNO_REPORT_MAGNETOMETER 0x03
 #define BNO_REPORT_ROTATION_VECTOR 0x05
 
+// We will send this before a packet to sync our code with the data stream
+#define START_MARKER 0xAA
+
 // GNSS object
 SFE_UBLOX_GNSS my_GNSS;
 #define mySerial Serial2  // Use Serial1 to connect to the GNSS module
@@ -43,7 +46,7 @@ void setup() {
   Wire.setClock(400000UL);
 
   // Initialize DPS310
- !dps_310.begin_I2C();
+  dps_310.begin_I2C();
 
   // Initialize BNO085
   while (!bno.begin_I2C()) {
@@ -55,7 +58,6 @@ void setup() {
   bno.enableReport(BNO_REPORT_GYROSCOPE, 40);
   bno.enableReport(BNO_REPORT_MAGNETOMETER, 20);
   bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 40);
-
 
   // Initialize GPS
   while (my_GNSS.begin() == false) {
@@ -77,6 +79,7 @@ struct DataPacket collect(struct DataPacket packet) {
   uint8_t executed_cases = 0b000; // Bitmask for 5 cases (5 bits, all initially 0)
   const uint8_t all_cases_executed = 0b111  ; // All cases executed when all bits are 1
 
+  // We wait to send a packet until the com accel, gyro, and quaternion fields are added
   while (executed_cases != all_cases_executed) {
     sh2_SensorValue_t sensor_value;
     if (bno.getSensorEvent(&sensor_value)) {
@@ -114,10 +117,34 @@ struct DataPacket collect(struct DataPacket packet) {
           break; // Ignore other reports
       }
     }
-    // Serial.print(executed_cases);
-    // Serial.println(" "+all_cases_executed);
   }
   return packet;
+}
+
+void printPacket(struct DataPacket data) {
+  Serial.println("=== DataPacket ===");
+  Serial.print("Timestamp: "); Serial.println(data.timestamp);
+  Serial.print("Voltage: "); Serial.println(data.voltage);
+  Serial.print("Temperature: "); Serial.println(data.temperature);
+  Serial.print("Pressure: "); Serial.println(data.pressure);
+  Serial.print("Comp Accel X: "); Serial.println(data.comp_accel_x);
+  Serial.print("Comp Accel Y: "); Serial.println(data.comp_accel_y);
+  Serial.print("Comp Accel Z: "); Serial.println(data.comp_accel_z);
+  Serial.print("Gyro X: "); Serial.println(data.gyro_x);
+  Serial.print("Gyro Y: "); Serial.println(data.gyro_y);
+  Serial.print("Gyro Z: "); Serial.println(data.gyro_z);
+  Serial.print("Magnetic X: "); Serial.println(data.magnetic_x);
+  Serial.print("Magnetic Y: "); Serial.println(data.magnetic_y);
+  Serial.print("Magnetic Z: "); Serial.println(data.magnetic_z);
+  Serial.print("Quat W: "); Serial.println(data.quat_w);
+  Serial.print("Quat X: "); Serial.println(data.quat_x);
+  Serial.print("Quat Y: "); Serial.println(data.quat_y);
+  Serial.print("Quat Z: "); Serial.println(data.quat_z);
+  Serial.print("GPS Lat: "); Serial.println(data.gps_lat);
+  Serial.print("GPS Long: "); Serial.println(data.gps_long);
+  Serial.print("GPS Alt: "); Serial.println(data.gps_alt);
+  Serial.println("==================");
+  Serial.println(Serial.availableForWrite());
 }
 
 void loop() {
@@ -149,29 +176,11 @@ void loop() {
 
   data = collect(data);
 
-  //Serial.println("=== DataPacket ===");
-  // Serial.print("Timestamp: "); Serial.println(data.timestamp);
-  // Serial.print("Voltage: "); Serial.println(data.voltage);
-  // Serial.print("Temperature: "); Serial.println(data.temperature);
-  // Serial.print("Pressure: "); Serial.println(data.pressure);
-  // Serial.print("Comp Accel X: "); Serial.println(data.comp_accel_x);
-  // Serial.print("Comp Accel Y: "); Serial.println(data.comp_accel_y);
-  // Serial.print("Comp Accel Z: "); Serial.println(data.comp_accel_z);
-  // Serial.print("Gyro X: "); Serial.println(data.gyro_x);
-  // Serial.print("Gyro Y: "); Serial.println(data.gyro_y);
-  // Serial.print("Gyro Z: "); Serial.println(data.gyro_z);
-  // Serial.print("Magnetic X: "); Serial.println(data.magnetic_x);
-  // Serial.print("Magnetic Y: "); Serial.println(data.magnetic_y);
-  // Serial.print("Magnetic Z: "); Serial.println(data.magnetic_z);
-  // Serial.print("Quat W: "); Serial.println(data.quat_w);
-  // Serial.print("Quat X: "); Serial.println(data.quat_x);
-  // Serial.print("Quat Y: "); Serial.println(data.quat_y);
-  // Serial.print("Quat Z: "); Serial.println(data.quat_z);
-  // Serial.print("GPS Lat: "); Serial.println(data.gps_lat);
-  // Serial.print("GPS Long: "); Serial.println(data.gps_long);
-  // Serial.print("GPS Alt: "); Serial.println(data.gps_alt);
-  // Serial.println("==================");
-  //Serial.println(Serial.availableForWrite());
+  // Only uncomment this for debugging, it should not be printing during a launch
+  // printPacket(data)
+
+  // This sends the start marker for the packet
+  Serial.write(byte(START_MARKER));
+  // This sends our data packet
   Serial.write((byte*)&data, sizeof(data));
-  
 }
