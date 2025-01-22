@@ -6,7 +6,8 @@ from typing import Required, TypedDict
 class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields are NotRequired
     """
     Represents a collection of all data that the logger can log in a line. Not every field will be
-    filled in every packet.
+    filled in every packet. If you want properties from another packet to be logged, you have to
+    make sure they have the exact same name.
     """
 
     state: Required[str]
