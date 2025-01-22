@@ -34,7 +34,7 @@ def run_flight(args: argparse.Namespace) -> None:
     mock_time_start = time.time()
 
     imu, logger, data_processor = create_components(args)
-    # Initialize the airbrakes context and display
+    # Initialize the payload context and display
     payload = PayloadContext(imu, logger, data_processor)
     flight_display = FlightDisplay(payload, mock_time_start, args)
 
@@ -93,7 +93,7 @@ def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, is_m
             # Stop the mock replay naturally if not interrupted
             flight_display.end_mock_natural.set()
     finally:
-        # Stop the display and airbrakes
+        # Stop the display and payload
         flight_display.stop()
         payload.stop()
 

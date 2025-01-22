@@ -82,9 +82,9 @@ struct DataPacket collect(struct DataPacket packet) {
     if (bno.getSensorEvent(&sensor_value)) {
       switch (sensor_value.sensorId) {
         case SH2_ACCELEROMETER:
-          packet.comp_accel_x = float(sensor_value.un.accelerometer.x);
-          packet.comp_accel_y = float(sensor_value.un.accelerometer.y);
-          packet.comp_accel_z = float(sensor_value.un.accelerometer.z);
+          packet.comp_accel_x = float(-sensor_value.un.accelerometer.x);
+          packet.comp_accel_y = float(-sensor_value.un.accelerometer.y);
+          packet.comp_accel_z = float(-sensor_value.un.accelerometer.z);
           executed_cases |= (1 << 0); // Mark case 0 as executed
           break;
 
@@ -172,11 +172,6 @@ void loop() {
   // Serial.print("GPS Alt: "); Serial.println(data.gps_alt);
   // Serial.println("==================");
   //Serial.println(Serial.availableForWrite());
-  if (Serial.availableForWrite() >= sizeof(data)) {
-    Serial.write('\n');
-    Serial.write((byte*)&data, sizeof(data));
-  } else {
-    Serial.println(Serial.availableForWrite());
-  }
+  Serial.write((byte*)&data, sizeof(data));
   
 }
