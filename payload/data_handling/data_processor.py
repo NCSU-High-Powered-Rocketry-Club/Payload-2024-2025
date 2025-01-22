@@ -107,7 +107,7 @@ class IMUDataProcessor:
         velocity, etc.
         :param data_packet: An IMUDataPacket object to process
         """
-        # If the data points are empty, we don't want to try to process anything
+        # If we don't have a data packet, return early
         if not data_packet:
             return
 
@@ -246,4 +246,4 @@ class IMUDataProcessor:
         """
         # calculate the time difference between the data packets
         # We are converting from ms to s, since we don't want to have a velocity in m/ms^2
-        return np.diff([self._last_data_packet.timestamp, self._data_packet.timestamp])[0]
+        return np.float64((self._data_packet.timestamp - self._last_data_packet.timestamp) / 1000.0)
