@@ -35,7 +35,7 @@ class IMU(BaseIMU):
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
         return IMUDataPacket(*unpacked_data)
 
-    def _fetch_data(self) -> IMUDataPacket | None:
+    def fetch_data(self) -> IMUDataPacket | None:
         """
         Continuously fetch data packets from the IMU and process them.
         """

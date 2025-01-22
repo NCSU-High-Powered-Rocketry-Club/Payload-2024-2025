@@ -17,4 +17,3 @@ class BaseIMU(ABC):
         """
         Makes a request to the IMU for the next data packet and returns it.
         """
-        return self._fetch_data()

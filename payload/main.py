@@ -7,6 +7,7 @@ import time
 from payload.constants import BAUD_RATE, LOGS_PATH, SERIAL_PORT
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
+from payload.hardware.base_imu import BaseIMU
 from payload.hardware.imu import IMU
 from payload.mock.display import FlightDisplay
 from payload.mock.mock_imu import MockIMU
@@ -43,7 +44,7 @@ def run_flight(args: argparse.Namespace) -> None:
 
 def create_components(
     args: argparse.Namespace,
-) -> tuple[IMU, Logger, IMUDataProcessor]:
+) -> tuple[BaseIMU, Logger, IMUDataProcessor]:
     """
     Creates the system components needed for the payload system. Depending on its arguments, it
     will return either mock or real components.
