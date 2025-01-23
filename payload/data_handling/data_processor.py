@@ -141,6 +141,14 @@ class IMUDataProcessor:
             vertical_velocity=self._vertical_velocity,
             vertical_acceleration=self._rotated_acceleration,
             time_since_last_data_packet=self._time_difference,
+            maximum_altitude=self.max_altitude,
+            maximum_velocity=self.max_vertical_velocity,
+            # the following are placeholders
+            pitch=0.0,
+            roll=0.0,
+            yaw=0.0,
+            crew_survivability=0.0,
+            landing_velocity=0.0,
         )
 
     def _first_update(self) -> None:
