@@ -2,7 +2,11 @@ import re
 import subprocess
 import threading
 import time
-import RPi.GPIO as GPIO
+
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    pass
 
 
 class Transmitter:

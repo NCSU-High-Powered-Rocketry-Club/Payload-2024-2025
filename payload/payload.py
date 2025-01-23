@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.base_imu import BaseIMU
+from payload.hardware.transmitter import Transmitter
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
@@ -30,6 +31,7 @@ class PayloadContext:
         "processed_data_packet",
         "shutdown_requested",
         "state",
+        "transmitter"
     )
 
     def __init__(
@@ -37,6 +39,7 @@ class PayloadContext:
         imu: BaseIMU,
         logger: Logger,
         data_processor: IMUDataProcessor,
+        transmitter: Transmitter,
     ) -> None:
         """
         Initializes the payload context with the specified hardware objects, logger, and data
@@ -50,6 +53,7 @@ class PayloadContext:
         self.imu: BaseIMU = imu
         self.logger: Logger = logger
         self.data_processor: IMUDataProcessor = data_processor
+        self.transmitter: Transmitter = transmitter
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
@@ -71,6 +75,7 @@ class PayloadContext:
         if self.shutdown_requested:
             return
         self.imu.stop()
+        self.transmitter.stop()
         self.logger.stop()
         self.shutdown_requested = True
 
@@ -103,3 +108,12 @@ class PayloadContext:
             self.imu_data_packet,
             self.processed_data_packet,
         )
+
+    def transmit_data(self) -> None:
+        """
+        Transmits the processed data packet to the ground station using the transmitter.
+        """
+        # We check here because the mock doesn't have a transmitter
+        if self.transmitter:
+            # TODO get it to send the data packet
+            self.transmitter.send_message("Hello, World!")

@@ -4,11 +4,13 @@ and run the main loop."""
 import argparse
 import time
 
-from payload.constants import BAUD_RATE, LOGS_PATH, SERIAL_PORT
+from payload.constants import BAUD_RATE, LOGS_PATH, SERIAL_PORT, TRANSMITTER_PIN, \
+    DIREWOLF_CONFIG_PATH
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.base_imu import BaseIMU
 from payload.hardware.imu import IMU
+from payload.hardware.transmitter import Transmitter
 from payload.mock.display import FlightDisplay
 from payload.mock.mock_imu import MockIMU
 from payload.mock.mock_logger import MockLogger
@@ -33,9 +35,9 @@ def run_mock_flight() -> None:
 def run_flight(args: argparse.Namespace) -> None:
     mock_time_start = time.time()
 
-    imu, logger, data_processor = create_components(args)
+    imu, logger, data_processor, transmitter = create_components(args)
     # Initialize the payload context and display
-    payload = PayloadContext(imu, logger, data_processor)
+    payload = PayloadContext(imu, logger, data_processor, transmitter)
     flight_display = FlightDisplay(payload, mock_time_start, args)
 
     # Run the main flight loop
@@ -44,7 +46,7 @@ def run_flight(args: argparse.Namespace) -> None:
 
 def create_components(
     args: argparse.Namespace,
-) -> tuple[BaseIMU, Logger, IMUDataProcessor]:
+) -> tuple[BaseIMU, Logger, IMUDataProcessor, Transmitter]:
     """
     Creates the system components needed for the payload system. Depending on its arguments, it
     will return either mock or real components.
@@ -57,14 +59,16 @@ def create_components(
             log_file_path=args.path,
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
+        transmitter = None
     else:
         # Use real hardware components
         imu = IMU(SERIAL_PORT, BAUD_RATE)
         logger = Logger(LOGS_PATH)
+        transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
 
     # Initialize data processing
     data_processor = IMUDataProcessor()
-    return imu, logger, data_processor
+    return imu, logger, data_processor, transmitter
 
 
 def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, is_mock: bool) -> None:

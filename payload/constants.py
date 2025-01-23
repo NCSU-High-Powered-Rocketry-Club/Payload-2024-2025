@@ -136,3 +136,12 @@ LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED = 50.0
 # -------------------------------------------------------
 GRAVITY_METERS_PER_SECOND_SQUARED = 9.798
 """This is the standard gravity on Earth."""
+
+# -------------------------------------------------------
+# Transmitter Configuration
+# -------------------------------------------------------
+TRANSMITTER_PIN = 8
+"""This is the GPIO pin that the transmitter is connected to."""
+
+DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
+"""The path to the Direwolf configuration file."""
