@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.base_imu import BaseIMU
+from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter
 from payload.state import StandbyState, State
 
@@ -31,7 +32,8 @@ class PayloadContext:
         "processed_data_packet",
         "shutdown_requested",
         "state",
-        "transmitter"
+        "transmitter",
+        "receiver",
     )
 
     def __init__(
@@ -40,6 +42,7 @@ class PayloadContext:
         logger: Logger,
         data_processor: IMUDataProcessor,
         transmitter: Transmitter,
+        receiver: Receiver,
     ) -> None:
         """
         Initializes the payload context with the specified hardware objects, logger, and data
@@ -54,6 +57,7 @@ class PayloadContext:
         self.logger: Logger = logger
         self.data_processor: IMUDataProcessor = data_processor
         self.transmitter: Transmitter = transmitter
+        self.receiver: Receiver = receiver
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
@@ -65,6 +69,7 @@ class PayloadContext:
         """
         Starts logger processes. This is called before the main while loop starts.
         """
+        self.receiver.start()
         self.logger.start()
 
     def stop(self) -> None:
@@ -75,6 +80,7 @@ class PayloadContext:
         if self.shutdown_requested:
             return
         self.imu.stop()
+        self.receiver.stop()
         self.transmitter.stop()
         self.logger.stop()
         self.shutdown_requested = True

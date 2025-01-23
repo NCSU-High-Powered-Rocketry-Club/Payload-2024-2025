@@ -10,6 +10,7 @@ from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.base_imu import BaseIMU
 from payload.hardware.imu import IMU
+from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter
 from payload.mock.display import FlightDisplay
 from payload.mock.mock_imu import MockIMU
@@ -35,9 +36,9 @@ def run_mock_flight() -> None:
 def run_flight(args: argparse.Namespace) -> None:
     mock_time_start = time.time()
 
-    imu, logger, data_processor, transmitter = create_components(args)
+    imu, logger, data_processor, transmitter, receiver = create_components(args)
     # Initialize the payload context and display
-    payload = PayloadContext(imu, logger, data_processor, transmitter)
+    payload = PayloadContext(imu, logger, data_processor, transmitter, receiver)
     flight_display = FlightDisplay(payload, mock_time_start, args)
 
     # Run the main flight loop
@@ -46,7 +47,7 @@ def run_flight(args: argparse.Namespace) -> None:
 
 def create_components(
     args: argparse.Namespace,
-) -> tuple[BaseIMU, Logger, IMUDataProcessor, Transmitter]:
+) -> tuple[BaseIMU, Logger, IMUDataProcessor, Transmitter, Receiver]:
     """
     Creates the system components needed for the payload system. Depending on its arguments, it
     will return either mock or real components.
@@ -60,15 +61,17 @@ def create_components(
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
         transmitter = None
+        receiver = None
     else:
         # Use real hardware components
         imu = IMU(SERIAL_PORT, BAUD_RATE)
         logger = Logger(LOGS_PATH)
         transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
+        receiver = Receiver(SERIAL_PORT, BAUD_RATE)
 
     # Initialize data processing
     data_processor = IMUDataProcessor()
-    return imu, logger, data_processor, transmitter
+    return imu, logger, data_processor, transmitter, receiver
 
 
 def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, is_mock: bool) -> None:

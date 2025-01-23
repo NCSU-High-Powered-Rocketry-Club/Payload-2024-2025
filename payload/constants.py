@@ -145,3 +145,9 @@ TRANSMITTER_PIN = 8
 
 DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
 """The path to the Direwolf configuration file."""
+
+# -------------------------------------------------------
+# Receiver Configuration
+# -------------------------------------------------------
+RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
+RECEIVER_BAUD_RATE = 9600
