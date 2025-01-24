@@ -15,6 +15,8 @@ class IMU(BaseIMU):
     Arduino.
     """
 
+    __slots__ = ("_serial",)
+
     def __init__(self, port: str, baud_rate: int) -> None:
         """
         Initializes the object that interacts with the Arduino connected to the pi.

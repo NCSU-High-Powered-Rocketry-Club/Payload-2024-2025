@@ -1,7 +1,8 @@
 import re
 import subprocess
 import time
-import RPi.GPIO as GPIO
+
+from RPi import GPIO
 
 # GPIO pin setup
 GPIO_PIN = 8
@@ -25,7 +26,7 @@ def cleanup_gpio():
 
 
 def update_beacon_comment(config_path, new_comment):
-    with open(config_path, "r") as file:
+    with open(config_path) as file:
         lines = file.readlines()
 
     found = False

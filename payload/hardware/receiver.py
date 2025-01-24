@@ -12,6 +12,8 @@ class Receiver(BaseReceiver):
     messages from the transmitter and then makes them available to the main thread.
     """
 
+    __slots__ = ("serial_port", "baud_rate", "_latest_message", "_stop_event", "_thread")
+
     def __init__(self, serial_port: str, baud_rate: int) -> None:
         self.serial_port = serial_port
         self.baud_rate = baud_rate

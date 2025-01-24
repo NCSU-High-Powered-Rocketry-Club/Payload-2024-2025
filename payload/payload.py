@@ -1,15 +1,15 @@
 """Module which provides a high level interface to the payload system on the rocket."""
-import time
+
 from typing import TYPE_CHECKING
 
+from payload.constants import STOP_MESSAGE, TRANSMIT_MESSAGE
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
-from payload.interfaces.base_imu import BaseIMU
 from payload.hardware.transmitter import Transmitter
+from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
 from payload.state import StandbyState, State
-from payload.constants import TRANSMIT_MESSAGE, STOP_MESSAGE, TRANSMISSION_DELAY
 
 if TYPE_CHECKING:
     from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
@@ -105,7 +105,6 @@ class PayloadContext:
         self.imu_data_packet = self.imu.fetch_data()
 
         # If we don't have a data packet, return early
-        # TODO: we might want to handle this differently and let the states decide what to do
         if not self.imu_data_packet:
             return
 
@@ -115,7 +114,10 @@ class PayloadContext:
         # Get the processed data packet from the data processor
         self.processed_data_packet = self.data_processor.get_processed_data_packet()
 
-        # Update the state machine based on the latest processed data
+        # Check if we have a message from the ground station
+        self.remote_override(self.receiver.latest_message)
+
+        # Update the state machine
         self.state.update()
 
         self.context_data_packet = ContextDataPacket(
@@ -129,35 +131,22 @@ class PayloadContext:
             self.processed_data_packet,
         )
 
-    def format_data_packet(self, message: "ProcessedDataPacket") -> str:
-        res = ""
-        res += f"ca: {message.current_altitude}, "
-        res += f"vv: {message.vertical_velocity}, "
-        res += f"va: {message.vertical_acceleration}, "
-        res += f"tsldp: {message.time_since_last_data_packet}, "
-        res += f"ma: {message.maximum_altitude}, "
-        res += f"p: {message.pitch}, "
-        res += f"r: {message.roll}, "
-        res += f"y: {message.yaw}, "
-        res += f"mv: {message.maximum_velocity}, "
-        res += f"lv: {message.landing_velocity}, "
-        res += f"cs: {message.crew_survivability}, "
-
-        return res
-
     def transmit_data(self) -> None:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            message_string = self.format_data_packet(self.processed_data_packet)
+            message_string = "start: " + str(self.processed_data_packet)
             self.transmitter.send_message(message_string)
         else:
             print("No transmitter!")
 
     def remote_override(self, message: str):
-        # This handles the messages the receiver could get
+        """
+        Receives a message from the ground station and acts on it.
+        :param message: The message received from the ground station.
+        """
         if message == TRANSMIT_MESSAGE:
             self.transmitting_latch = True
         elif message == STOP_MESSAGE:

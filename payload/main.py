@@ -5,22 +5,22 @@ import argparse
 import time
 
 from payload.constants import (
+    ARDUINO_SERIAL_PORT,
     BAUD_RATE,
     DIREWOLF_CONFIG_PATH,
     LOGS_PATH,
-    RECEIVER_SERIAL_PORT,
-    ARDUINO_SERIAL_PORT,
-    TRANSMITTER_PIN,
     MOCK_RECEIVER_INITIAL_DELAY,
     MOCK_RECEIVER_RECEIVE_DELAY,
+    RECEIVER_SERIAL_PORT,
     STOP_MESSAGE,
+    TRANSMITTER_PIN,
 )
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
-from payload.interfaces.base_imu import BaseIMU
 from payload.hardware.imu import IMU
 from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter
+from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
 from payload.mock.display import FlightDisplay
 from payload.mock.mock_imu import MockIMU

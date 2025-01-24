@@ -1,5 +1,6 @@
 import threading
 import time
+
 from payload.constants import NO_MESSAGE
 from payload.interfaces.base_receiver import BaseReceiver
 
@@ -9,6 +10,15 @@ class MockReceiver(BaseReceiver):
     This is a mock class that simulates the Receiver. It will return a predetermined message when
     fetch_data is called.
     """
+
+    __slots__ = (
+        "message",
+        "initial_delay",
+        "receive_delay",
+        "receive_message",
+        "_running",
+        "_thread",
+    )
 
     def __init__(self, initial_delay: float, receive_delay: float, receive_message: str) -> None:
         self.message = NO_MESSAGE

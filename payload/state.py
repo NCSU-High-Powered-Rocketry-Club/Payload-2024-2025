@@ -55,6 +55,7 @@ class State(ABC):
         Called every loop iteration. Uses the context to interact with the hardware and decides
         when to move to the next state.
         """
+        # If we have decided to remote override the payload, we will start the transmission here
         if self.context.transmitting_latch:
             if time.time() - self.last_transmission_time > TRANSMISSION_DELAY:
                 self.last_transmission_time = time.time()

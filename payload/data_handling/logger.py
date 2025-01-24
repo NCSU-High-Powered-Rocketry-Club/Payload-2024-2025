@@ -3,14 +3,12 @@
 import csv
 import multiprocessing
 import signal
-from collections import deque
 from pathlib import Path
 from typing import Any, Literal
 
 from msgspec import to_builtins
 
 from payload.constants import (
-    LOG_BUFFER_SIZE,
     MAX_GET_TIMEOUT_SECONDS,
     STOP_SIGNAL,
 )
@@ -35,7 +33,6 @@ class Logger:
     LOG_BUFFER_STATES = ("StandbyState", "LandedState")
 
     __slots__ = (
-        "_log_buffer",
         "_log_counter",
         "_log_process",
         "_log_queue",
@@ -62,7 +59,6 @@ class Logger:
 
         # Buffer for StandbyState and LandedState
         self._log_counter = 0
-        self._log_buffer = deque(maxlen=LOG_BUFFER_SIZE)
 
         # Create a new log file with the next number in sequence
         self.log_path = log_dir / f"log_{max_suffix + 1}.csv"
@@ -90,14 +86,6 @@ class Logger:
         Returns whether the logging process is running.
         """
         return self._log_process.is_alive()
-
-    # TODO: remove this
-    @property
-    def is_log_buffer_full(self) -> bool:
-        """
-        Returns whether the log buffer is full.
-        """
-        return len(self._log_buffer) == LOG_BUFFER_SIZE
 
     @staticmethod
     def _convert_unknown_type(obj_type: Any) -> str:

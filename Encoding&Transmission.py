@@ -1,11 +1,8 @@
 import re
-
 import subprocess
-
 import time
 
-import RPi.GPIO as GPIO
-
+from RPi import GPIO
 
 # GPIO pin setup
 
@@ -31,7 +28,7 @@ def cleanup_gpio():
 
 
 def update_beacon_comment(config_path, new_comment):
-    with open(config_path, "r") as file:
+    with open(config_path) as file:
         lines = file.readlines()
 
     found = False
@@ -73,7 +70,7 @@ def main():
     print("Please enter the new beacon comment:")
 
     new_comment = (
-        "test message 1!2@3#4$5%6^7&8*9(0)-_=+[{]}\|;:'" "] "
+        r"test message 1!2@3#4$5%6^7&8*9(0)-_=+[{]}\|;:'" "] "
     )  # Take user input for the new comment
 
     if update_beacon_comment(config_path, new_comment):

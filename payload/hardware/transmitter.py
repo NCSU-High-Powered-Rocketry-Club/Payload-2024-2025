@@ -3,7 +3,6 @@ import subprocess
 import threading
 import time
 
-
 try:
     from RPi import GPIO
 except ImportError:
@@ -15,6 +14,8 @@ class Transmitter:
     This is the class that controls the SA85transceiver. It is responsible for sending messages
     to our ground station.
     """
+
+    __slots__ = ("gpio_pin", "config_path")
 
     def __init__(self, gpio_pin, config_path) -> None:
         """
@@ -46,7 +47,7 @@ class Transmitter:
         :param new_comment: The new comment to set in the Direwolf configuration file.
         """
         try:
-            with open(self.config_path, "r") as file:
+            with open(self.config_path) as file:
                 lines = file.readlines()
 
             found = False

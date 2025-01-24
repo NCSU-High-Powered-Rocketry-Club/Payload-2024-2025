@@ -13,7 +13,7 @@ class MockLogger(Logger):
     can be computationally expensive.
     """
 
-    __slots__ = ("delete_log_file",)
+    __slots__ = ("delete_log_file", "_log_process")
 
     def __init__(self, log_file_path: Path, delete_log_file: bool = True):
         """
