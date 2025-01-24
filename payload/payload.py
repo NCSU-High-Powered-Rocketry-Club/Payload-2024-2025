@@ -99,8 +99,6 @@ class PayloadContext:
         state.
         """
 
-        print("context loop")
-
         # We only get one data packet at a time from the IMU as it runs very slowly
         self.imu_data_packet = self.imu.fetch_data()
 
@@ -128,7 +126,7 @@ class PayloadContext:
             self.processed_data_packet,
         )
 
-    def transmit_data(self) -> None:
+    def transmit_data(self, message) -> None:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """

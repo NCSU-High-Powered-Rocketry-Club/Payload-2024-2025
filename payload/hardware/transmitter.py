@@ -4,11 +4,10 @@ import threading
 import time
 
 
-from RPi import GPIO
-# try:
-#     from RPi import GPIO
-# except ImportError:
-#     pass
+try:
+    from RPi import GPIO
+except ImportError:
+    pass
 
 
 class Transmitter:

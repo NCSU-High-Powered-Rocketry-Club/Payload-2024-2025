@@ -26,7 +26,7 @@ class DisplayEndingType(StrEnum):
 # -------------------------------------------------------
 
 SERIAL_PORT = "/dev/ttyUSB0"
-# SERIAL_PORT = "/dev/ttyUSB0"
+# SERIAL_PORT = "COM5"
 
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi."""

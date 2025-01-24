@@ -72,10 +72,12 @@ def create_components(
         receiver = Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE) if args.real_receiver else None
     else:
         # Use real hardware components
-        imu = IMU(RECEIVER_SERIAL_PORT, BAUD_RATE)
+        imu = IMU(SERIAL_PORT, BAUD_RATE)
         logger = Logger(LOGS_PATH)
-        transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
-        receiver = Receiver(SERIAL_PORT, BAUD_RATE)
+        # transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
+        # receiver = Receiver(SERIAL_PORT, BAUD_RATE)
+        transmitter = None
+        receiver = None
 
     # Initialize data processing
     data_processor = IMUDataProcessor()
