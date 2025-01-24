@@ -30,7 +30,7 @@ SERIAL_PORT = "COM5"
 connects to the Raspberry Pi."""
 BAUD_RATE = 115200
 """The baud rate of the channel"""
-PACKET_START_MARKER = b"\xAA"
+PACKET_START_MARKER = b"\xaa"
 """The start marker of the data packet. This helps use to know where a packet starts in the stream
 of bytes."""
 PACKET_BYTE_SIZE = 84

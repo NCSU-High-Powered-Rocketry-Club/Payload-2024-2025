@@ -10,7 +10,6 @@ from typing import Any, Literal
 from msgspec import to_builtins
 
 from payload.constants import (
-    IDLE_LOG_CAPACITY,
     LOG_BUFFER_SIZE,
     MAX_GET_TIMEOUT_SECONDS,
     STOP_SIGNAL,
@@ -134,7 +133,8 @@ class Logger:
 
         # Convert the processed data packet to a dictionary
         processed_data_packet_dict: dict[str, str] = to_builtins(
-            processed_data_packet, enc_hook=Logger._convert_unknown_type  # converts np float to str
+            processed_data_packet,
+            enc_hook=Logger._convert_unknown_type,  # converts np float to str
         )
         # Let's drop the "time_since_last_data_packet" field:
         processed_data_packet_dict.pop("time_since_last_data_packet", None)

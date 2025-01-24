@@ -4,8 +4,13 @@ and run the main loop."""
 import argparse
 import time
 
-from payload.constants import BAUD_RATE, LOGS_PATH, SERIAL_PORT, TRANSMITTER_PIN, \
-    DIREWOLF_CONFIG_PATH
+from payload.constants import (
+    BAUD_RATE,
+    DIREWOLF_CONFIG_PATH,
+    LOGS_PATH,
+    SERIAL_PORT,
+    TRANSMITTER_PIN,
+)
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.base_imu import BaseIMU

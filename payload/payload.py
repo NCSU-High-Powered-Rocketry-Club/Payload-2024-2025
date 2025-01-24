@@ -30,10 +30,10 @@ class PayloadContext:
         "imu_data_packet",
         "logger",
         "processed_data_packet",
+        "receiver",
         "shutdown_requested",
         "state",
         "transmitter",
-        "receiver",
     )
 
     def __init__(
@@ -69,7 +69,9 @@ class PayloadContext:
         """
         Starts logger processes. This is called before the main while loop starts.
         """
-        self.receiver.start()
+        # If it's a mock, we don't want to start the receiver
+        if self.receiver:
+            self.receiver.start()
         self.logger.start()
 
     def stop(self) -> None:
@@ -80,8 +82,10 @@ class PayloadContext:
         if self.shutdown_requested:
             return
         self.imu.stop()
-        self.receiver.stop()
-        self.transmitter.stop()
+        if self.receiver:
+            self.receiver.stop()
+        if self.transmitter:
+            self.transmitter.stop()
         self.logger.stop()
         self.shutdown_requested = True
 

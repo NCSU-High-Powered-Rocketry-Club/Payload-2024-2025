@@ -1,5 +1,6 @@
-import serial
 import threading
+
+import serial
 
 
 class Receiver:
@@ -7,6 +8,7 @@ class Receiver:
     This is the class that controls the Xbee Pro s3b. On a separate thread, it listens for incoming
     messages from the transmitter and then makes them available to the main thread.
     """
+
     def __init__(self, serial_port: str, baud_rate: int) -> None:
         self.serial_port = serial_port
         self.baud_rate = baud_rate
@@ -39,7 +41,7 @@ class Receiver:
                 print(f"Listening on {self.serial_port} at {self.baud_rate} baud rate...")
                 while not self._stop_event.is_set():
                     if ser.in_waiting > 0:  # Check if data is available
-                        line = ser.readline().decode('utf-8', errors='ignore').strip()
+                        line = ser.readline().decode("utf-8", errors="ignore").strip()
                         if line:
                             self._latest_message = line
                             print(f"Received: {line}")
