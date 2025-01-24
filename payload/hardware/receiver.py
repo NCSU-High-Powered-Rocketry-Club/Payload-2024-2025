@@ -1,0 +1,51 @@
+import serial
+import threading
+
+
+class Receiver:
+    """
+    This is the class that controls the Xbee Pro s3b. On a separate thread, it listens for incoming
+    messages from the transmitter and then makes them available to the main thread.
+    """
+    def __init__(self, serial_port: str, baud_rate: int) -> None:
+        self.serial_port = serial_port
+        self.baud_rate = baud_rate
+        self._latest_message: str = "No Message Received"
+        self._stop_event = threading.Event()
+        self._thread = threading.Thread(target=self._listen, daemon=True)
+
+    @property
+    def latest_message(self) -> str:
+        """Property to get the most recently received message."""
+        return self._latest_message
+
+    def start(self) -> None:
+        """Starts the listening thread."""
+        if not self._thread.is_alive():
+            self._stop_event.clear()
+            self._thread = threading.Thread(target=self._listen, daemon=True)
+            self._thread.start()
+
+    def stop(self) -> None:
+        """Stops the listening thread."""
+        self._stop_event.set()
+        if self._thread.is_alive():
+            self._thread.join()
+
+    def _listen(self) -> None:
+        """Continuously listens for serial input."""
+        try:
+            with serial.Serial(self.serial_port, self.baud_rate) as ser:
+                print(f"Listening on {self.serial_port} at {self.baud_rate} baud rate...")
+                while not self._stop_event.is_set():
+                    if ser.in_waiting > 0:  # Check if data is available
+                        line = ser.readline().decode('utf-8', errors='ignore').strip()
+                        if line:
+                            self._latest_message = line
+                            print(f"Received: {line}")
+        except serial.SerialException as e:
+            print(f"Error: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+        finally:
+            print("Stopped listening.")

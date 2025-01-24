@@ -4,7 +4,7 @@ import struct
 
 import serial
 
-from payload.constants import PACKET_BYTE_SIZE
+from payload.constants import PACKET_BYTE_SIZE, PACKET_START_MARKER
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.hardware.base_imu import BaseIMU
 
@@ -34,14 +34,18 @@ class IMU(BaseIMU):
         """
         # Iterate through each data point in the packet.
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
-        print(unpacked_data[0:2])
         return IMUDataPacket(*unpacked_data)
 
     def fetch_data(self) -> IMUDataPacket | None:
         """
-        Continuously fetch data packets from the IMU and process them.
+        Fetches a data packet from the IMU in a non-blocking manner.
+        It keeps reading until it finds a valid start marker, then returns a full packet.
+        If there is not enough data, it returns None.
         """
-        if self._serial.in_waiting >= PACKET_BYTE_SIZE:
-            serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
-            return IMU._process_packet_data(serialized_data_packet)
+        while self._serial.in_waiting >= PACKET_BYTE_SIZE + 1:  # The + 1 is for the start marker
+            # Reads a single byte and checks if it is the start marker
+            byte = self._serial.read(1)
+            if byte == PACKET_START_MARKER:
+                serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
+                return IMU._process_packet_data(serialized_data_packet)
         return None

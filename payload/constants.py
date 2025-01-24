@@ -25,11 +25,14 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-SERIAL_PORT = "COM8"
+SERIAL_PORT = "COM5"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi."""
 BAUD_RATE = 115200
 """The baud rate of the channel"""
+PACKET_START_MARKER = b"\xAA"
+"""The start marker of the data packet. This helps use to know where a packet starts in the stream
+of bytes."""
 PACKET_BYTE_SIZE = 84
 """Size of the data packet being sent from the Arduino in bytes"""
 
@@ -133,3 +136,18 @@ LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED = 50.0
 # -------------------------------------------------------
 GRAVITY_METERS_PER_SECOND_SQUARED = 9.798
 """This is the standard gravity on Earth."""
+
+# -------------------------------------------------------
+# Transmitter Configuration
+# -------------------------------------------------------
+TRANSMITTER_PIN = 8
+"""This is the GPIO pin that the transmitter is connected to."""
+
+DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
+"""The path to the Direwolf configuration file."""
+
+# -------------------------------------------------------
+# Receiver Configuration
+# -------------------------------------------------------
+RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
+RECEIVER_BAUD_RATE = 9600
