@@ -1,9 +1,10 @@
 """Module which provides a high level interface to the payload system on the rocket."""
-
+import time
 from typing import TYPE_CHECKING
 
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
+from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.hardware.base_imu import BaseIMU
 from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter
@@ -25,6 +26,7 @@ class PayloadContext:
     """
 
     __slots__ = (
+        "context_data_packet",
         "data_processor",
         "imu",
         "imu_data_packet",
@@ -64,6 +66,7 @@ class PayloadContext:
         self.shutdown_requested = False
         self.imu_data_packet: IMUDataPacket | None = None
         self.processed_data_packet: ProcessedDataPacket | None = None
+        self.context_data_packet: ContextDataPacket | None = None
 
     def start(self) -> None:
         """
@@ -112,9 +115,12 @@ class PayloadContext:
         # Update the state machine based on the latest processed data
         self.state.update()
 
+        # TODO: mock a receiver
+        self.context_data_packet = ContextDataPacket(self.state.name[0], f"{time.time()}")
+
         # Logs the current state, extension, IMU data, and processed data
         self.logger.log(
-            self.state.name,
+            self.context_data_packet,
             self.imu_data_packet,
             self.processed_data_packet,
         )

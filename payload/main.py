@@ -65,8 +65,10 @@ def create_components(
             log_file_path=args.path,
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
-        transmitter = None
-        receiver = None
+        transmitter = (
+            Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH) if args.real_transmitter else None
+        )
+        receiver = Receiver(SERIAL_PORT, BAUD_RATE) if args.real_receiver else None
     else:
         # Use real hardware components
         imu = IMU(SERIAL_PORT, BAUD_RATE)

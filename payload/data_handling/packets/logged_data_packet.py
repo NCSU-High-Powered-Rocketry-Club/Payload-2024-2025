@@ -1,6 +1,6 @@
 """Module for describing the data packet for the logger to log"""
 
-from typing import Required, TypedDict
+from typing import TypedDict
 
 
 class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields are NotRequired
@@ -10,7 +10,9 @@ class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields 
     make sure they have the exact same name.
     """
 
-    state: Required[str]
+    # Context Data Packet Fields
+    state_name: str
+    received_message: str | None
 
     # IMU Data Packet Fields
     timestamp: int

@@ -14,6 +14,7 @@ from payload.constants import (
     MAX_GET_TIMEOUT_SECONDS,
     STOP_SIGNAL,
 )
+from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.logged_data_packet import LoggedDataPacket
 from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
@@ -109,13 +110,13 @@ class Logger:
 
     @staticmethod
     def _prepare_log_dict(
-        state: str,
+        context_data_packet: ContextDataPacket,
         imu_data_packet: IMUDataPacket,
         processed_data_packet: ProcessedDataPacket,
     ) -> LoggedDataPacket:
         """
         Creates a data packet dictionary representing a row of data to be logged.
-        :param state: The current state of the payload.
+        :param context_data_packet: The context data packet to log.
         :param imu_data_packet: The IMU data packet to log.
         :param processed_data_packet: The processed data packet to log.
         :return: The dictionary representing what will be logged.
@@ -123,9 +124,12 @@ class Logger:
 
         # Let's first add the state field (This might be expanded into a context data pack like in
         # airbrakes code):
-        logged_data_packet: LoggedDataPacket = {
-            "state": state,
-        }
+        logged_data_packet: LoggedDataPacket = {}
+
+        # Convert the context data packet to a dictionary and add it to the logged data packet
+        context_data_packet_dict: dict[str, str] = to_builtins(context_data_packet)
+        logged_data_packet.update(context_data_packet_dict)
+
         # Convert the imu data packet to a dictionary
         # Using to_builtins() is much faster than asdict() for some reason
         imu_data_packet_dict: dict[str, int | float] = to_builtins(imu_data_packet)
@@ -159,21 +163,19 @@ class Logger:
 
     def log(
         self,
-        state: str,
+        context_data_packet: ContextDataPacket,
         imu_data_packet: IMUDataPacket,
         processed_data_packet: ProcessedDataPacket,
     ) -> None:
         """
         Logs the current state and IMU data to the CSV file.
-        :param state: The current state of the payload.
+        :param context_data_packet: The context data packet to log.
         :param imu_data_packet: The IMU data packets to log.
         :param processed_data_packet: The processed data packets to log.
         """
-        # We only want the first letter of the state to save space
-        state_letter = state[0]
         # We are populating a dictionary with the fields of the logged data packet
         logged_data_packet = Logger._prepare_log_dict(
-            state_letter,
+            context_data_packet,
             imu_data_packet,
             processed_data_packet,
         )
