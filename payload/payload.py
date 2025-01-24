@@ -126,13 +126,29 @@ class PayloadContext:
             self.processed_data_packet,
         )
 
-    def transmit_data(self, message) -> None:
+    def format_data_packet(self, message: "ProcessedDataPacket") -> str:
+        res = ""
+        res += f"current altitude: {message.current_altitude}, "
+        res += f"vertical velocity: {message.vertical_velocity}, "
+        res += f"vertical acceleration: {message.vertical_acceleration}, "
+        res += f"time since last data packet: {message.time_since_last_data_packet}, "
+        res += f"maximum altitude: {message.maximum_altitude}, "
+        res += f"pitch: {message.pitch}, "
+        res += f"roll: {message.roll}, "
+        res += f"yaw: {message.yaw}, "
+        res += f"maximum velocity: {message.maximum_velocity}, "
+        res += f"landing velocity: {message.landing_velocity}, "
+        res += f"crew survivability: {message.crew_survivability}, "
+
+        return res
+
+    def transmit_data(self, message: "ProcessedDataPacket") -> None:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            # TODO get it to send the data packet
-            self.transmitter.send_message("Hello, World!")
+            message_string = self.format_data_packet(message)
+            self.transmitter.send_message(message_string)
         else:
             print("No transmitter!")
