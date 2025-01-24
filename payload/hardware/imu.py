@@ -6,7 +6,7 @@ import serial
 
 from payload.constants import PACKET_BYTE_SIZE, PACKET_START_MARKER
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
-from payload.hardware.base_imu import BaseIMU
+from payload.interfaces.base_imu import BaseIMU
 
 
 class IMU(BaseIMU):

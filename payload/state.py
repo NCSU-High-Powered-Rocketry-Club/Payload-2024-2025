@@ -1,5 +1,5 @@
 """Module for the finite state machine that represents which state of flight we are in."""
-
+import time
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -9,7 +9,7 @@ from payload.constants import (
     MAX_FREE_FALL_SECONDS,
     MAX_VELOCITY_THRESHOLD,
     TAKEOFF_HEIGHT_METERS,
-    TAKEOFF_VELOCITY_METERS_PER_SECOND,
+    TAKEOFF_VELOCITY_METERS_PER_SECOND, TRANSMISSION_DELAY,
 )
 from payload.utils import convert_milliseconds_to_seconds
 
@@ -89,6 +89,8 @@ class StandbyState(State):
             self.next_state()
             return
 
+        self.next_state()
+
     def next_state(self):
         self.context.state = MotorBurnState(self.context)
 
@@ -111,6 +113,8 @@ class MotorBurnState(State):
         if data.vertical_velocity < data.max_vertical_velocity * MAX_VELOCITY_THRESHOLD:
             self.next_state()
             return
+
+        self.next_state()
 
     def next_state(self):
         self.context.state = CoastState(self.context)
@@ -139,6 +143,8 @@ class CoastState(State):
         if data.current_altitude <= data.max_altitude * 0.9:
             self.next_state()
             return
+
+        self.next_state()
 
     def next_state(self):
         self.context.state = FreeFallState(self.context)
@@ -170,6 +176,8 @@ class FreeFallState(State):
         ):
             self.next_state()
 
+        self.next_state()
+
     def next_state(self):
         self.context.state = LandedState(self.context)
 
@@ -179,13 +187,15 @@ class LandedState(State):
     When the rocket has landed.
     """
 
-    __slots__ = ()
+    __slots__ = ("last_transmission_time",)
+
+    last_transmission_time: int = 0
 
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""
 
-        if self.context.logger.is_log_buffer_full:
-            self.context.stop()
+        if time.time() - self.last_transmission_time > TRANSMISSION_DELAY:
+            self.context.transmit_data(self.context.processed_data_packet)
 
     def next_state(self):
         # Explicitly do nothing, there is no next state

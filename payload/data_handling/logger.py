@@ -91,6 +91,7 @@ class Logger:
         """
         return self._log_process.is_alive()
 
+    # TODO: remove this
     @property
     def is_log_buffer_full(self) -> bool:
         """

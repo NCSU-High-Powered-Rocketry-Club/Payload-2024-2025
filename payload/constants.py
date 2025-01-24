@@ -146,6 +146,9 @@ TRANSMITTER_PIN = 8
 DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
 """The path to the Direwolf configuration file."""
 
+TRANSMISSION_DELAY = 10.0
+"""The amount of time we wait in between transmissions"""
+
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------

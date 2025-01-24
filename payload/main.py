@@ -13,7 +13,7 @@ from payload.constants import (
 )
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
-from payload.hardware.base_imu import BaseIMU
+from payload.interfaces.base_imu import BaseIMU
 from payload.hardware.imu import IMU
 from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter

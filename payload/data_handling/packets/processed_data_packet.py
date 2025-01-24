@@ -32,3 +32,21 @@ class ProcessedDataPacket(msgspec.Struct):
     landing_velocity: np.float64
     # survivability, in percent
     crew_survivability: np.float64
+
+    def __str__(self):
+        """
+        Creates a string representation of the data packet with each field separated by a comma.
+        """
+        return (
+            f"{self.current_altitude},"
+            f"{self.vertical_velocity},"
+            f"{self.vertical_acceleration},"
+            f"{self.time_since_last_data_packet},"
+            f"{self.maximum_altitude},"
+            f"{self.pitch},"
+            f"{self.roll},"
+            f"{self.yaw},"
+            f"{self.maximum_velocity},"
+            f"{self.landing_velocity},"
+            f"{self.crew_survivability}"
+        )

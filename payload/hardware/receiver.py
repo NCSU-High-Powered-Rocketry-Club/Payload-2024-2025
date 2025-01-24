@@ -2,8 +2,10 @@ import threading
 
 import serial
 
+from payload.interfaces.base_receiver import BaseReceiver
 
-class Receiver:
+
+class Receiver(BaseReceiver):
     """
     This is the class that controls the Xbee Pro s3b. On a separate thread, it listens for incoming
     messages from the transmitter and then makes them available to the main thread.

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
-from payload.hardware.base_imu import BaseIMU
+from payload.interfaces.base_imu import BaseIMU
 from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter
 from payload.state import StandbyState, State

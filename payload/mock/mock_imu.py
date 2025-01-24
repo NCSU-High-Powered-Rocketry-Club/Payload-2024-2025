@@ -7,7 +7,7 @@ import pandas as pd
 
 from payload.constants import FREQUENCY
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
-from payload.hardware.base_imu import BaseIMU
+from payload.interfaces.base_imu import BaseIMU
 
 
 class MockIMU(BaseIMU):
