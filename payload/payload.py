@@ -134,3 +134,5 @@ class PayloadContext:
         if self.transmitter:
             # TODO get it to send the data packet
             self.transmitter.send_message("Hello, World!")
+        else:
+            print("No transmitter!")

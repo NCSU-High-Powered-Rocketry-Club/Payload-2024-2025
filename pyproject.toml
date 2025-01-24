@@ -19,6 +19,7 @@ dependencies = [
     "pyserial",
     "sounddevice",
     "soundfile",
+    "rpi-gpio>=0.7.1",
 ]
 
 [dependency-groups]

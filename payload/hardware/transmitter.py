@@ -12,7 +12,7 @@ except ImportError:
 
 class Transmitter:
     """
-    This is the class that controls the SA858 transceiver. It is responsible for sending messages
+    This is the class that controls the SA85transceiver. It is responsible for sending messages
     to our ground station.
     """
 
@@ -46,7 +46,7 @@ class Transmitter:
         :param new_comment: The new comment to set in the Direwolf configuration file.
         """
         try:
-            with open(self.config_path) as file:
+            with open(self.config_path, 'r') as file:
                 lines = file.readlines()
 
             found = False
@@ -94,6 +94,7 @@ class Transmitter:
         print("Transmission complete. Pin reset.")
 
         subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Stop Direwolf
+        
 
     def stop(self) -> None:
         """

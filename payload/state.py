@@ -199,6 +199,8 @@ class LandedState(State):
         """We use this method to stop the payload system after we have hit our log buffer."""
 
         if time.time() - self.last_transmission_time > TRANSMISSION_DELAY:
+            print("sent message")
+            self.last_transmission_time = time.time()
             self.context.transmit_data(self.context.processed_data_packet)
 
     def next_state(self):
