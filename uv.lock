@@ -389,6 +389,7 @@ dependencies = [
     { name = "pigpio" },
     { name = "psutil" },
     { name = "pyserial" },
+    { name = "rpi-gpio" },
     { name = "scipy" },
     { name = "sounddevice" },
     { name = "soundfile" },
@@ -413,6 +414,7 @@ requires-dist = [
     { name = "pigpio" },
     { name = "psutil" },
     { name = "pyserial" },
+    { name = "rpi-gpio", specifier = ">=0.7.1" },
     { name = "scipy" },
     { name = "sounddevice" },
     { name = "soundfile" },
@@ -563,6 +565,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/ab/3a/0316b28d0761c6734
 wheels = [
     { url = "https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90", size = 242424 },
 ]
+
+[[package]]
+name = "rpi-gpio"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/0f/10b524a12b3445af1c607c27b2f5ed122ef55756e29942900e5c950735f2/RPi.GPIO-0.7.1.tar.gz", hash = "sha256:cd61c4b03c37b62bba4a5acfea9862749c33c618e0295e7e90aa4713fb373b70", size = 29090 }
 
 [[package]]
 name = "ruff"
