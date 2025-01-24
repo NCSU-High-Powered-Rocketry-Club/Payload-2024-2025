@@ -100,6 +100,7 @@ class Transmitter:
         """
         Cleans up the GPIO pins when the transmitter is stopped.
         """
+        self._pull_pin_high()
         GPIO.cleanup()
 
     def send_message(self, message: str) -> None:

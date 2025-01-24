@@ -128,17 +128,17 @@ class PayloadContext:
 
     def format_data_packet(self, message: "ProcessedDataPacket") -> str:
         res = ""
-        res += f"current altitude: {message.current_altitude}, "
-        res += f"vertical velocity: {message.vertical_velocity}, "
-        res += f"vertical acceleration: {message.vertical_acceleration}, "
-        res += f"time since last data packet: {message.time_since_last_data_packet}, "
-        res += f"maximum altitude: {message.maximum_altitude}, "
-        res += f"pitch: {message.pitch}, "
-        res += f"roll: {message.roll}, "
-        res += f"yaw: {message.yaw}, "
-        res += f"maximum velocity: {message.maximum_velocity}, "
-        res += f"landing velocity: {message.landing_velocity}, "
-        res += f"crew survivability: {message.crew_survivability}, "
+        res += f"ca: {message.current_altitude}, "
+        res += f"vv: {message.vertical_velocity}, "
+        res += f"va: {message.vertical_acceleration}, "
+        res += f"tsldp: {message.time_since_last_data_packet}, "
+        res += f"ma: {message.maximum_altitude}, "
+        res += f"p: {message.pitch}, "
+        res += f"r: {message.roll}, "
+        res += f"y: {message.yaw}, "
+        res += f"mv: {message.maximum_velocity}, "
+        res += f"lv: {message.landing_velocity}, "
+        res += f"cs: {message.crew_survivability}, "
 
         return res
 
