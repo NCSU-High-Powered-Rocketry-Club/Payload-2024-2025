@@ -19,13 +19,15 @@ dependencies = [
     "pyserial",
     "sounddevice",
     "soundfile",
-    "rpi-gpio>=0.7.1",
 ]
 
 [dependency-groups]
 dev = [
     "pytest",
     "ruff",
+]
+rpi = [  # Dependencies which only run on the pi.
+    "rpi-gpio>=0.7.1",
 ]
 
 [project.scripts]

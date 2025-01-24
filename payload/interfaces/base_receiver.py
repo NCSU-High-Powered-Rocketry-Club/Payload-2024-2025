@@ -9,7 +9,7 @@ class BaseReceiver(ABC):
     ReceiverDataPacket that can be fetched with the fetch_data method.
     """
 
-    @abstractmethod
+    @property
     def latest_message(self) -> str:
         """
         Property to get the most recently received message.

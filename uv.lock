@@ -389,7 +389,6 @@ dependencies = [
     { name = "pigpio" },
     { name = "psutil" },
     { name = "pyserial" },
-    { name = "rpi-gpio" },
     { name = "scipy" },
     { name = "sounddevice" },
     { name = "soundfile" },
@@ -400,6 +399,9 @@ dependencies = [
 dev = [
     { name = "pytest" },
     { name = "ruff" },
+]
+rpi = [
+    { name = "rpi-gpio" },
 ]
 
 [package.metadata]
@@ -414,7 +416,6 @@ requires-dist = [
     { name = "pigpio" },
     { name = "psutil" },
     { name = "pyserial" },
-    { name = "rpi-gpio", specifier = ">=0.7.1" },
     { name = "scipy" },
     { name = "sounddevice" },
     { name = "soundfile" },
@@ -426,6 +427,7 @@ dev = [
     { name = "pytest" },
     { name = "ruff" },
 ]
+rpi = [{ name = "rpi-gpio", specifier = ">=0.7.1" }]
 
 [[package]]
 name = "pigpio"

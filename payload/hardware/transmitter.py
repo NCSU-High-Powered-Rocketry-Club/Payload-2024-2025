@@ -46,7 +46,7 @@ class Transmitter:
         :param new_comment: The new comment to set in the Direwolf configuration file.
         """
         try:
-            with open(self.config_path, 'r') as file:
+            with open(self.config_path, "r") as file:
                 lines = file.readlines()
 
             found = False
@@ -94,7 +94,6 @@ class Transmitter:
         print("Transmission complete. Pin reset.")
 
         subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Stop Direwolf
-        
 
     def stop(self) -> None:
         """
