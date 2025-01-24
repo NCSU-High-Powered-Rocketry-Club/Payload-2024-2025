@@ -1,4 +1,5 @@
 """Module for the finite state machine that represents which state of flight we are in."""
+
 import time
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
@@ -9,7 +10,8 @@ from payload.constants import (
     MAX_FREE_FALL_SECONDS,
     MAX_VELOCITY_THRESHOLD,
     TAKEOFF_HEIGHT_METERS,
-    TAKEOFF_VELOCITY_METERS_PER_SECOND, TRANSMISSION_DELAY,
+    TAKEOFF_VELOCITY_METERS_PER_SECOND,
+    TRANSMISSION_DELAY,
 )
 from payload.utils import convert_milliseconds_to_seconds
 
@@ -79,6 +81,8 @@ class StandbyState(State):
         # 2) Altitude - If the altitude is above a threshold, the rocket has launched.
         # Ideally we would directly communicate with the motor, but we don't have that capability.
 
+        self.next_state()
+
         data = self.context.data_processor
 
         if data.vertical_velocity > TAKEOFF_VELOCITY_METERS_PER_SECOND:
@@ -88,8 +92,6 @@ class StandbyState(State):
         if data.current_altitude > TAKEOFF_HEIGHT_METERS:
             self.next_state()
             return
-
-        self.next_state()
 
     def next_state(self):
         self.context.state = MotorBurnState(self.context)
@@ -189,7 +191,9 @@ class LandedState(State):
 
     __slots__ = ("last_transmission_time",)
 
-    last_transmission_time: int = 0
+    def __init__(self, context: "payloadContext"):
+        super().__init__(context)
+        self.last_transmission_time: int = 0
 
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""

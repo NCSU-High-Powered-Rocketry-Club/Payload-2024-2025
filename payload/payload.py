@@ -98,6 +98,9 @@ class PayloadContext:
         do different things. It is what controls the payload and chooses when to move to the next
         state.
         """
+
+        print("context loop")
+
         # We only get one data packet at a time from the IMU as it runs very slowly
         self.imu_data_packet = self.imu.fetch_data()
 

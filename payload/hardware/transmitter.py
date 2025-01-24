@@ -3,10 +3,12 @@ import subprocess
 import threading
 import time
 
-try:
-    from RPi import GPIO
-except ImportError:
-    pass
+
+from RPi import GPIO
+# try:
+#     from RPi import GPIO
+# except ImportError:
+#     pass
 
 
 class Transmitter:

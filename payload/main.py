@@ -8,6 +8,7 @@ from payload.constants import (
     BAUD_RATE,
     DIREWOLF_CONFIG_PATH,
     LOGS_PATH,
+    RECEIVER_SERIAL_PORT,
     SERIAL_PORT,
     TRANSMITTER_PIN,
 )
@@ -68,10 +69,10 @@ def create_components(
         transmitter = (
             Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH) if args.real_transmitter else None
         )
-        receiver = Receiver(SERIAL_PORT, BAUD_RATE) if args.real_receiver else None
+        receiver = Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE) if args.real_receiver else None
     else:
         # Use real hardware components
-        imu = IMU(SERIAL_PORT, BAUD_RATE)
+        imu = IMU(RECEIVER_SERIAL_PORT, BAUD_RATE)
         logger = Logger(LOGS_PATH)
         transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
         receiver = Receiver(SERIAL_PORT, BAUD_RATE)
