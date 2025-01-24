@@ -1,5 +1,4 @@
 """Module which provides a high level interface to the payload system on the rocket."""
-
 import time
 from typing import TYPE_CHECKING
 
@@ -7,10 +6,10 @@ from payload.data_handling.data_processor import IMUDataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.interfaces.base_imu import BaseIMU
-from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_receiver import BaseReceiver
 from payload.state import StandbyState, State
+from payload.constants import TRANSMIT_MESSAGE, STOP_MESSAGE, TRANSMISSION_DELAY
 
 if TYPE_CHECKING:
     from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
@@ -28,6 +27,7 @@ class PayloadContext:
     """
 
     __slots__ = (
+        "_last_transmission_time",
         "context_data_packet",
         "data_processor",
         "imu",
@@ -38,6 +38,7 @@ class PayloadContext:
         "shutdown_requested",
         "state",
         "transmitter",
+        "transmitting_latch",
     )
 
     def __init__(
@@ -70,13 +71,13 @@ class PayloadContext:
         self.processed_data_packet: ProcessedDataPacket | None = None
         self.context_data_packet: ContextDataPacket | None = None
 
+        self.transmitting_latch = False
+
     def start(self) -> None:
         """
         Starts logger processes. This is called before the main while loop starts.
         """
-        # If it's a mock, we don't want to start the receiver
-        if self.receiver:
-            self.receiver.start()
+        self.receiver.start()
         self.logger.start()
 
     def stop(self) -> None:
@@ -87,8 +88,7 @@ class PayloadContext:
         if self.shutdown_requested:
             return
         self.imu.stop()
-        if self.receiver:
-            self.receiver.stop()
+        self.receiver.stop()
         if self.transmitter:
             self.transmitter.stop()
         self.logger.stop()
@@ -145,13 +145,20 @@ class PayloadContext:
 
         return res
 
-    def transmit_data(self, message: "ProcessedDataPacket") -> None:
+    def transmit_data(self) -> None:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            message_string = self.format_data_packet(message)
+            message_string = self.format_data_packet(self.processed_data_packet)
             self.transmitter.send_message(message_string)
         else:
             print("No transmitter!")
+
+    def remote_override(self, message: str):
+        # This handles the messages the receiver could get
+        if message == TRANSMIT_MESSAGE:
+            self.transmitting_latch = True
+        elif message == STOP_MESSAGE:
+            self.transmitting_latch = False

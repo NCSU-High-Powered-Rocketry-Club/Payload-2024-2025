@@ -16,7 +16,7 @@ from payload.constants import (
 from payload.utils import convert_milliseconds_to_seconds
 
 if TYPE_CHECKING:
-    from payload.payload import payloadContext
+    from payload.payload import PayloadContext
 
 
 class State(ABC):
@@ -32,14 +32,15 @@ class State(ABC):
     4. Free Fall - when the rocket is falling back to the ground after apogee
     """
 
-    __slots__ = ("context", "start_time_ns")
+    __slots__ = ("context", "start_time_ns", "last_transmission_time")
 
-    def __init__(self, context: "payloadContext"):
+    def __init__(self, context: "PayloadContext"):
         """
         :param context: The state context object that will be used to interact with the electronics
         """
         self.context = context
         self.start_time_ns = context.data_processor.current_timestamp
+        self.last_transmission_time = 0
 
     @property
     def name(self):
@@ -54,6 +55,10 @@ class State(ABC):
         Called every loop iteration. Uses the context to interact with the hardware and decides
         when to move to the next state.
         """
+        if self.context.transmitting_latch:
+            if time.time() - self.last_transmission_time > TRANSMISSION_DELAY:
+                self.last_transmission_time = time.time()
+                self.context.transmit_data()
 
     @abstractmethod
     def next_state(self):
@@ -80,6 +85,7 @@ class StandbyState(State):
         # launched.
         # 2) Altitude - If the altitude is above a threshold, the rocket has launched.
         # Ideally we would directly communicate with the motor, but we don't have that capability.
+        super().update()
 
         self.next_state()
 
@@ -105,6 +111,7 @@ class MotorBurnState(State):
     def update(self):
         """Checks to see if the acceleration has dropped to zero, indicating the motor has
         burned out."""
+        super().update()
 
         data = self.context.data_processor
 
@@ -127,11 +134,12 @@ class CoastState(State):
     When the motor has burned out and the rocket is coasting to apogee.
     """
 
-    def __init__(self, context: "payloadContext"):
+    def __init__(self, context: "PayloadContext"):
         super().__init__(context)
 
     def update(self):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
+        super().update()
 
         data = self.context.data_processor
 
@@ -161,6 +169,7 @@ class FreeFallState(State):
 
     def update(self):
         """Check if the rocket has landed, based on our altitude."""
+        super().update()
 
         data = self.context.data_processor
 
@@ -189,19 +198,14 @@ class LandedState(State):
     When the rocket has landed.
     """
 
-    __slots__ = ("last_transmission_time",)
-
-    def __init__(self, context: "payloadContext"):
-        super().__init__(context)
-        self.last_transmission_time: int = 0
+    __slots__ = ()
 
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""
 
         if time.time() - self.last_transmission_time > TRANSMISSION_DELAY:
-            print("sent message")
             self.last_transmission_time = time.time()
-            self.context.transmit_data(self.context.processed_data_packet)
+            self.context.transmit_data()
 
     def next_state(self):
         # Explicitly do nothing, there is no next state

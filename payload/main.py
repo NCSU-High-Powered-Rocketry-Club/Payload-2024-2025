@@ -86,10 +86,7 @@ def create_components(
         imu = IMU(ARDUINO_SERIAL_PORT, BAUD_RATE)
         logger = Logger(LOGS_PATH)
         transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
-        # receiver = Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE)
-        # transmitter = None
-        # TODO !!!
-        receiver = None
+        receiver = Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE)
 
     # Initialize data processing
     data_processor = IMUDataProcessor()
