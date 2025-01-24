@@ -157,3 +157,14 @@ TRANSMISSION_DELAY = 10.0
 RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
+
+NO_MESSAGE = "No Message Received"
+"""The message that the receiver returns when there is no message to return"""
+TRANSMIT_MESSAGE = "TRANSMIT"
+"""The message that the transmitter sends to the receiver to start transmitting data"""
+STOP_MESSAGE = "STOP"
+"""The message that the transmitter sends to the receiver to stop transmitting data"""
+
+# These are in seconds
+MOCK_RECEIVER_INITIAL_DELAY = 5.0
+MOCK_RECEIVER_RECEIVE_DELAY = 2.0

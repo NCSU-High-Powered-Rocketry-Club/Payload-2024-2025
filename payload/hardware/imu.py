@@ -25,6 +25,7 @@ class IMU(BaseIMU):
 
     def stop(self):
         """stops the IMU process."""
+        self._serial.close()
 
     @staticmethod
     def _process_packet_data(binary_packet) -> IMUDataPacket:

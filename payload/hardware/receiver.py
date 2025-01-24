@@ -2,6 +2,7 @@ import threading
 
 import serial
 
+from payload.constants import NO_MESSAGE
 from payload.interfaces.base_receiver import BaseReceiver
 
 
@@ -14,7 +15,7 @@ class Receiver(BaseReceiver):
     def __init__(self, serial_port: str, baud_rate: int) -> None:
         self.serial_port = serial_port
         self.baud_rate = baud_rate
-        self._latest_message: str = "No Message Received"
+        self._latest_message: str = NO_MESSAGE
         self._stop_event = threading.Event()
         self._thread = threading.Thread(target=self._listen, daemon=True)
 
