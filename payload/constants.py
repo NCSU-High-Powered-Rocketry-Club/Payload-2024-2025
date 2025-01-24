@@ -25,8 +25,8 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-SERIAL_PORT = "/dev/ttyUSB0"
-# SERIAL_PORT = "COM5"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
+# ARDUINO_SERIAL_PORT = "COM5"
 
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi."""
@@ -155,4 +155,5 @@ TRANSMISSION_DELAY = 10.0
 # Receiver Configuration
 # -------------------------------------------------------
 RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
+"""The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600

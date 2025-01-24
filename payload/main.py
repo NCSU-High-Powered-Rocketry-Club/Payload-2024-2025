@@ -9,7 +9,7 @@ from payload.constants import (
     DIREWOLF_CONFIG_PATH,
     LOGS_PATH,
     RECEIVER_SERIAL_PORT,
-    SERIAL_PORT,
+    ARDUINO_SERIAL_PORT,
     TRANSMITTER_PIN,
 )
 from payload.data_handling.data_processor import IMUDataProcessor
@@ -72,10 +72,10 @@ def create_components(
         receiver = Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE) if args.real_receiver else None
     else:
         # Use real hardware components
-        imu = IMU(SERIAL_PORT, BAUD_RATE)
+        imu = IMU(ARDUINO_SERIAL_PORT, BAUD_RATE)
         logger = Logger(LOGS_PATH)
         transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
-        # receiver = Receiver(SERIAL_PORT, BAUD_RATE)
+        receiver = Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE)
         # transmitter = None
         # TODO !!!
         receiver = None
