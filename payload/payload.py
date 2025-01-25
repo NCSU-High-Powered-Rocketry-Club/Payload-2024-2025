@@ -28,6 +28,8 @@ class PayloadContext:
 
     __slots__ = (
         "_last_transmission_time",
+        "_transmitting_latch",
+        "_stop_latch",
         "context_data_packet",
         "data_processor",
         "imu",
@@ -38,7 +40,6 @@ class PayloadContext:
         "shutdown_requested",
         "state",
         "transmitter",
-        "transmitting_latch",
     )
 
     def __init__(
@@ -71,14 +72,15 @@ class PayloadContext:
         self.processed_data_packet: ProcessedDataPacket | None = None
         self.context_data_packet: ContextDataPacket | None = None
 
-        self.transmitting_latch = False
+        self._transmitting_latch = False
+        self._stop_latch = False
 
     def start(self) -> None:
         """
         Starts logger processes. This is called before the main while loop starts.
         """
         self.imu.start()
-        # self.receiver.start()
+        self.receiver.start()
         self.logger.start()
 
     def stop(self) -> None:
@@ -90,8 +92,8 @@ class PayloadContext:
             return
         print("stopping imu")
         self.imu.stop()
-        # print("stopping receiver")
-        # self.receiver.stop()
+        print("stopping receiver")
+        self.receiver.stop()
         print("stopping transmitter")
         if self.transmitter:
             self.transmitter.stop()
@@ -143,8 +145,7 @@ class PayloadContext:
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            message_string = "start: " + str("Hello World")
-            print("TRANSMITTTTTTTTTTTTTTT")
+            message_string = "start: " + str(self.processed_data_packet)
             self.transmitter.send_message(message_string)
         else:
             print("No transmitter!")
@@ -154,8 +155,23 @@ class PayloadContext:
         Receives a message from the ground station and acts on it.
         :param message: The message received from the ground station.
         """
-        if message == TRANSMIT_MESSAGE:
-            self.transmitting_latch = True
+        if message == TRANSMIT_MESSAGE and not self._transmitting_latch:
+            print("transmitting")
+            print("transmitting")
+
+            print("transmitting")
+
+            print("transmitting")
+
+            print("transmitting")
+
+            print("transmitting")
+
+            print("transmitting")
+
+            self._transmitting_latch = True
+            self._stop_latch = False
             self.transmit_data()
-        elif message == STOP_MESSAGE:
-            self.transmitting_latch = False
+        elif message == STOP_MESSAGE and not self._stop_latch:
+            self._stop_latch = True
+            self._transmitting_latch = False

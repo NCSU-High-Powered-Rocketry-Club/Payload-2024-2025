@@ -25,12 +25,12 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-# ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
-ARDUINO_SERIAL_PORT = "COM5"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
+# ARDUINO_SERIAL_PORT = "COM5"
 
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi."""
-BAUD_RATE = 115200
+ARDUINO_BAUD_RATE = 115200
 """The baud rate of the channel"""
 PACKET_START_MARKER = b"\xaa"
 """The start marker of the data packet. This helps use to know where a packet starts in the stream

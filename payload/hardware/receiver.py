@@ -12,7 +12,7 @@ class Receiver(BaseReceiver):
     messages from the transmitter and then makes them available to the main thread.
     """
 
-    __slots__ = ("serial_port", "baud_rate", "_latest_message", "_stop_event", "_thread")
+    __slots__ = ("_latest_message", "_stop_event", "_thread", "baud_rate", "serial_port")
 
     def __init__(self, serial_port: str, baud_rate: int) -> None:
         self.serial_port = serial_port
@@ -47,8 +47,8 @@ class Receiver(BaseReceiver):
                         line = ser.readline().decode("utf-8", errors="ignore").strip()
                         print("got line")
                         if line:
-                            self._latest_message = line
-                            print(f"Received: {line}")
+                            self._latest_message = line.strip()
+                            print(f"Received: {self._latest_message}")
                 print("exitted while loop")
         except serial.SerialException as e:
             print(f"Error: {e}")

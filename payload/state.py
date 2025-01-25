@@ -32,7 +32,10 @@ class State(ABC):
     4. Free Fall - when the rocket is falling back to the ground after apogee
     """
 
-    __slots__ = ("context", "start_time_ns",)
+    __slots__ = (
+        "context",
+        "start_time_ns",
+    )
 
     def __init__(self, context: "PayloadContext"):
         """
@@ -82,9 +85,6 @@ class StandbyState(State):
         # Ideally we would directly communicate with the motor, but we don't have that capability.
         super().update()
 
-        # TODO: remove for launch
-        self.next_state()
-
         data = self.context.data_processor
 
         if data.vertical_velocity > TAKEOFF_VELOCITY_METERS_PER_SECOND:
@@ -119,8 +119,6 @@ class MotorBurnState(State):
             self.next_state()
             return
 
-        self.next_state()
-
     def next_state(self):
         self.context.state = CoastState(self.context)
 
@@ -149,8 +147,6 @@ class CoastState(State):
         if data.current_altitude <= data.max_altitude * 0.9:
             self.next_state()
             return
-
-        self.next_state()
 
     def next_state(self):
         self.context.state = FreeFallState(self.context)
@@ -182,8 +178,6 @@ class FreeFallState(State):
             >= MAX_FREE_FALL_SECONDS
         ):
             self.next_state()
-
-        self.next_state()
 
     def next_state(self):
         self.context.state = LandedState(self.context)

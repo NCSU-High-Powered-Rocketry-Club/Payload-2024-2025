@@ -87,9 +87,9 @@ class Transmitter:
             print("Failed to update the configuration. Message not sent.")
             return
 
-        subprocess.run(["direwolf"], check=True)  # Start Direwolf
-
-        for i in range(10):
+        subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
+        time.sleep(2)
+        for i in range(20):
             self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
 
             if self._stop_event.is_set():
@@ -110,12 +110,12 @@ class Transmitter:
         Cleans up the GPIO pins when the transmitter is stopped.
         """
         self._pull_pin_high()
+        GPIO.cleanup()
         subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
         self._stop_event.set()
         if self.message_worker_thread:
             self.message_worker_thread.join()
         print("stopped transmitter")
-        GPIO.cleanup()
 
     def send_message(self, message: str) -> None:
         """

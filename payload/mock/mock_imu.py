@@ -45,6 +45,10 @@ class MockIMU(BaseIMU):
             usecols=self._valid_columns,
         )
 
+    def start(self) -> None:
+        """Starts the IMU."""
+        self.is_running = True
+
     def stop(self) -> None:
         """Stops the IMU."""
         self.is_running = False

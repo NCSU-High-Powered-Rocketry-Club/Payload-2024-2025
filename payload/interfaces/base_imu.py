@@ -13,6 +13,12 @@ class BaseIMU(ABC):
     """
 
     @abstractmethod
+    def start(self) -> None:
+        """
+        Starts the IMU.
+        """
+
+    @abstractmethod
     def stop(self) -> None:
         """
         Stops the IMU.

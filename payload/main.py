@@ -6,13 +6,15 @@ import time
 
 from payload.constants import (
     ARDUINO_SERIAL_PORT,
-    BAUD_RATE,
+    ARDUINO_BAUD_RATE,
     DIREWOLF_CONFIG_PATH,
     LOGS_PATH,
     MOCK_RECEIVER_INITIAL_DELAY,
     MOCK_RECEIVER_RECEIVE_DELAY,
+    RECEIVER_BAUD_RATE,
     RECEIVER_SERIAL_PORT,
     STOP_MESSAGE,
+    TRANSMIT_MESSAGE,
     TRANSMITTER_PIN,
 )
 from payload.data_handling.data_processor import IMUDataProcessor
@@ -67,33 +69,39 @@ def create_components(
     """
     if args.mock:
         # Replace hardware with mock objects for mock replay
-        imu = IMU(ARDUINO_SERIAL_PORT, BAUD_RATE) if args.real_imu else MockIMU(
-            log_file_path=args.path,
+        imu = (
+            IMU(ARDUINO_SERIAL_PORT, ARDUINO_BAUD_RATE)
+            if args.real_imu
+            else MockIMU(
+                log_file_path=args.path,
+            )
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
         transmitter = (
             Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH) if args.real_transmitter else None
         )
         receiver = (
-            Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE)
+            Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)
             if args.real_receiver
             else MockReceiver(
-                MOCK_RECEIVER_INITIAL_DELAY, MOCK_RECEIVER_RECEIVE_DELAY, STOP_MESSAGE
+                MOCK_RECEIVER_INITIAL_DELAY, MOCK_RECEIVER_RECEIVE_DELAY, TRANSMIT_MESSAGE
             )
         )
     else:
         # Use real hardware components
-        imu = IMU(ARDUINO_SERIAL_PORT, BAUD_RATE)
+        imu = IMU(ARDUINO_SERIAL_PORT, ARDUINO_BAUD_RATE)
         logger = Logger(LOGS_PATH)
         transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
-        receiver = Receiver(RECEIVER_SERIAL_PORT, BAUD_RATE)
+        receiver = Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)
 
     # Initialize data processing
     data_processor = IMUDataProcessor()
     return imu, logger, data_processor, transmitter, receiver
 
 
-def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, args: argparse.Namespace) -> None:
+def run_flight_loop(
+    payload: PayloadContext, flight_display: FlightDisplay, args: argparse.Namespace
+) -> None:
     """
     Main flight control loop that runs until shutdown is requested or interrupted.
     :param payload: The payload context managing the state machine.
