@@ -117,6 +117,14 @@ def arg_parser(mock_invocation: bool = False) -> argparse.Namespace:
         default=False,
     )
 
+    parser.add_argument(
+        "-i",
+        "--real-imu",
+        help="Run the mock replay with the real imu.",
+        action="store_true",
+        default=False,
+    )
+
     args = parser.parse_args()
 
     # Check if the user has passed any options that are only available in mock replay mode:

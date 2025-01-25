@@ -53,7 +53,7 @@ def run_flight(args: argparse.Namespace) -> None:
     flight_display = FlightDisplay(payload, mock_time_start, args)
 
     # Run the main flight loop
-    run_flight_loop(payload, flight_display, args.mock)
+    run_flight_loop(payload, flight_display, args)
 
 
 def create_components(
@@ -67,7 +67,7 @@ def create_components(
     """
     if args.mock:
         # Replace hardware with mock objects for mock replay
-        imu = MockIMU(
+        imu = IMU(ARDUINO_SERIAL_PORT, BAUD_RATE) if args.real_imu else MockIMU(
             log_file_path=args.path,
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
@@ -93,12 +93,12 @@ def create_components(
     return imu, logger, data_processor, transmitter, receiver
 
 
-def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, is_mock: bool) -> None:
+def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, args: argparse.Namespace) -> None:
     """
     Main flight control loop that runs until shutdown is requested or interrupted.
     :param payload: The payload context managing the state machine.
     :param flight_display: Display interface for flight data.
-    :param is_mock: Whether running in mock replay mode.
+    :param args: Command line arguments determining the configuration.
     """
     try:
         payload.start()
@@ -107,15 +107,15 @@ def run_flight_loop(payload: PayloadContext, flight_display: FlightDisplay, is_m
             # Update the state machine
             payload.update()
             # Stop the replay when the data is exhausted
-            if is_mock and not payload.imu.is_running:
+            if args.mock and (not args.real_imu and not payload.imu.is_running):
                 break
 
     # handle user interrupt gracefully
     except KeyboardInterrupt:
-        if is_mock:
+        if args.mock:
             flight_display.end_mock_interrupted.set()
     else:  # This is run if we have landed and the program is not interrupted (see state.py)
-        if is_mock:
+        if args.mock:
             # Stop the mock replay naturally if not interrupted
             flight_display.end_mock_natural.set()
     finally:
