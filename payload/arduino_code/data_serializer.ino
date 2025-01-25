@@ -179,8 +179,10 @@ void loop() {
   // Only uncomment this for debugging, it should not be printing during a launch
   // printPacket(data)
 
-  // This sends the start marker for the packet
-  Serial.write(byte(START_MARKER));
-  // This sends our data packet
-  Serial.write((byte*)&data, sizeof(data));
+  if (Serial) {
+      // This sends the start marker for the packet
+      Serial.write(byte(START_MARKER));
+      // This sends our data packet
+      Serial.write((byte*)&data, sizeof(data));
+  }
 }
