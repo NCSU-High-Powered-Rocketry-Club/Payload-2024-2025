@@ -10,6 +10,7 @@ class BaseReceiver(ABC):
     """
 
     @property
+    @abstractmethod
     def latest_message(self) -> str:
         """
         Property to get the most recently received message.

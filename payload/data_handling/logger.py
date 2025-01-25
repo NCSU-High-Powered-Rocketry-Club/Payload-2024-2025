@@ -149,7 +149,7 @@ class Logger:
         self._log_queue.put(STOP_SIGNAL)  # Put the stop signal in the queue
         print("put stop signal in queue")
         # Waits for the process to finish before stopping it
-        self._log_process.join()
+        self._log_process.join(timeout=3)
 
     def log(
         self,

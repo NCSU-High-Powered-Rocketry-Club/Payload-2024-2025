@@ -88,6 +88,7 @@ class StandbyState(State):
         # Ideally we would directly communicate with the motor, but we don't have that capability.
         super().update()
 
+        # TODO: remove for launch
         self.next_state()
 
         data = self.context.data_processor
