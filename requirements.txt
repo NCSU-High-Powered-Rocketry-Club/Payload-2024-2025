@@ -1,7 +1,0 @@
-adafruit-circuitpython-dps310
-adafruit-circuitpython-bno08x
-msgspec
-pyserial
-sounddevice
-soundfile
-numpy
