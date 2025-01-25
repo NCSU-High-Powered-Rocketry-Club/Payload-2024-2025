@@ -90,18 +90,17 @@ class Transmitter:
         subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
         time.sleep(2)
         for i in range(20):
-            self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
-
             if self._stop_event.is_set():
                 self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
                 break
+            self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
 
             time.sleep(5)  # Keep the pin low for the transmission duration
 
-            self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
-
             if self._stop_event.is_set():
                 break
+
+            self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
 
             time.sleep(5)  # Keep the pin low for the transmission duration
 
@@ -110,7 +109,6 @@ class Transmitter:
         Cleans up the GPIO pins when the transmitter is stopped.
         """
         self._pull_pin_high()
-        GPIO.cleanup()
         try:
             subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
         except subprocess.CalledProcessError as e:
@@ -120,7 +118,8 @@ class Transmitter:
                 print(f"Error while stopping Direwolf: {e}")
         self._stop_event.set()
         if self.message_worker_thread:
-            self.message_worker_thread.join()
+            self.message_worker_thread.join(5)
+        GPIO.cleanup()
         print("Stopped Transmitter")
 
     def send_message(self, message: str) -> None:
