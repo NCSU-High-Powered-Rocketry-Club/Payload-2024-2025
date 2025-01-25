@@ -1,48 +1,62 @@
 [project]
 name = "Payload-2024-2025"
-description = "Payload code for our rocket as part of the NASA Student Launch Competition"
-requires-python = ">=3.10"
+description = "Codebase for the 2024 - 2025 NASA Student Launch Competition"
+requires-python = ">=3.12"
 version = "0.1.0"
+readme = "README.md"
 dependencies = [
-    "adafruit-circuitpython-bmp280",
-    "adafruit-circuitpython-bno055",
+    "gpiozero",
+    "pigpio", # Run sudo pigpiod before running the program
     "msgspec",
+    "numpy",
+    "colorama",
+    "psutil",
+    "scipy",
+    "pandas",
+    "textual",
+    "adafruit-circuitpython-dps310",
+    "adafruit-circuitpython-bno08x",
     "pyserial",
     "sounddevice",
     "soundfile",
-    "numpy",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest",
     "ruff",
 ]
+rpi = [  # Dependencies which only run on the pi.
+    "rpi-gpio>=0.7.1",
+]
+
+[project.scripts]
+mock = "payload.main:run_mock_flight"
+real = "payload.main:run_real_flight"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# UV:
+[tool.uv]
+python-preference = "only-managed"
+
+# HATCH:
+[tool.hatch.build.targets.wheel]
+packages = ["payload"]
+
 
 # RUFF:
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 show-fixes = true
 exclude = ["scripts"]
 
 [tool.ruff.lint]
-preview = true
-explicit-preview-rules = true  # TODO: Drop this when RUF022 and RUF023 are out of preview
-ignore = ["PLR2004", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PERF203", "ISC001", "S311"]
+ignore = ["PLR2004", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PERF203", "ISC001", "T201"]
 select = ["E", "F", "I", "PL", "UP", "RUF", "PTH", "C4", "B", "PIE", "SIM", "RET", "RSE",
-          "G", "ISC", "PT", "ASYNC", "TCH", "SLOT", "PERF", "PYI", "FLY", "AIR", "RUF022",
-          "RUF023", "Q", "INP", "W", "YTT", "DTZ", "ARG", "T20", "FURB", "DOC",
-          "D100", "D101", "D300", "D418", "D419", "S", "NPY"]
-
-[tool.ruff.lint.per-file-ignores]
-"main.py" = ["T201"]
-"airbrakes/mock/display.py" = ["T201"]
-"tests/*.py" = ["T20", "S101", "D100", "ARG001", "RUF012"]
-
-[tool.pytest.ini_options]
-filterwarnings = [
-    "ignore:This process:DeprecationWarning",  # ignore warning about fork()
-    "ignore:To reduce servo jitter",  # ignore warning about pigpio
-    "ignore:Could not import MSCL",  # ignore warning about MSCL being not installed
-]
+          "G", "ISC", "PT", "ASYNC", "TCH", "SLOT", "PERF", "PYI", "FLY", "AIR", "Q", "INP", 
+          "W", "YTT", "DTZ", "ARG", "T20", "FURB", "D100", "D101", "D300", "D418",
+          "D419", "S", "NPY"]
