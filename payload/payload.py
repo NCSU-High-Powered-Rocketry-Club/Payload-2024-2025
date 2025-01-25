@@ -90,17 +90,17 @@ class PayloadContext:
         """
         if self.shutdown_requested:
             return
-        print("stopping imu")
         self.imu.stop()
-        print("stopping receiver")
+        print("Stopped IMU")
         self.receiver.stop()
-        print("stopping transmitter")
+        print("Stopped Receiver")
         if self.transmitter:
             self.transmitter.stop()
-        print("stopping logger")
+            print("Stopped Transmitter")
         self.logger.stop()
-        print("stopped everything")
+        print("Stopping Logger")
         self.shutdown_requested = True
+        print("Stopped Everything")
 
     def update(self) -> None:
         """
@@ -147,8 +147,6 @@ class PayloadContext:
         if self.transmitter:
             message_string = "start: " + str(self.processed_data_packet)
             self.transmitter.send_message(message_string)
-        else:
-            print("No transmitter!")
 
     def remote_override(self, message: str):
         """
@@ -156,19 +154,6 @@ class PayloadContext:
         :param message: The message received from the ground station.
         """
         if message == TRANSMIT_MESSAGE and not self._transmitting_latch:
-            print("transmitting")
-            print("transmitting")
-
-            print("transmitting")
-
-            print("transmitting")
-
-            print("transmitting")
-
-            print("transmitting")
-
-            print("transmitting")
-
             self._transmitting_latch = True
             self._stop_latch = False
             self.transmit_data()

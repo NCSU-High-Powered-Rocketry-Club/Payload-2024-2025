@@ -111,11 +111,17 @@ class Transmitter:
         """
         self._pull_pin_high()
         GPIO.cleanup()
-        subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
+        try:
+            subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                print("Direwolf is not running. Nothing to kill.")
+            else:
+                print(f"Error while stopping Direwolf: {e}")
         self._stop_event.set()
         if self.message_worker_thread:
             self.message_worker_thread.join()
-        print("stopped transmitter")
+        print("Stopped Transmitter")
 
     def send_message(self, message: str) -> None:
         """

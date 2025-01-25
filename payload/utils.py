@@ -40,8 +40,8 @@ def get_arduino_serial_port():
             ["ls", "/dev/ttyUSB*"],  # Command to list all USB serial devices
             stdout=subprocess.PIPE,  # Capture standard output
             stderr=subprocess.PIPE,  # Capture standard error (to handle cases with no devices)
-            text=True,               # Decode output as a string
-            check=True               # Raise an exception if the command fails
+            text=True,  # Decode output as a string
+            check=True,  # Raise an exception if the command fails
         )
         # Return the first detected serial port
         return result.stdout.strip().split("\n")[0]
