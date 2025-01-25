@@ -147,6 +147,7 @@ class Logger:
         Stops the logging process. It will finish logging the current message and then stop.
         """
         self._log_queue.put(STOP_SIGNAL)  # Put the stop signal in the queue
+        print("put stop signal in queue")
         # Waits for the process to finish before stopping it
         self._log_process.join()
 
@@ -204,8 +205,8 @@ class Logger:
                 message_fields: list[LoggedDataPacket | Literal["STOP"]] = self._log_queue.get_many(
                     timeout=MAX_GET_TIMEOUT_SECONDS
                 )
+                if STOP_SIGNAL in message_fields:
+                    return
                 # If the message is the stop signal, break out of the loop
                 for message_field in message_fields:
-                    if message_field == STOP_SIGNAL:
-                        return
                     writer.writerow(Logger._truncate_floats(message_field))

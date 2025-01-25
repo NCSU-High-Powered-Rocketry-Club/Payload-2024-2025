@@ -87,11 +87,16 @@ class PayloadContext:
         """
         if self.shutdown_requested:
             return
+        print("stopping imu")
         self.imu.stop()
+        print("stopping receiver")
         self.receiver.stop()
+        print("stopping transmitter")
         if self.transmitter:
             self.transmitter.stop()
+        print("stopping logger")
         self.logger.stop()
+        print("stopped everything")
         self.shutdown_requested = True
 
     def update(self) -> None:
@@ -138,6 +143,7 @@ class PayloadContext:
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
             message_string = "start: " + str(self.processed_data_packet)
+            print("TRANSMITTTTTTTTTTTTTTT")
             self.transmitter.send_message(message_string)
         else:
             print("No transmitter!")

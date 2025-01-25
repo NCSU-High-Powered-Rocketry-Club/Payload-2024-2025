@@ -28,16 +28,14 @@ class Receiver(BaseReceiver):
 
     def start(self) -> None:
         """Starts the listening thread."""
-        if not self._thread.is_alive():
-            self._stop_event.clear()
-            self._thread = threading.Thread(target=self._listen, daemon=True)
-            self._thread.start()
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._listen, daemon=True)
+        self._thread.start()
 
     def stop(self) -> None:
         """Stops the listening thread."""
         self._stop_event.set()
-        if self._thread.is_alive():
-            self._thread.join()
+        self._thread.join(timeout=3)
 
     def _listen(self) -> None:
         """Continuously listens for serial input."""
@@ -47,9 +45,11 @@ class Receiver(BaseReceiver):
                 while not self._stop_event.is_set():
                     if ser.in_waiting > 0:  # Check if data is available
                         line = ser.readline().decode("utf-8", errors="ignore").strip()
+                        print("got line")
                         if line:
                             self._latest_message = line
                             print(f"Received: {line}")
+                print("exitted while loop")
         except serial.SerialException as e:
             print(f"Error: {e}")
         except Exception as e:
