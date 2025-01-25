@@ -95,7 +95,7 @@ class StandbyState(State):
             self.next_state()
             return
         
-        self.next_state()
+        # self.next_state()
 
     def next_state(self):
         self.context.state = MotorBurnState(self.context)
@@ -112,7 +112,7 @@ class MotorBurnState(State):
         super().update()
 
         data = self.context.data_processor
-        self.next_state()
+        # self.next_state()
 
         # If our current velocity is less than our max velocity, that means we have stopped
         # accelerating. This is the same thing as checking if our accel sign has flipped
@@ -137,7 +137,7 @@ class CoastState(State):
     def update(self):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
         super().update()
-        self.next_state()
+        # self.next_state()
 
 
         data = self.context.data_processor
@@ -183,7 +183,7 @@ class FreeFallState(State):
             >= MAX_FREE_FALL_SECONDS
         ):
             self.next_state()
-        self.next_state()
+        # self.next_state()
 
 
     def next_state(self):
