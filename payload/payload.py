@@ -77,7 +77,8 @@ class PayloadContext:
         """
         Starts logger processes. This is called before the main while loop starts.
         """
-        self.receiver.start()
+        self.imu.start()
+        # self.receiver.start()
         self.logger.start()
 
     def stop(self) -> None:
@@ -89,8 +90,8 @@ class PayloadContext:
             return
         print("stopping imu")
         self.imu.stop()
-        print("stopping receiver")
-        self.receiver.stop()
+        # print("stopping receiver")
+        # self.receiver.stop()
         print("stopping transmitter")
         if self.transmitter:
             self.transmitter.stop()
@@ -142,7 +143,7 @@ class PayloadContext:
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            message_string = "start: " + str(self.processed_data_packet)
+            message_string = "start: " + str("Hello World")
             print("TRANSMITTTTTTTTTTTTTTT")
             self.transmitter.send_message(message_string)
         else:
@@ -155,5 +156,6 @@ class PayloadContext:
         """
         if message == TRANSMIT_MESSAGE:
             self.transmitting_latch = True
+            self.transmit_data()
         elif message == STOP_MESSAGE:
             self.transmitting_latch = False

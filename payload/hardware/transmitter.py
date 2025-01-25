@@ -15,7 +15,7 @@ class Transmitter:
     to our ground station.
     """
 
-    __slots__ = ("gpio_pin", "config_path")
+    __slots__ = ("gpio_pin", "config_path", "_stop_event", "message_worker_thread")
 
     def __init__(self, gpio_pin, config_path) -> None:
         """
@@ -26,6 +26,9 @@ class Transmitter:
         """
         self.gpio_pin = gpio_pin
         self.config_path = config_path
+        self._stop_event = threading.Event()
+        self.message_worker_thread = None
+
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
         GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as output, initially high
 
@@ -84,27 +87,41 @@ class Transmitter:
             print("Failed to update the configuration. Message not sent.")
             return
 
-        self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
+        subprocess.run(["direwolf"], check=True)  # Start Direwolf
 
-        subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Stop Direwolf if running
-        time.sleep(2)  # Wait for a moment to ensure process termination
-        subprocess.Popen(["direwolf"])  # Start Direwolf
+        for i in range(10):
+            self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
 
-        time.sleep(5)  # Keep the pin low for the transmission duration
-        self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
-        print("Transmission complete. Pin reset.")
+            if self._stop_event.is_set():
+                self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+                break
 
-        subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Stop Direwolf
+            time.sleep(5)  # Keep the pin low for the transmission duration
+
+            self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+
+            if self._stop_event.is_set():
+                break
+
+            time.sleep(5)  # Keep the pin low for the transmission duration
 
     def stop(self) -> None:
         """
         Cleans up the GPIO pins when the transmitter is stopped.
         """
         self._pull_pin_high()
+        subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
+        self._stop_event.set()
+        if self.message_worker_thread:
+            self.message_worker_thread.join()
+        print("stopped transmitter")
         GPIO.cleanup()
 
     def send_message(self, message: str) -> None:
         """
         Sends a message to the ground station.
         """
-        threading.Thread(target=self._send_message_worker, args=(message,), daemon=True).start()
+        self.message_worker_thread = threading.Thread(
+            target=self._send_message_worker, args=(message,)
+        )
+        self.message_worker_thread.start()

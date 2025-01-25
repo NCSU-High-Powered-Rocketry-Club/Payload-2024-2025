@@ -32,7 +32,7 @@ class State(ABC):
     4. Free Fall - when the rocket is falling back to the ground after apogee
     """
 
-    __slots__ = ("context", "start_time_ns", "last_transmission_time")
+    __slots__ = ("context", "start_time_ns",)
 
     def __init__(self, context: "PayloadContext"):
         """
@@ -40,7 +40,6 @@ class State(ABC):
         """
         self.context = context
         self.start_time_ns = context.data_processor.current_timestamp
-        self.last_transmission_time = 0
 
     @property
     def name(self):
@@ -55,11 +54,6 @@ class State(ABC):
         Called every loop iteration. Uses the context to interact with the hardware and decides
         when to move to the next state.
         """
-        # If we have decided to remote override the payload, we will start the transmission here
-        if self.context.transmitting_latch:
-            if time.time() - self.last_transmission_time > TRANSMISSION_DELAY:
-                self.last_transmission_time = time.time()
-                self.context.transmit_data()
 
     @abstractmethod
     def next_state(self):
@@ -202,12 +196,15 @@ class LandedState(State):
 
     __slots__ = ()
 
+    def __init__(self, context: "PayloadContext"):
+        super().__init__(context)
+
+        # Starts the transmission at the beginning of landed state
+        self.context.transmit_data()
+
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""
-
-        if time.time() - self.last_transmission_time > TRANSMISSION_DELAY:
-            self.last_transmission_time = time.time()
-            self.context.transmit_data()
+        pass
 
     def next_state(self):
         # Explicitly do nothing, there is no next state

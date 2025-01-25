@@ -1,6 +1,7 @@
 """Module for interacting with the IMU (Inertial measurement unit) on the rocket."""
 
 import struct
+import time
 
 import serial
 
@@ -15,7 +16,7 @@ class IMU(BaseIMU):
     Arduino.
     """
 
-    __slots__ = ("_serial",)
+    __slots__ = ("_serial", "_port", "_baud_rate")
 
     def __init__(self, port: str, baud_rate: int) -> None:
         """
@@ -23,16 +24,19 @@ class IMU(BaseIMU):
         :param port: the port that the Arduino is connected to
         :param baud_rate: the baud rate of the channel
         """
-        self._serial = serial.Serial(port, baud_rate, timeout=10)
+        self._serial = None
+        self._baud_rate = baud_rate
+        self._port = port
+
+    def start(self):
+        self._serial = serial.Serial(self._port, self._baud_rate, timeout=10)
 
     def stop(self):
         """stops the IMU process."""
-        print("STOPPINGSTOPPINGSTOPPINGSTOPPINGSTOPPINGSTOPPINGSTOPPING")
-        self._serial.reset_input_buffer()
-        print("here")
-        self._serial.reset_output_buffer()
+        # self._serial.reset_input_buffer()
+        # self._serial.reset_output_buffer()
         self._serial.close()
-        print("closed imu")
+        print("imu stopped")
 
     @staticmethod
     def _process_packet_data(binary_packet) -> IMUDataPacket:
