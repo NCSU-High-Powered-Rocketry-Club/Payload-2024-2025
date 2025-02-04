@@ -63,7 +63,7 @@ void setup() {
   while (my_GNSS.begin() == false) {
     delay(1000);
   }
-  my_GNSS.setI2COutput(COM_TYPE_UBX);  //Set the I2C port to output UBX only
+  my_GNSS.setI2COutput(COM_TYPE_UBX);  // Set the I2C port to output UBX only
   my_GNSS.setNavigationFrequency(60);
   Serial.begin(115200);
 }
@@ -179,7 +179,10 @@ void loop() {
   // Only uncomment this for debugging, it should not be printing during a launch
   // printPacket(data);
 
-  if (Serial && Serial.availableForWrite() >= 85) {
+  // First we check if it actually has a serial connection, then we check if the serial has enough
+  // space to write the packet because for whatever reason, the serial only has a buffer size of 106
+  // bytes.
+  if (Serial && Serial.availableForWrite() >= sizeof(data) + 1) {
     // This sends the start marker for the packet
     Serial.write(byte(START_MARKER));
     // This sends our data packet

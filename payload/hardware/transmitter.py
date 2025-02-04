@@ -4,6 +4,7 @@ import threading
 import time
 
 try:
+    # TODO: convert this to gpiozero, also go through and organize methods
     from RPi import GPIO
 except ImportError:
     pass
@@ -125,7 +126,7 @@ class Transmitter:
 
     def send_message(self, message: str) -> None:
         """
-        Sends a message to the ground station.
+        Sends a message to the ground station. This should only be called one time.
         """
         self.message_worker_thread = threading.Thread(
             target=self._send_message_worker, args=(message,)

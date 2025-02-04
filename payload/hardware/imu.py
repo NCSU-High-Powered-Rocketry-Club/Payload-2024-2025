@@ -25,24 +25,22 @@ class IMU(BaseIMU):
         :param baud_rate: the baud rate of the channel
         """
         self._serial = None
-        self._baud_rate = baud_rate
         self._port = port
+        self._baud_rate = baud_rate
 
     def start(self):
         self._serial = serial.Serial(self._port, self._baud_rate, timeout=10)
 
     def stop(self):
-        """stops the IMU process."""
-        # self._serial.reset_input_buffer()
-        # self._serial.reset_output_buffer()
         self._serial.close()
-        print("imu stopped")
 
     @staticmethod
     def _process_packet_data(binary_packet) -> IMUDataPacket:
         """
         Process the data points in the unpacked packet and puts into an IMUDataPacket.
-        :param binary_packet: The serialized data packet containing multiple data points.
+        :param binary_packet: The serialized data packet containing multiple data points. On the
+        arduino, we allocate 84 bytes for each packet. These bytes match up with the order of the
+        fields in the IMUDataPacket struct.
         """
         # Iterate through each data point in the packet.
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
@@ -55,7 +53,9 @@ class IMU(BaseIMU):
         If there is not enough data, it returns None.
         """
         while self._serial.in_waiting >= PACKET_BYTE_SIZE + 1:  # The + 1 is for the start marker
-            # Reads a single byte and checks if it is the start marker
+            # Reads a single byte and checks if it is the start marker. We do this to properly sync
+            # our code with the start of a packet. This will read through any junk data until it
+            # finds the start marker.
             byte = self._serial.read(1)
             if byte == PACKET_START_MARKER:
                 serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
