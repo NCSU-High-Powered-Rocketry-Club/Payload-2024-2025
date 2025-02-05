@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     import multiprocessing
 
 
+# TODO: clean this up
+
 def get_always_list(self, *args, **kwargs) -> list:
     """Used to get items from the queue, and always returns a list. Only relevant on Windows,
     as the multiprocessing.Queue doesn't have a `get_many` method"""

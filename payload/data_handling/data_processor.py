@@ -136,6 +136,7 @@ class IMUDataProcessor:
 
         :return: A ProcessedDataPacket object.
         """
+        # TODO: clean this up
         return ProcessedDataPacket(
             current_altitude=self._current_altitude,
             vertical_velocity=self._vertical_velocity,

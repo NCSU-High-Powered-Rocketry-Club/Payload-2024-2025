@@ -108,6 +108,7 @@ def run_flight_loop(
     :param flight_display: Display interface for flight data.
     :param args: Command line arguments determining the configuration.
     """
+    # TODO: graceful shutdown
     try:
         payload.start()
         flight_display.start()

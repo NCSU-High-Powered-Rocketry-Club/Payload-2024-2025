@@ -18,7 +18,7 @@ class ProcessedDataPacket(msgspec.Struct):
     # dt is the time difference between the current and previous data point
     time_since_last_data_packet: np.float64
 
-    # The following data points are for the transciever
+    # The following data points are for the transceiver
 
     # maximum altitude reached in meters, zeroed-out
     maximum_altitude: np.float64

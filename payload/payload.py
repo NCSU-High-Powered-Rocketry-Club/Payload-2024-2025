@@ -79,6 +79,7 @@ class PayloadContext:
         """
         Starts logger processes. This is called before the main while loop starts.
         """
+        # TODO: make threads safer by using a context manager
         self.imu.start()
         self.receiver.start()
         self.logger.start()
@@ -88,6 +89,7 @@ class PayloadContext:
         Handles shutting down the payload. This will cause the main loop to break. It stops the IMU
         and stops the logger.
         """
+        # TODO: make a better way to print out what is stopping
         if self.shutdown_requested:
             return
         self.imu.stop()
@@ -128,6 +130,7 @@ class PayloadContext:
         # Update the state machine
         self.state.update()
 
+        # We make a data packet with info about what the context is doing
         self.context_data_packet = ContextDataPacket(
             self.state.name[0], self.receiver.latest_message
         )

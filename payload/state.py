@@ -30,6 +30,7 @@ class State(ABC):
     2. Motor Burn - when the motor is burning and the rocket is accelerating
     3. Flight - when the motor has burned out and the rocket is coasting
     4. Free Fall - when the rocket is falling back to the ground after apogee
+    5. Landed - when the rocket has landed
     """
 
     __slots__ = (
@@ -83,8 +84,6 @@ class StandbyState(State):
         # launched.
         # 2) Altitude - If the altitude is above a threshold, the rocket has launched.
         # Ideally we would directly communicate with the motor, but we don't have that capability.
-        super().update()
-
         data = self.context.data_processor
 
         if data.vertical_velocity > TAKEOFF_VELOCITY_METERS_PER_SECOND:
@@ -107,8 +106,6 @@ class MotorBurnState(State):
     def update(self):
         """Checks to see if the acceleration has dropped to zero, indicating the motor has
         burned out."""
-        super().update()
-
         data = self.context.data_processor
 
         # If our current velocity is less than our max velocity, that means we have stopped
@@ -128,13 +125,8 @@ class CoastState(State):
     When the motor has burned out and the rocket is coasting to apogee.
     """
 
-    def __init__(self, context: "PayloadContext"):
-        super().__init__(context)
-
     def update(self):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
-        super().update()
-
         data = self.context.data_processor
 
         # if our velocity is close to zero or negative, we are in free fall.
@@ -161,11 +153,10 @@ class FreeFallState(State):
 
     def update(self):
         """Check if the rocket has landed, based on our altitude."""
-        super().update()
-
         data = self.context.data_processor
 
         # If our altitude is around 0, and we have an acceleration spike, we have landed
+        # TODO: check if this works
         if (
             data.current_altitude <= GROUND_ALTITUDE_METERS
             and data.vertical_acceleration >= LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED
