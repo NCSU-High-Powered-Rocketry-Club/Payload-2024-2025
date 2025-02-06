@@ -28,12 +28,6 @@ class IMU(BaseIMU):
         self._port = port
         self._baud_rate = baud_rate
 
-    def start(self):
-        self._serial = serial.Serial(self._port, self._baud_rate, timeout=10)
-
-    def stop(self):
-        self._serial.close()
-
     @staticmethod
     def _process_packet_data(binary_packet) -> IMUDataPacket:
         """
@@ -45,6 +39,12 @@ class IMU(BaseIMU):
         # Iterate through each data point in the packet.
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
         return IMUDataPacket(*unpacked_data)
+
+    def start(self):
+        self._serial = serial.Serial(self._port, self._baud_rate, timeout=10)
+
+    def stop(self):
+        self._serial.close()
 
     def fetch_data(self) -> IMUDataPacket | None:
         """

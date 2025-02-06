@@ -33,6 +33,33 @@ class Transmitter:
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
         GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as output, initially high
 
+    def stop(self) -> None:
+        """
+        Cleans up the GPIO pins when the transmitter is stopped.
+        """
+        self._pull_pin_high()
+        GPIO.cleanup()
+        try:
+            subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 1:
+                print("Direwolf is not running. Nothing to kill.")
+            else:
+                print(f"Error while stopping Direwolf: {e}")
+        self._stop_event.set()
+        if self.message_worker_thread:
+            self.message_worker_thread.join()
+        print("Stopped Transmitter")
+
+    def send_message(self, message: str) -> None:
+        """
+        Sends a message to the ground station. This should only be called one time.
+        """
+        self.message_worker_thread = threading.Thread(
+            target=self._send_message_worker, args=(message,)
+        )
+        self.message_worker_thread.start()
+
     def _pull_pin_low(self) -> None:
         """
         Pulls the GPIO pin low. This activates the PTT (Push-To-Talk) of the transceiver.
@@ -105,30 +132,3 @@ class Transmitter:
                 break
 
             time.sleep(5)  # Keep the pin low for the transmission duration
-
-    def stop(self) -> None:
-        """
-        Cleans up the GPIO pins when the transmitter is stopped.
-        """
-        self._pull_pin_high()
-        GPIO.cleanup()
-        try:
-            subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
-        except subprocess.CalledProcessError as e:
-            if e.returncode == 1:
-                print("Direwolf is not running. Nothing to kill.")
-            else:
-                print(f"Error while stopping Direwolf: {e}")
-        self._stop_event.set()
-        if self.message_worker_thread:
-            self.message_worker_thread.join()
-        print("Stopped Transmitter")
-
-    def send_message(self, message: str) -> None:
-        """
-        Sends a message to the ground station. This should only be called one time.
-        """
-        self.message_worker_thread = threading.Thread(
-            target=self._send_message_worker, args=(message,)
-        )
-        self.message_worker_thread.start()
