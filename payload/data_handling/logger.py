@@ -14,8 +14,8 @@ from payload.constants import (
 )
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
-from payload.data_handling.packets.logged_data_packet import LoggedDataPacket
-from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
+from payload.data_handling.packets.logger_data_packet import LoggerDataPacket
+from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
 from payload.utils import modify_multiprocessing_queue_windows
 
 
@@ -63,14 +63,14 @@ class Logger:
         # Create a new log file with the next number in sequence
         self.log_path = log_dir / f"log_{max_suffix + 1}.csv"
         with self.log_path.open(mode="w", newline="") as file_writer:
-            writer = csv.DictWriter(file_writer, fieldnames=list(LoggedDataPacket.__annotations__))
+            writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
             writer.writeheader()
 
         # Makes a queue to store log messages, basically it's a process-safe list that you add to
         # the back and pop from front, meaning that things will be logged in the order they were
         # added.
         # Signals (like stop) are sent as strings, but data is sent as dictionaries
-        self._log_queue: multiprocessing.Queue[LoggedDataPacket | Literal["STOP"]] = (
+        self._log_queue: multiprocessing.Queue[LoggerDataPacket | Literal["STOP"]] = (
             multiprocessing.Queue()
         )
         modify_multiprocessing_queue_windows(self._log_queue)
@@ -101,8 +101,8 @@ class Logger:
     def _prepare_log_dict(
         context_data_packet: ContextDataPacket,
         imu_data_packet: IMUDataPacket,
-        processed_data_packet: ProcessedDataPacket,
-    ) -> LoggedDataPacket:
+        processed_data_packet: ProcessorDataPacket,
+    ) -> LoggerDataPacket:
         """
         Creates a data packet dictionary representing a row of data to be logged.
         :param context_data_packet: The context data packet to log.
@@ -113,7 +113,7 @@ class Logger:
 
         # Let's first add the state field (This might be expanded into a context data pack like in
         # airbrakes code):
-        logged_data_packet: LoggedDataPacket = {}
+        logged_data_packet: LoggerDataPacket = {}
 
         # Convert the context data packet to a dictionary and add it to the logged data packet
         context_data_packet_dict: dict[str, str] = to_builtins(context_data_packet)
@@ -155,7 +155,7 @@ class Logger:
         self,
         context_data_packet: ContextDataPacket,
         imu_data_packet: IMUDataPacket,
-        processed_data_packet: ProcessedDataPacket,
+        processed_data_packet: ProcessorDataPacket,
     ) -> None:
         """
         Logs the current state and IMU data to the CSV file.
@@ -174,7 +174,7 @@ class Logger:
 
     # ------------------------ ALL METHODS BELOW RUN IN A SEPARATE PROCESS -------------------------
     @staticmethod
-    def _truncate_floats(data: LoggedDataPacket) -> dict[str, str | object]:
+    def _truncate_floats(data: LoggerDataPacket) -> dict[str, str | object]:
         """
         Truncates the decimal place of the floats in the dictionary to 8 decimal places.
         :param data: The dictionary to truncate.
@@ -198,11 +198,11 @@ class Logger:
 
         # Set up the csv logging in the new process
         with self.log_path.open(mode="a", newline="") as file_writer:
-            writer = csv.DictWriter(file_writer, fieldnames=list(LoggedDataPacket.__annotations__))
+            writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
             while True:
                 # Get a message from the queue (this will block until a message is available)
                 # Because there's no timeout, it will wait indefinitely until it gets a message.
-                message_fields: list[LoggedDataPacket | Literal["STOP"]] = self._log_queue.get_many(
+                message_fields: list[LoggerDataPacket | Literal["STOP"]] = self._log_queue.get_many(
                     timeout=MAX_GET_TIMEOUT_SECONDS
                 )
                 if STOP_SIGNAL in message_fields:

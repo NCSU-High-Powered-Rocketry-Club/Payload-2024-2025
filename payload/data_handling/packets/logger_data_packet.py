@@ -3,7 +3,7 @@
 from typing import TypedDict
 
 
-class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields are NotRequired
+class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields are NotRequired
     """
     Represents a collection of all data that the logger can log in a line. Not every field will be
     filled in every packet. If you want properties from another packet to be logged, you have to

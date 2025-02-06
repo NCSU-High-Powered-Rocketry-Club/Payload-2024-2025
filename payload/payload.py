@@ -12,7 +12,7 @@ from payload.interfaces.base_receiver import BaseReceiver
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
-    from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
+    from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
     from payload.hardware.imu import IMUDataPacket
 
 
@@ -69,7 +69,7 @@ class PayloadContext:
         self.state: State = StandbyState(self)
         self.shutdown_requested = False
         self.imu_data_packet: IMUDataPacket | None = None
-        self.processed_data_packet: ProcessedDataPacket | None = None
+        self.processed_data_packet: ProcessorDataPacket | None = None
         self.context_data_packet: ContextDataPacket | None = None
 
         self._transmitting_latch = False

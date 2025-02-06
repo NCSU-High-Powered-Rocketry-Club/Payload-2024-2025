@@ -9,7 +9,7 @@ from payload.constants import (
     GRAVITY_METERS_PER_SECOND_SQUARED,
 )
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
-from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
+from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
 from payload.utils import convert_milliseconds_to_seconds, deadband
 
 
@@ -130,21 +130,20 @@ class IMUDataProcessor:
         # Store the last data point for the next update
         self._last_data_packet = data_packet
 
-    def get_processed_data_packet(self) -> ProcessedDataPacket:
+    def get_processed_data_packet(self) -> ProcessorDataPacket:
         """
         Processes the data points and returns a ProcessedDataPacket object.
 
         :return: A ProcessedDataPacket object.
         """
-        # TODO: clean this up
-        return ProcessedDataPacket(
+        return ProcessorDataPacket(
             current_altitude=self._current_altitude,
             vertical_velocity=self._vertical_velocity,
             vertical_acceleration=self._rotated_acceleration,
             time_since_last_data_packet=self._time_difference,
-            maximum_altitude=self.max_altitude,
-            maximum_velocity=self.max_vertical_velocity,
-            # the following are placeholders
+            maximum_altitude=np.float64(self.max_altitude),
+            maximum_velocity=np.float64(self.max_vertical_velocity),
+            # TODO: Implement these
             pitch=0.0,
             roll=0.0,
             yaw=0.0,
@@ -206,7 +205,8 @@ class IMUDataProcessor:
         gyro_y = self._data_packet.estAngularRateY
         gyro_z = self._data_packet.estAngularRateZ
 
-        # scipy docs for more info: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html
+        # scipy docs for more info:
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html
         # Calculate the delta quaternion from the angular rates
         dt = self._time_difference
         delta_rotation = R.from_rotvec(np.array([gyro_x * dt, gyro_y * dt, gyro_z * dt]))
@@ -222,7 +222,7 @@ class IMUDataProcessor:
         # regardless of orientation.
         return -rotated_accel[2]
 
-    def _calculate_vertical_velocity(self) -> npt.NDArray[np.float64]:
+    def _calculate_vertical_velocity(self) -> np.float64:
         """
         Calculates the velocity of the rocket based on the rotated compensated acceleration.
         Integrates that acceleration to get the velocity.
