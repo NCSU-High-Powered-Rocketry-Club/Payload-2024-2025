@@ -54,6 +54,7 @@ class IMUDataProcessor:
         self._rotated_acceleration: np.float64 = np.float64(0.0)
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
+        self._crew_survivability: np.float64 = np.float64(100.0)
 
     def __str__(self) -> str:
         return (
@@ -143,11 +144,12 @@ class IMUDataProcessor:
             time_since_last_data_packet=self._time_difference,
             maximum_altitude=self.max_altitude,
             maximum_velocity=self.max_vertical_velocity,
+            crew_survivability=self.crew_survivability,
             # the following are placeholders
             pitch=0.0,
             roll=0.0,
             yaw=0.0,
-            crew_survivability=0.0,
+            
             landing_velocity=0.0,
         )
 
@@ -259,3 +261,23 @@ class IMUDataProcessor:
                 self._data_packet.timestamp - self._last_data_packet.timestamp
             )
         )
+
+    def _calculate_crew_survivability(self) ->np.float64:
+        """
+        Calculates the probability that our crew of STEMnauts is alive depending on 
+        conditions during the flight. The surviabililty is only dependent on events after
+        motor burn out. 
+        :return: A float with the percent chance that our crew is still alive
+        """
+
+        #Calculate the current 'intensity' of the flight
+        #Each iteration or amount of time we can subtract an amount from their survival chance based on the intensity of the flight
+        #Intensity can be based on acceleration and orientation (if they are upside down)
+        #Lastly we can subtract a percent based on the ground hit velocity
+        intensity_percent = 0.0
+
+
+        updated_survival_chance = self.crew_survivability - self.crew_survivability * intensity_percent
+        
+        return updated_survival_chance
+        
