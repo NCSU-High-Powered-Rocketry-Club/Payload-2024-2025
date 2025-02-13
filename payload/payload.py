@@ -148,7 +148,9 @@ class PayloadContext:
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            print("transmittingtransmittingtransmittingtransmittingtransmittingtransmittingtransmitting")
+            print(
+                "transmittingtransmittingtransmittingtransmittingtransmittingtransmittingtransmitting"
+            )
             message_string = "start: " + str(self.processed_data_packet)
             self.transmitter.send_message(message_string)
 

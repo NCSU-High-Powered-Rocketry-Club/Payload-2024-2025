@@ -143,7 +143,7 @@ class FlightDisplay:
             f"Max velocity so far:       {G}{data_processor.max_vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Current height:            {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
-            f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}"
+            f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}",
         ]
         # Print the output
         print("\n".join(output))

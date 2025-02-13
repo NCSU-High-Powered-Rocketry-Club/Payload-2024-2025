@@ -3,13 +3,9 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from payload.constants import (
-    ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
-    GRAVITY_METERS_PER_SECOND_SQUARED,
-)
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
-from payload.utils import convert_milliseconds_to_seconds, deadband
+from payload.utils import convert_milliseconds_to_seconds
 
 
 class DataProcessor:
@@ -25,9 +21,9 @@ class DataProcessor:
         "_data_packet",
         "_initial_altitude",
         "_last_data_packet",
+        "_last_velocity_timestamp",
         "_max_altitude",
         "_max_vertical_velocity",
-        "_previous_vertical_velocity",
         "_rotated_acceleration",
         "_time_difference",
         "_vertical_velocity",
@@ -45,7 +41,6 @@ class DataProcessor:
         self._max_altitude: np.float64 = np.float64(0.0)
         self._vertical_velocity: np.float64 = np.float64(0.0)
         self._max_vertical_velocity: np.float64 = np.float64(0.0)
-        self._previous_vertical_velocity: np.float64 = np.float64(0.0)
         self._initial_altitude: np.float64 | None = None
         self._current_altitude: np.float64 = np.float64(0.0)
         self._last_data_packet: IMUDataPacket | None = None
@@ -53,6 +48,7 @@ class DataProcessor:
         self._rotated_acceleration: np.float64 = np.float64(0.0)
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
+        self._last_velocity_timestamp: np.float64 | None = None
 
     @property
     def max_altitude(self) -> float:
@@ -218,26 +214,27 @@ class DataProcessor:
 
     def _calculate_vertical_velocity(self) -> np.float64:
         """
-        Calculates the velocity of the rocket based on the rotated compensated acceleration.
-        Integrates that acceleration to get the velocity.
-        :return: A numpy array of the velocity of the rocket at each data packet
+        Calculates the velocity of the rocket based by differentiating the altitude.
+        :return: The velocity of the rocket in m/s.
         """
-        # Gets the vertical acceleration from the rotated vertical acceleration. gravity needs to be
-        # subtracted from vertical acceleration, Then deadbanded.
-        vertical_acceleration = deadband(
-            self._rotated_acceleration - GRAVITY_METERS_PER_SECOND_SQUARED,
-            ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
-        )
+        # If we don't have a last velocity timestamp, we can't calculate the velocity
+        if self._last_velocity_timestamp is None:
+            self._last_velocity_timestamp = self._data_packet.timestamp
+            return np.float64(0.0)
 
-        # Integrate the acceleration to get the velocity
-        vertical_velocity = (
-            self._previous_vertical_velocity + vertical_acceleration * self._time_difference
-        )
-
-        # Store the last calculated velocity vector
-        self._previous_vertical_velocity = vertical_velocity
-
-        return vertical_velocity
+        # If we have a different altitude, we can calculate the velocity
+        if self._data_packet.pressureAlt != self._last_data_packet.pressureAlt:
+            # Calculate the velocity using the altitude difference and the time difference
+            velocity = np.float64(
+                (self._data_packet.pressureAlt - self._last_data_packet.pressureAlt)
+                / self._time_difference
+            )
+            # Update the last velocity timestamp for the next update
+            self._last_velocity_timestamp = self._data_packet.timestamp
+        else:
+            # If the altitude hasn't changed, we use the last velocity
+            velocity = self._vertical_velocity
+        return velocity
 
     def _calculate_time_difference(self) -> np.float64:
         """
@@ -245,7 +242,7 @@ class DataProcessor:
         This cannot be called on the first update as _last_data_packet is None. Units are in
         seconds.
         :return: A float with the time difference between the data packet and the previous
-            data packet.
+        data packet.
         """
         # calculate the time difference between the data packets
         # We are converting from ms to s, since we don't want to have a velocity in m/ms^2
