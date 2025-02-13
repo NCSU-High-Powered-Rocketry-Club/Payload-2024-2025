@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from colorama import Fore, Style, init
 
-from payload.constants import DisplayEndingType
+from payload.constants import DISPLAY_FREQUENCY, DisplayEndingType
 
 if TYPE_CHECKING:
     from payload.payload import PayloadContext
@@ -54,7 +54,7 @@ class FlightDisplay:
         init(autoreset=True)  # Automatically reset colors after each print
         self._payload = payload
         self._start_time = start_time
-        self._running = False
+        self._running = threading.Event()
         self._args = args
         self._launch_time: int = 0  # Launch time from MotorBurnState
         self._coast_time: int = 0  # Coast time from CoastState
@@ -76,14 +76,14 @@ class FlightDisplay:
         """
         Starts the display.
         """
-        self._running = True
+        self._running.set()
         self._thread_target.start()
 
     def stop(self) -> None:
         """
         Stops the display thread.
         """
-        self._running = False
+        self._running.clear()
         self._thread_target.join()
 
     def update_display(self) -> None:
@@ -96,7 +96,7 @@ class FlightDisplay:
             return
 
         # Update the display as long as the program is running:
-        while self._running:
+        while self._running.is_set():
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
@@ -159,3 +159,6 @@ class FlightDisplay:
                 print(f"{R}{'=' * 12} INTERRUPTED REPLAY {'=' * 13}{RESET}")
             case DisplayEndingType.TAKEOFF:
                 print(f"{R}{'=' * 13} ROCKET LAUNCHED {'=' * 14}{RESET}")
+
+        # Sleep for a bit to avoid spamming the terminal
+        time.sleep(1 / DISPLAY_FREQUENCY)

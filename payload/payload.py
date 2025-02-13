@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from payload.constants import STOP_MESSAGE, TRANSMIT_MESSAGE
-from payload.data_handling.data_processor import IMUDataProcessor
+from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.hardware.transmitter import Transmitter
@@ -28,8 +28,8 @@ class PayloadContext:
 
     __slots__ = (
         "_last_transmission_time",
-        "_transmitting_latch",
         "_stop_latch",
+        "_transmitting_latch",
         "context_data_packet",
         "data_processor",
         "imu",
@@ -46,7 +46,7 @@ class PayloadContext:
         self,
         imu: BaseIMU,
         logger: Logger,
-        data_processor: IMUDataProcessor,
+        data_processor: DataProcessor,
         transmitter: Transmitter,
         receiver: BaseReceiver,
     ) -> None:
@@ -61,7 +61,7 @@ class PayloadContext:
         """
         self.imu: BaseIMU = imu
         self.logger: Logger = logger
-        self.data_processor: IMUDataProcessor = data_processor
+        self.data_processor: DataProcessor = data_processor
         self.transmitter: Transmitter = transmitter
         self.receiver: BaseReceiver = receiver
 
@@ -122,7 +122,7 @@ class PayloadContext:
         self.data_processor.update(self.imu_data_packet)
 
         # Get the processed data packet from the data processor
-        self.processed_data_packet = self.data_processor.get_processed_data_packet()
+        self.processed_data_packet = self.data_processor.get_processor_data_packet()
 
         # Check if we have a message from the ground station
         self.remote_override(self.receiver.latest_message)

@@ -1,6 +1,5 @@
 """Module for the finite state machine that represents which state of flight we are in."""
 
-import time
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
@@ -11,7 +10,6 @@ from payload.constants import (
     MAX_VELOCITY_THRESHOLD,
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
-    TRANSMISSION_DELAY,
 )
 from payload.utils import convert_milliseconds_to_seconds
 
@@ -71,8 +69,6 @@ class StandbyState(State):
     """
     When the rocket is on the rail on the ground.
     """
-
-    __slots__ = ()
 
     def update(self):
         """
@@ -149,14 +145,11 @@ class FreeFallState(State):
     When the rocket is falling back to the ground after apogee.
     """
 
-    __slots__ = ()
-
     def update(self):
         """Check if the rocket has landed, based on our altitude."""
         data = self.context.data_processor
 
         # If our altitude is around 0, and we have an acceleration spike, we have landed
-        # TODO: check if this works
         if (
             data.current_altitude <= GROUND_ALTITUDE_METERS
             and data.vertical_acceleration >= LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED
@@ -179,8 +172,6 @@ class LandedState(State):
     When the rocket has landed.
     """
 
-    __slots__ = ()
-
     def __init__(self, context: "PayloadContext"):
         super().__init__(context)
 
@@ -189,7 +180,6 @@ class LandedState(State):
 
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""
-        pass
 
     def next_state(self):
         # Explicitly do nothing, there is no next state

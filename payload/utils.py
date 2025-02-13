@@ -2,7 +2,6 @@
 
 import argparse
 from functools import partial
-import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -11,6 +10,7 @@ if TYPE_CHECKING:
 
 
 # TODO: clean this up
+
 
 def get_always_list(self, *args, **kwargs) -> list:
     """Used to get items from the queue, and always returns a list. Only relevant on Windows,
@@ -34,23 +34,6 @@ def modify_multiprocessing_queue_windows(obj: "multiprocessing.Queue") -> None:
 def convert_milliseconds_to_seconds(timestamp: float) -> float | None:
     """Converts milliseconds to seconds"""
     return timestamp / 1e3
-
-
-def get_arduino_serial_port():
-    try:
-        result = subprocess.run(
-            ["ls", "/dev/ttyUSB*"],  # Command to list all USB serial devices
-            stdout=subprocess.PIPE,  # Capture standard output
-            stderr=subprocess.PIPE,  # Capture standard error (to handle cases with no devices)
-            text=True,  # Decode output as a string
-            check=True,  # Raise an exception if the command fails
-        )
-        # Return the first detected serial port
-        return result.stdout.strip().split("\n")[0]
-    except subprocess.CalledProcessError:
-        # Handle the case where no USB serial devices are found
-        print("No Arduino found connected to /dev/ttyUSB*.")
-        return None
 
 
 def deadband(input_value: float, threshold: float) -> float:

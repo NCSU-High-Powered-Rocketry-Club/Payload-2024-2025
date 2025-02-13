@@ -3,10 +3,12 @@
 from enum import StrEnum
 from pathlib import Path
 
-# TODO: update for just payload
 # -------------------------------------------------------
 # Display Configuration
 # -------------------------------------------------------
+
+DISPLAY_FREQUENCY = 10
+"""The frequency at which the display updates in Hz"""
 
 
 class DisplayEndingType(StrEnum):
@@ -31,8 +33,6 @@ ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
 
-"""The port that the Arduino is connected to. This is typically the default port where the IMU
-connects to the Raspberry Pi."""
 ARDUINO_BAUD_RATE = 115200
 """The baud rate of the channel"""
 PACKET_START_MARKER = b"\xaa"
@@ -41,36 +41,16 @@ of bytes."""
 PACKET_BYTE_SIZE = 84
 """Size of the data packet being sent from the Arduino in bytes"""
 
-RAW_DATA_PACKET_SAMPLING_RATE = 1 / 1000
-"""The frequency at which the IMU sends raw data packets, this is 1kHz"""
-EST_DATA_PACKET_SAMPLING_RATE = 1 / 500
-"""The frequency at which the IMU sends estimated data packets, this is 500Hz"""
-
-# This is used by all queues to keep things consistent:
-MAX_FETCHED_PACKETS = 15
-"""This is used to limit how many packets we fetch from the imu at once."""
-
 # Timeouts for get() queue operations:
 MAX_GET_TIMEOUT_SECONDS = 100  # seconds
 """The maximum amount of time in seconds to wait for a get operation on the queue."""
-
-# Max bytes to put/get from the queue at once:
-BUFFER_SIZE_IN_BYTES = 1000 * 1000 * 20  # 20 Mb
-"""The maximum number of bytes to put or get from the queue at once. This is an increase from the
-default value of 1Mb, which is too small sometimes for our data packets, e.g. when logging the
-entire buffer, which is 5000 packets."""
-
-MAX_QUEUE_SIZE = 100_000
-"""The maximum size of the queue that holds the data packets. This is to prevent the queue from"
-growing too large and taking up too much memory. This is a very large number, so it should not be
-reached in normal operation."""
 
 IMU_TIMEOUT_SECONDS = 3.0
 """The maximum amount of time in seconds the IMU process to do something (e.g. read a packet) before
 it is considered to have timed out. This is used to prevent the program from deadlocking if the IMU
 stops sending data."""
 
-FREQUENCY = 50
+IMU_APPROXIMATE_FREQUENCY = 50
 """The frequency at which the IMU sends data packets, this is 50Hz"""
 
 # -------------------------------------------------------
@@ -85,19 +65,6 @@ TEST_LOGS_PATH = Path("test_logs")
 STOP_SIGNAL = "STOP"
 """The signal to stop the logging and the apogee prediction process, this will be put in the queue
 to stop the process"""
-
-
-# Formula for converting number of packets to seconds and vice versa:
-# If N = total number of packets, T = total time in seconds:
-# f = EstimatedDataPacket.frequency + RawDataPacket.frequency = 500 + 1000 = 1500 Hz
-# T = N/f => T = N/1500
-
-IDLE_LOG_CAPACITY = 5000  # Using the formula above, this is 3.33 seconds of data
-"""The maximum number of data packets to log in the StandbyState and LandedState. This is to prevent
-log file sizes from growing too large. Some of our 2023-2024 launches were >300 mb."""
-LOG_BUFFER_SIZE = 5000
-"""Buffer size if CAPACITY is reached. Once the state changes, this buffer will be logged to make
-sure we don't lose data"""
 
 # -------------------------------------------------------
 # State Machine Configuration

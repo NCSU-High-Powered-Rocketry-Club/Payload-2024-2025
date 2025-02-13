@@ -88,14 +88,14 @@ class Logger:
         return self._log_process.is_alive()
 
     @staticmethod
-    def _convert_unknown_type(obj_type: Any) -> str:
+    def _convert_unknown_type(unknown_object: Any) -> str:
         """
         Truncates the decimal place of the object to 8 decimal places. Used by msgspec to
         convert numpy float64 to a string.
-        :param obj_type: The object to truncate.
+        :param unknown_object: The object to truncate.
         :return: The truncated object.
         """
-        return f"{obj_type:.8f}"
+        return f"{unknown_object:.8f}"
 
     @staticmethod
     def _prepare_log_dict(
@@ -104,7 +104,8 @@ class Logger:
         processed_data_packet: ProcessorDataPacket,
     ) -> LoggerDataPacket:
         """
-        Creates a data packet dictionary representing a row of data to be logged.
+        Creates a data packet dictionary representing a row of data to be logged. To control what
+        is logged, you can add or remove fields from LoggerDataPacket.
         :param context_data_packet: The context data packet to log.
         :param imu_data_packet: The IMU data packet to log.
         :param processed_data_packet: The processed data packet to log.
@@ -129,8 +130,6 @@ class Logger:
             processed_data_packet,
             enc_hook=Logger._convert_unknown_type,  # converts np float to str
         )
-        # Let's drop the "time_since_last_data_packet" field:
-        processed_data_packet_dict.pop("time_since_last_data_packet", None)
 
         logged_data_packet.update(processed_data_packet_dict)
 
@@ -160,8 +159,8 @@ class Logger:
         """
         Logs the current state and IMU data to the CSV file.
         :param context_data_packet: The context data packet to log.
-        :param imu_data_packet: The IMU data packets to log.
-        :param processed_data_packet: The processed data packets to log.
+        :param imu_data_packet: The IMU data packet to log.
+        :param processed_data_packet: The processed data packet to log.
         """
         # We are populating a dictionary with the fields of the logged data packet
         logged_data_packet = Logger._prepare_log_dict(

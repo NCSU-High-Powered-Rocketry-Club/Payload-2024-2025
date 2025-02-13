@@ -1,7 +1,6 @@
 """Module for interacting with the IMU (Inertial measurement unit) on the rocket."""
 
 import struct
-import time
 
 import serial
 
@@ -16,7 +15,7 @@ class IMU(BaseIMU):
     Arduino.
     """
 
-    __slots__ = ("_serial", "_port", "_baud_rate")
+    __slots__ = ("_baud_rate", "_port", "_serial")
 
     def __init__(self, port: str, baud_rate: int) -> None:
         """
@@ -52,6 +51,10 @@ class IMU(BaseIMU):
         It keeps reading until it finds a valid start marker, then returns a full packet.
         If there is not enough data, it returns None.
         """
+        # Over serial, we are constantly sending packets of data. We need to read the data in a way
+        # that we can properly sync with the start of a packet. This is why we read one byte at a
+        # time until we find the start marker. Additionally, we alot exactly 84 bytes for each
+        # packet, even if some of the fields are empty.
         while self._serial.in_waiting >= PACKET_BYTE_SIZE + 1:  # The + 1 is for the start marker
             # Reads a single byte and checks if it is the start marker. We do this to properly sync
             # our code with the start of a packet. This will read through any junk data until it

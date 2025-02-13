@@ -1,7 +1,6 @@
 """Module for processing IMU data on a higher level."""
 
 import numpy as np
-import numpy.typing as npt
 from scipy.spatial.transform import Rotation as R
 
 from payload.constants import (
@@ -13,10 +12,10 @@ from payload.data_handling.packets.processor_data_packet import ProcessorDataPac
 from payload.utils import convert_milliseconds_to_seconds, deadband
 
 
-class IMUDataProcessor:
+class DataProcessor:
     """
     Performs high level calculations on the data packets received from the IMU. Includes
-    calculation the rolling averages of acceleration, maximum altitude so far, etc., from the set of
+    calculating the rolling averages of acceleration, maximum altitude so far, etc., from the set of
     data points.
     """
 
@@ -36,7 +35,7 @@ class IMUDataProcessor:
 
     def __init__(self):
         """
-        Initializes the IMUDataProcessor object. It processes data points to calculate various
+        Initializes the DataProcessor object. It processes data points to calculate various
         things we need such as the maximum altitude, current altitude, velocity, etc. All numbers
         in this class are handled with numpy.
 
@@ -55,15 +54,6 @@ class IMUDataProcessor:
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
 
-    def __str__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"max_altitude={self.max_altitude}, "
-            f"current_altitude={self.current_altitude}, "
-            f"velocity={self.vertical_velocity}, "
-            f"max_velocity={self.max_vertical_velocity}, "
-        )
-
     @property
     def max_altitude(self) -> float:
         """
@@ -74,7 +64,10 @@ class IMUDataProcessor:
 
     @property
     def current_altitude(self) -> float:
-        """Returns the altitude of the rocket (zeroed out) from the data points, in meters."""
+        """
+        Returns the altitude of the rocket (calibrated from initial altitude) from the data points,
+        in meters.
+        """
         return float(self._current_altitude)
 
     @property
@@ -103,8 +96,9 @@ class IMUDataProcessor:
 
     def update(self, data_packet: IMUDataPacket) -> None:
         """
-        Updates the data points to process. This will recompute all information such as altitude,
-        velocity, etc.
+        Updates the data points to process. This will recompute all information and handle math
+        related to orientation (quaternions/pitch roll yaw) such as altitude, velocity,
+        acceleration, and crew survivability.
         :param data_packet: An IMUDataPacket object to process
         """
         # If we don't have a data packet, return early
@@ -130,7 +124,7 @@ class IMUDataProcessor:
         # Store the last data point for the next update
         self._last_data_packet = data_packet
 
-    def get_processed_data_packet(self) -> ProcessorDataPacket:
+    def get_processor_data_packet(self) -> ProcessorDataPacket:
         """
         Processes the data points and returns a ProcessedDataPacket object.
 
