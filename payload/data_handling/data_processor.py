@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
+from payload.constants import ALTITUDE_DEADBAND_METERS
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
 from payload.utils import convert_milliseconds_to_seconds
@@ -21,7 +22,7 @@ class DataProcessor:
         "_data_packet",
         "_initial_altitude",
         "_last_data_packet",
-        "_last_velocity_timestamp",
+        "_last_velocity_calculation_packet",
         "_max_altitude",
         "_max_vertical_velocity",
         "_rotated_acceleration",
@@ -48,7 +49,7 @@ class DataProcessor:
         self._rotated_acceleration: np.float64 = np.float64(0.0)
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
-        self._last_velocity_timestamp: np.float64 | None = None
+        self._last_velocity_calculation_packet: IMUDataPacket | None = None
 
     @property
     def max_altitude(self) -> float:
@@ -218,19 +219,24 @@ class DataProcessor:
         :return: The velocity of the rocket in m/s.
         """
         # If we don't have a last velocity timestamp, we can't calculate the velocity
-        if self._last_velocity_timestamp is None:
-            self._last_velocity_timestamp = self._data_packet.timestamp
+        if self._last_velocity_calculation_packet is None:
+            self._last_velocity_calculation_packet = self._data_packet
             return np.float64(0.0)
 
         # If we have a different altitude, we can calculate the velocity
-        if self._data_packet.pressureAlt != self._last_data_packet.pressureAlt:
+        if (
+            abs(self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt)
+            > ALTITUDE_DEADBAND_METERS
+        ):
             # Calculate the velocity using the altitude difference and the time difference
             velocity = np.float64(
-                (self._data_packet.pressureAlt - self._last_data_packet.pressureAlt)
-                / self._time_difference
+                (self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt)
+                / convert_milliseconds_to_seconds(
+                    self._data_packet.timestamp - self._last_velocity_calculation_packet.timestamp
+                )
             )
-            # Update the last velocity timestamp for the next update
-            self._last_velocity_timestamp = self._data_packet.timestamp
+            # Update the last velocity packet for the next update
+            self._last_velocity_calculation_packet = self._data_packet
         else:
             # If the altitude hasn't changed, we use the last velocity
             velocity = self._vertical_velocity

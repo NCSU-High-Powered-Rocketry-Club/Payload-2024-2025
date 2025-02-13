@@ -109,6 +109,10 @@ LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED = 50.0
 GRAVITY_METERS_PER_SECOND_SQUARED = 9.798
 """This is the standard gravity on Earth."""
 
+ALTITUDE_DEADBAND_METERS = 0.05
+"""The deadband for the altitude in meters. This is used to prevent small fluctuations in altitude
+from being considered as a change in altitude."""
+
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
