@@ -180,6 +180,7 @@ class LandedState(State):
 
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""
+        pass
 
     def next_state(self):
         # Explicitly do nothing, there is no next state
