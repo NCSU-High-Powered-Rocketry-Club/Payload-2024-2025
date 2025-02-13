@@ -32,6 +32,10 @@ class IMUDataProcessor:
         "_rotated_acceleration",
         "_time_difference",
         "_vertical_velocity",
+        "_crew_survivability",
+        "_pitch",
+        "_yaw",
+        "_roll"
     )
 
     def __init__(self):
@@ -54,7 +58,10 @@ class IMUDataProcessor:
         self._rotated_acceleration: np.float64 = np.float64(0.0)
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
-        self._crew_survivability: np.float64 = np.float64(100.0)
+        self._crew_survivability: np.float64 = np.float64(1.0)
+        self._roll: np.float64 = np.float64(0.0)
+        self._pitch: np.float64 = np.float64(0.0)
+        self._yaw: np.float64 = np.float64(0.0)
 
     def __str__(self) -> str:
         return (
@@ -127,7 +134,7 @@ class IMUDataProcessor:
 
         self._current_altitude = self._calculate_current_altitude()
         self._max_altitude = max(self._current_altitude, self._max_altitude)
-
+        self._crew_survivability = self._calculate_crew_survivability()
         # Store the last data point for the next update
         self._last_data_packet = data_packet
 
@@ -144,7 +151,7 @@ class IMUDataProcessor:
             time_since_last_data_packet=self._time_difference,
             maximum_altitude=self.max_altitude,
             maximum_velocity=self.max_vertical_velocity,
-            crew_survivability=self.crew_survivability,
+            crew_survivability=self._crew_survivability,
             # the following are placeholders
             pitch=0.0,
             roll=0.0,
@@ -274,10 +281,14 @@ class IMUDataProcessor:
         #Each iteration or amount of time we can subtract an amount from their survival chance based on the intensity of the flight
         #Intensity can be based on acceleration and orientation (if they are upside down)
         #Lastly we can subtract a percent based on the ground hit velocity
-        intensity_percent = 0.0
+        updated_survival_chance = 1.0
+        intensity_percent = (np.abs(self.vertical_acceleration)*0.25 + 
+                             np.abs(self._data_packet.estAngularRateY) + 
+                             np.sin(self._pitch / 2) * 10
+                             )/100.0
 
-
-        updated_survival_chance = self.crew_survivability - self.crew_survivability * intensity_percent
+        if(intensity_percent > 0.15):
+            updated_survival_chance = self._crew_survivability*(1.0-intensity_percent)
         
         return updated_survival_chance
         
