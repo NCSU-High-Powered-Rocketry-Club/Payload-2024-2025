@@ -19,6 +19,7 @@ dependencies = [
     "pyserial",
     "sounddevice",
     "soundfile",
+    "ahrs>=0.3.1",
 ]
 
 [dependency-groups]
