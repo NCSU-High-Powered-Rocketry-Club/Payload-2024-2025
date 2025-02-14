@@ -275,7 +275,7 @@ class DataProcessor:
                 self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt,
                 ALTITUDE_DEADBAND_METERS,
             )
-            > 0
+            != 0
         ):
             # Calculate the velocity using the altitude difference and the time difference
             velocity = np.float64(
