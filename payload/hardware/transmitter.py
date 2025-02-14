@@ -113,7 +113,7 @@ class Transmitter(BaseTransmitter):
         """
         Starts the transmitter.
         """
-        # TODO: when we rewrite, this needs to be implemented
+        return NotImplementedError("Not implmented yet")
 
     def stop(self) -> None:
         """
