@@ -9,12 +9,13 @@ from payload.constants import (
     ARDUINO_SERIAL_PORT,
     DIREWOLF_CONFIG_PATH,
     LOGS_PATH,
+    MOCK_MESSAGE_PATH,
     MOCK_RECEIVER_INITIAL_DELAY,
     MOCK_RECEIVER_RECEIVE_DELAY,
     RECEIVER_BAUD_RATE,
     RECEIVER_SERIAL_PORT,
     TRANSMIT_MESSAGE,
-    TRANSMITTER_PIN, MOCK_MESSAGE_PATH,
+    TRANSMITTER_PIN,
 )
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
@@ -78,7 +79,9 @@ def create_components(
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
         transmitter = (
-            Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH) if args.real_transmitter else MockTransmitter(MOCK_MESSAGE_PATH)
+            Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
+            if args.real_transmitter
+            else MockTransmitter(MOCK_MESSAGE_PATH)
         )
         receiver = (
             Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)

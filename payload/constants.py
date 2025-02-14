@@ -129,6 +129,8 @@ This should be gitignored."""
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
+NO_MESSAGE_TRANSMITTED = "No message transmitted"
+
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
