@@ -7,12 +7,14 @@ import time
 from contextlib import suppress
 from pathlib import Path
 
+from payload.interfaces.base_transmitter import BaseTransmitter
+
 with suppress(ImportError):
     # TODO: convert this to gpiozero, also go through and organize methods
     from RPi import GPIO
 
 
-class Transmitter:
+class Transmitter(BaseTransmitter):
     """
     This is the class that controls the SA85transceiver. It is responsible for sending messages
     to our ground station.
@@ -106,6 +108,14 @@ class Transmitter:
             self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
 
             time.sleep(5)  # Keep the pin low for the transmission duration
+
+        self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+
+    def start(self) -> None:
+        """
+        Starts the transmitter.
+        """
+        return NotImplementedError("Not implmented yet")
 
     def stop(self) -> None:
         """

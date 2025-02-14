@@ -1,7 +1,6 @@
 """Module to handle recording of the airbrakes with a camera."""
 
 import os
-import signal
 from contextlib import suppress
 from threading import Event, Thread
 

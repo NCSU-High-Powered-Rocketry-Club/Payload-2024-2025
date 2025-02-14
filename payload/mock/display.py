@@ -144,6 +144,8 @@ class FlightDisplay:
             f"Current alt velocity:      {G}{data_processor.velocity_from_altitude:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Current height:            {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
+            f"Transmitter message:       {G}{self._payload.transmitted_message[:10]:<10}{RESET}",
+            # TODO: maybe delete this field or at least make it say true or false
             f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}",
         ]
         # Print the output

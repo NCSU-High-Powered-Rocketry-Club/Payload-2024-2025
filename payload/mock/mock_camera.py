@@ -1,7 +1,6 @@
 """Module which uses a mock camera, since the original camera needs many libraries and actual
 hardware."""
 
-import signal
 from time import sleep
 
 from payload.hardware.camera import Camera
