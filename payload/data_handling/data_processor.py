@@ -148,9 +148,9 @@ class IMUDataProcessor:
             maximum_altitude=self.max_altitude,
             maximum_velocity=self.max_vertical_velocity,
             # the following are placeholders
-            pitch=0.0,
-            roll=0.0,
-            yaw=0.0,
+            roll=self.roll_pitch_yaw[0],
+            pitch=self.roll_pitch_yaw[1],
+            yaw=self.roll_pitch_yaw[2],
             crew_survivability=0.0,
             landing_velocity=0.0,
         )
