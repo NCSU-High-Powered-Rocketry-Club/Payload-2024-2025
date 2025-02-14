@@ -108,8 +108,9 @@ class DataProcessor:
             return 0
 
     @property
-    def roll_pitch_yaw(self) -> np.ndarray[np.float64]:
-        return self._current_orientation_quaternions.as_euler("xyz", degrees=True)
+    def roll_pitch_yaw(self) -> tuple[np.float64, np.float64, np.float64]:
+        """The roll pitch and yaw of the rocket, in degrees."""
+        return tuple(self._current_orientation_quaternions.as_euler("xyz", degrees=True))
 
     def update(self, data_packet: IMUDataPacket) -> None:
         """
@@ -162,10 +163,10 @@ class DataProcessor:
             time_since_last_data_packet=self._time_difference,
             maximum_altitude=np.float64(self.max_altitude),
             maximum_velocity=np.float64(self.max_velocity_from_acceleration),
-            # TODO: Implement these
             roll=self.roll_pitch_yaw[0],
             pitch=self.roll_pitch_yaw[1],
             yaw=self.roll_pitch_yaw[2],
+            # TODO: Implement these
             crew_survivability=0.0,
             landing_velocity=0.0,
         )
