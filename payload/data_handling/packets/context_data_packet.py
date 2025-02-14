@@ -13,5 +13,8 @@ class ContextDataPacket(msgspec.Struct):
     state_name: Literal["S", "M", "C", "F", "L"]
     """Represents the stage of flight we are in. Will only be a single letter."""
 
+    transmitted_message: str
+    """The message transmitted to the ground station."""
+
     received_message: str
     """The message received from the ground station."""

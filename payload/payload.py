@@ -2,13 +2,14 @@
 
 from typing import TYPE_CHECKING
 
-from payload.constants import STOP_MESSAGE, TRANSMIT_MESSAGE
+from payload.constants import NO_MESSAGE_TRANSMITTED, STOP_MESSAGE, TRANSMIT_MESSAGE
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
+from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
@@ -39,6 +40,7 @@ class PayloadContext:
         "receiver",
         "shutdown_requested",
         "state",
+        "transmitted_message",
         "transmitter",
     )
 
@@ -62,7 +64,7 @@ class PayloadContext:
         self.imu: BaseIMU = imu
         self.logger: Logger = logger
         self.data_processor: DataProcessor = data_processor
-        self.transmitter: Transmitter = transmitter
+        self.transmitter: BaseTransmitter = transmitter
         self.receiver: BaseReceiver = receiver
 
         # The rocket starts in the StandbyState
@@ -71,6 +73,7 @@ class PayloadContext:
         self.imu_data_packet: IMUDataPacket | None = None
         self.processed_data_packet: ProcessorDataPacket | None = None
         self.context_data_packet: ContextDataPacket | None = None
+        self.transmitted_message = NO_MESSAGE_TRANSMITTED
 
         self._transmitting_latch = False
         self._stop_latch = False
@@ -81,6 +84,7 @@ class PayloadContext:
         """
         # TODO: make threads safer by using a context manager
         self.imu.start()
+        self.transmitter.start()
         self.receiver.start()
         self.logger.start()
 
@@ -96,9 +100,8 @@ class PayloadContext:
         print("Stopped IMU")
         self.receiver.stop()
         print("Stopped Receiver")
-        if self.transmitter:
-            self.transmitter.stop()
-            print("Stopped Transmitter")
+        self.transmitter.stop()
+        print("Stopped Transmitter")
         self.logger.stop()
         print("Stopping Logger")
         self.shutdown_requested = True
@@ -132,7 +135,7 @@ class PayloadContext:
 
         # We make a data packet with info about what the context is doing
         self.context_data_packet = ContextDataPacket(
-            self.state.name[0], self.receiver.latest_message
+            self.state.name[0], self.transmitted_message, self.receiver.latest_message
         )
 
         # Logs the current state, extension, IMU data, and processed data
@@ -146,13 +149,8 @@ class PayloadContext:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """
-        # We check here because the mock doesn't have a transmitter
-        if self.transmitter:
-            print(
-                "transmittingtransmittingtransmittingtransmittingtransmittingtransmittingtransmitting"
-            )
-            message_string = "start: " + str(self.processed_data_packet)
-            self.transmitter.send_message(message_string)
+        self.transmitted_message = "start: " + str(self.processed_data_packet)
+        self.transmitter.send_message(self.transmitted_message)
 
     def remote_override(self, message: str):
         """

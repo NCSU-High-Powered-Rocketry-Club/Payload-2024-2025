@@ -9,6 +9,7 @@ from payload.constants import (
     ARDUINO_SERIAL_PORT,
     DIREWOLF_CONFIG_PATH,
     LOGS_PATH,
+    MOCK_MESSAGE_PATH,
     MOCK_RECEIVER_INITIAL_DELAY,
     MOCK_RECEIVER_RECEIVE_DELAY,
     RECEIVER_BAUD_RATE,
@@ -27,6 +28,7 @@ from payload.mock.display import FlightDisplay
 from payload.mock.mock_imu import MockIMU
 from payload.mock.mock_logger import MockLogger
 from payload.mock.mock_receiver import MockReceiver
+from payload.mock.mock_transmitter import MockTransmitter
 from payload.payload import PayloadContext
 from payload.utils import arg_parser
 
@@ -77,7 +79,9 @@ def create_components(
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
         transmitter = (
-            Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH) if args.real_transmitter else None
+            Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
+            if args.real_transmitter
+            else MockTransmitter(MOCK_MESSAGE_PATH)
         )
         receiver = (
             Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)
