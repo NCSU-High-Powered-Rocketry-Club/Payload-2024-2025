@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from colorama import Fore, Style, init
 
-from payload.constants import DisplayEndingType
+from payload.constants import DISPLAY_FREQUENCY, DisplayEndingType
 
 if TYPE_CHECKING:
     from payload.payload import PayloadContext
@@ -54,7 +54,7 @@ class FlightDisplay:
         init(autoreset=True)  # Automatically reset colors after each print
         self._payload = payload
         self._start_time = start_time
-        self._running = False
+        self._running = threading.Event()
         self._args = args
         self._launch_time: int = 0  # Launch time from MotorBurnState
         self._coast_time: int = 0  # Coast time from CoastState
@@ -76,14 +76,14 @@ class FlightDisplay:
         """
         Starts the display.
         """
-        self._running = True
+        self._running.set()
         self._thread_target.start()
 
     def stop(self) -> None:
         """
         Stops the display thread.
         """
-        self._running = False
+        self._running.clear()
         self._thread_target.join()
 
     def update_display(self) -> None:
@@ -96,7 +96,7 @@ class FlightDisplay:
             return
 
         # Update the display as long as the program is running:
-        while self._running:
+        while self._running.is_set():
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
@@ -139,12 +139,13 @@ class FlightDisplay:
             # Format time as MM:SS:
             f"Launch time:               {G}T+{time.strftime('%M:%S', time.gmtime(time_since_launch))}{RESET}",  # noqa: E501
             f"State:                     {G}{self._payload.state.name:<15}{RESET}",
-            f"Current velocity:          {G}{data_processor.vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
-            f"Max velocity so far:       {G}{data_processor.max_vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Current accel velocity:    {G}{data_processor.velocity_from_acceleration:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Max velocity so far:       {G}{data_processor.max_velocity_from_acceleration:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Current alt velocity:      {G}{data_processor.velocity_from_altitude:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Current height:            {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Crew survivability:       {G}{100*data_processor._crew_survivability:<10.2f}{RESET} {R}%{RESET}",
-            f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}"
+            f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}",
         ]
         # Print the output
         print("\n".join(output))
@@ -161,3 +162,6 @@ class FlightDisplay:
                 print(f"{R}{'=' * 12} INTERRUPTED REPLAY {'=' * 13}{RESET}")
             case DisplayEndingType.TAKEOFF:
                 print(f"{R}{'=' * 13} ROCKET LAUNCHED {'=' * 14}{RESET}")
+
+        # Sleep for a bit to avoid spamming the terminal
+        time.sleep(1 / DISPLAY_FREQUENCY)

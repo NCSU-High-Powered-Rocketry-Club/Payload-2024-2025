@@ -3,7 +3,7 @@
 from typing import TypedDict
 
 
-class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields are NotRequired
+class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields are NotRequired
     """
     Represents a collection of all data that the logger can log in a line. Not every field will be
     filled in every packet. If you want properties from another packet to be logged, you have to
@@ -39,7 +39,8 @@ class LoggedDataPacket(TypedDict, total=False):  # total=False means all fields 
 
     # Processed Data Packet Fields
     current_altitude: float | None
-    vertical_velocity: float | None
+    velocity_from_acceleration: float | None
+    velocity_from_altitude: float | None
     vertical_acceleration: float | None
     maximum_altitude: float | None
     pitch: float | None
