@@ -297,23 +297,25 @@ class DataProcessor:
         motor burn out. and ground hit velocity
         :return: A float with the percent chance that our crew is still alive
         """
-
+        
         #Calculate the current 'intensity' of the flight
         #Each iteration we subtract an amount from their survival 
         #chance based on the intensity of the flight
-    
-        updated_survival_chance = self._crew_survivability()
+
+        updated_survival_chance = self._crew_survivability
         
+        #TODO: Tweak constants in formula so that chance doesnt go straight to zero
         intensity_percent = (np.abs(self.vertical_acceleration)*0.25 + 
                              np.abs(self._data_packet.estAngularRateY) + 
-                             np.sin(self._pitch / 2) * 10
+                             np.sin(self.roll_pitch_yaw[1] / 2) * 10
                              )/100.0
 
         if(intensity_percent > 0.15):
             updated_survival_chance = self._crew_survivability*(1.0-intensity_percent)
 
         return updated_survival_chance
-        
+
+    #TODO: implement real landing velocity here    
     def _finalize_crew_survivability(self):
         landing_velocity = 0
         if(landing_velocity > 10):
