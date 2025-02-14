@@ -1,5 +1,6 @@
 """Module for processing IMU data on a higher level."""
 
+import ahrs
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -7,6 +8,7 @@ from payload.constants import (
     ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
     ALTITUDE_DEADBAND_METERS,
     GRAVITY_METERS_PER_SECOND_SQUARED,
+    IMU_APPROXIMATE_FREQUENCY,
 )
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
@@ -27,6 +29,7 @@ class DataProcessor:
         "_initial_altitude",
         "_last_data_packet",
         "_last_velocity_calculation_packet",
+        "_madgwick",
         "_max_altitude",
         "_max_velocity_from_acceleration",
         "_previous_vertical_velocity",
@@ -127,8 +130,10 @@ class DataProcessor:
 
         # If we don't have a last data point, we can't calculate the time differences needed
         # for velocity calculation:
-        if self._last_data_packet is None:
+        if self._last_data_packet is None and data_packet.magneticFieldX:
             self._first_update()
+        elif self._last_data_packet is None:
+            return
 
         self._time_difference = np.float64(
             convert_milliseconds_to_seconds(
@@ -184,20 +189,25 @@ class DataProcessor:
         # This is us getting the rocket's initial altitude from the first data packets
         self._initial_altitude = self._data_packet.pressureAlt
 
-        # This is us getting the rocket's initial orientation
-        # Convert initial orientation quaternion array to a scipy Rotation object
-        # This will automatically normalize the quaternion as well:
+        acc = np.array([
+            self._data_packet.estCompensatedAccelX,
+            self._data_packet.estCompensatedAccelY,
+            self._data_packet.estCompensatedAccelZ,
+        ])
+        mag = np.array([
+            self._data_packet.magneticFieldX,
+            self._data_packet.magneticFieldY,
+            self._data_packet.magneticFieldZ,
+        ])
+
+        # ahrs outputs as (w,x,y,z)
+        aqua = ahrs.filters.AQUA()
+        ahrs_inital_quaternion = ahrs.filters.AQUA.estimate(aqua, acc, mag)
         self._current_orientation_quaternions = R.from_quat(
-            np.array(
-                [
-                    self._data_packet.estOrientQuaternionW,
-                    self._data_packet.estOrientQuaternionX,
-                    self._data_packet.estOrientQuaternionY,
-                    self._data_packet.estOrientQuaternionZ,
-                ]
-            ),
+            ahrs_inital_quaternion,
             scalar_first=True,  # This means the order is w, x, y, z.
         )
+        self._madgwick = ahrs.filters.Madgwick(q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY)
 
     def _calculate_current_altitude(self) -> np.float64:
         """
@@ -213,28 +223,38 @@ class DataProcessor:
 
         :return: float containing the vertical acceleration
         """
-        self._current_orientation_quaternions = R.from_quat(
-            np.array(
-                [
-                    self._data_packet.estOrientQuaternionW,
-                    self._data_packet.estOrientQuaternionX,
-                    self._data_packet.estOrientQuaternionY,
-                    self._data_packet.estOrientQuaternionZ,
-                ]
-            ),
-            scalar_first=True,  # This means the order is w, x, y, z.
-        )
+        acc = np.array([
+            self._data_packet.estCompensatedAccelX,
+            self._data_packet.estCompensatedAccelY,
+            self._data_packet.estCompensatedAccelZ,
+        ])
+        gyro = np.array([
+            self._data_packet.estAngularRateX,
+            self._data_packet.estAngularRateY,
+            self._data_packet.estAngularRateZ,
+        ])
+        mag = np.array([
+            self._data_packet.magneticFieldX,
+            self._data_packet.magneticFieldY,
+            self._data_packet.magneticFieldZ,
+        ])
 
-        # Accelerations are in m/s^2
-        x_accel = self._data_packet.estCompensatedAccelX
-        y_accel = self._data_packet.estCompensatedAccelY
-        z_accel = self._data_packet.estCompensatedAccelZ
+        # Scipy rotation object as a np array
+        quat = R.as_quat(self._current_orientation_quaternions, scalar_first=True)
+        # update quaternion heading with ahrs, use MARG if magnetometer is available
+        if all(mag_data_point is not None for mag_data_point in mag):
+            quat = self._madgwick.updateMARG(quat, gyro, acc, mag)
+        else:
+            quat = self._madgwick.updateIMU(self._current_orientation_quaternions, gyro, acc)
+        # putting back into scipy format
+        self._current_orientation_quaternions = R.from_quat(quat, scalar_first=True)
 
         # Rotate the acceleration vector using the orientation
-        rotated_accel = self._current_orientation_quaternions.apply([x_accel, y_accel, z_accel])
+        rotated_accel = self._current_orientation_quaternions.apply([acc[0], acc[1], acc[2]])
 
         # Vertical acceleration will always be the 3rd element of the rotated vector,
         # regardless of orientation.
+        #print(rotated_accel)
         return -rotated_accel[2]
 
     def _calculate_velocity_from_acceleration(self) -> np.float64:

@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
+ARDUINO_SERIAL_PORT = "COM8"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -50,7 +50,7 @@ IMU_TIMEOUT_SECONDS = 3.0
 it is considered to have timed out. This is used to prevent the program from deadlocking if the IMU
 stops sending data."""
 
-IMU_APPROXIMATE_FREQUENCY = 50
+IMU_APPROXIMATE_FREQUENCY = 35
 """The frequency at which the IMU sends data packets, this is 50Hz"""
 
 # -------------------------------------------------------

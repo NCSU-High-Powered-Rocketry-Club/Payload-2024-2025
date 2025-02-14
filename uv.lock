@@ -155,6 +155,18 @@ wheels = [
 ]
 
 [[package]]
+name = "ahrs"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/66/56/7fc17b6c330eff8986e01dfd3744154ffa45cf4ccd45fd779dc6e2713ec1/AHRS-0.3.1.tar.gz", hash = "sha256:20caf8c76f206ce757594f25f0f017834b8154084cd0a1a39a072753a93d03d8", size = 170087 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a1/2c/953d3cb547673bab4e88a4699c59de16053600345166a926d2f58ee4b179/AHRS-0.3.1-py3-none-any.whl", hash = "sha256:710999319828bd8f34e40851b6aab553798afb15aa1cc0a2a95abd15ed080691", size = 197947 },
+]
+
+[[package]]
 name = "binho-host-adapter"
 version = "0.1.6"
 source = { registry = "https://pypi.org/simple" }
@@ -426,6 +438,7 @@ source = { editable = "." }
 dependencies = [
     { name = "adafruit-circuitpython-bno08x" },
     { name = "adafruit-circuitpython-dps310" },
+    { name = "ahrs" },
     { name = "colorama" },
     { name = "msgspec" },
     { name = "numpy" },
@@ -457,6 +470,7 @@ rpi = [
 requires-dist = [
     { name = "adafruit-circuitpython-bno08x" },
     { name = "adafruit-circuitpython-dps310" },
+    { name = "ahrs", specifier = ">=0.3.1" },
     { name = "colorama" },
     { name = "msgspec" },
     { name = "numpy" },
