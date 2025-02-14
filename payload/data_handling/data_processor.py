@@ -35,7 +35,8 @@ class IMUDataProcessor:
         "_crew_survivability",
         "_pitch",
         "_yaw",
-        "_roll"
+        "_roll",
+        "calculating_crew_survivability"
     )
 
     def __init__(self):
@@ -62,6 +63,7 @@ class IMUDataProcessor:
         self._roll: np.float64 = np.float64(0.0)
         self._pitch: np.float64 = np.float64(0.0)
         self._yaw: np.float64 = np.float64(0.0)
+        self.calculating_crew_survivability = False
 
     def __str__(self) -> str:
         return (
@@ -134,7 +136,10 @@ class IMUDataProcessor:
 
         self._current_altitude = self._calculate_current_altitude()
         self._max_altitude = max(self._current_altitude, self._max_altitude)
-        self._crew_survivability = self._calculate_crew_survivability()
+
+        if(self.calculating_crew_survivability):
+            self._crew_survivability = self._calculate_crew_survivability()
+
         # Store the last data point for the next update
         self._last_data_packet = data_packet
 
@@ -273,15 +278,16 @@ class IMUDataProcessor:
         """
         Calculates the probability that our crew of STEMnauts is alive depending on 
         conditions during the flight. The surviabililty is only dependent on events after
-        motor burn out. 
+        motor burn out. and ground hit velocity
         :return: A float with the percent chance that our crew is still alive
         """
 
         #Calculate the current 'intensity' of the flight
-        #Each iteration or amount of time we can subtract an amount from their survival chance based on the intensity of the flight
-        #Intensity can be based on acceleration and orientation (if they are upside down)
-        #Lastly we can subtract a percent based on the ground hit velocity
-        updated_survival_chance = 1.0
+        #Each iteration we subtract an amount from their survival 
+        #chance based on the intensity of the flight
+    
+        updated_survival_chance = self._crew_survivability()
+        
         intensity_percent = (np.abs(self.vertical_acceleration)*0.25 + 
                              np.abs(self._data_packet.estAngularRateY) + 
                              np.sin(self._pitch / 2) * 10
@@ -289,6 +295,10 @@ class IMUDataProcessor:
 
         if(intensity_percent > 0.15):
             updated_survival_chance = self._crew_survivability*(1.0-intensity_percent)
-        
+
         return updated_survival_chance
         
+    def _finalize_crew_survivability(self):
+        landing_velocity = 0
+        if(landing_velocity > 10):
+            self.data_processor._crew_survivability = self.data_processor._crew_survivability*0.8

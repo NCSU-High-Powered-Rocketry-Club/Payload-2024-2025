@@ -133,6 +133,7 @@ class CoastState(State):
 
     def __init__(self, context: "PayloadContext"):
         super().__init__(context)
+        self.context.start_survivability()
 
     def update(self):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
@@ -202,7 +203,7 @@ class LandedState(State):
 
         # Starts the transmission at the beginning of landed state
         self.context.transmit_data()
-
+        self.context.ground_hit_intensity()
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""
         pass

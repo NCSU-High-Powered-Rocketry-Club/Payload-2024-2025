@@ -161,3 +161,9 @@ class PayloadContext:
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True
             self._transmitting_latch = False
+
+    def start_survivability(self):
+        self.data_processor.calculating_crew_survivability = True
+
+    def ground_hit_intensity(self):
+        self.data_processor._finalize_crew_survivability()
