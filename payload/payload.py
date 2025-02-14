@@ -141,7 +141,6 @@ class PayloadContext:
             self.imu_data_packet,
             self.processed_data_packet,
         )
-        print(self.data_processor.roll_pitch_yaw)
 
     def transmit_data(self) -> None:
         """
