@@ -107,6 +107,11 @@ class DataProcessor:
         except AttributeError:  # If we don't have a last data packet
             return 0
 
+    @property
+    def roll_pitch_yaw(self) -> tuple[np.float64, np.float64, np.float64]:
+        """The roll pitch and yaw of the rocket, in degrees."""
+        return tuple(self._current_orientation_quaternions.as_euler("xyz", degrees=True))
+
     def update(self, data_packet: IMUDataPacket) -> None:
         """
         Updates the data points to process. This will recompute all information and handle math
@@ -158,10 +163,10 @@ class DataProcessor:
             time_since_last_data_packet=self._time_difference,
             maximum_altitude=np.float64(self.max_altitude),
             maximum_velocity=np.float64(self.max_velocity_from_acceleration),
+            roll=self.roll_pitch_yaw[0],
+            pitch=self.roll_pitch_yaw[1],
+            yaw=self.roll_pitch_yaw[2],
             # TODO: Implement these
-            pitch=0.0,
-            roll=0.0,
-            yaw=0.0,
             crew_survivability=0.0,
             landing_velocity=0.0,
         )
@@ -204,35 +209,30 @@ class DataProcessor:
 
     def _calculate_rotated_acceleration(self) -> np.float64:
         """
-        Calculates the rotated vertical acceleration. Converts gyroscope data into a delta
-        quaternion, and adds onto the last quaternion.
+        Calculates the rotated vertical acceleration.
 
         :return: float containing the vertical acceleration
         """
+        self._current_orientation_quaternions = R.from_quat(
+            np.array(
+                [
+                    self._data_packet.estOrientQuaternionW,
+                    self._data_packet.estOrientQuaternionX,
+                    self._data_packet.estOrientQuaternionY,
+                    self._data_packet.estOrientQuaternionZ,
+                ]
+            ),
+            scalar_first=True,  # This means the order is w, x, y, z.
+        )
 
-        current_orientation = self._current_orientation_quaternions
         # Accelerations are in m/s^2
         x_accel = self._data_packet.estCompensatedAccelX
         y_accel = self._data_packet.estCompensatedAccelY
         z_accel = self._data_packet.estCompensatedAccelZ
-        # Angular rates are in rads/s
-        gyro_x = self._data_packet.estAngularRateX
-        gyro_y = self._data_packet.estAngularRateY
-        gyro_z = self._data_packet.estAngularRateZ
 
-        # scipy docs for more info:
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html
-        # Calculate the delta quaternion from the angular rates
-        dt = self._time_difference
-        delta_rotation = R.from_rotvec(np.array([gyro_x * dt, gyro_y * dt, gyro_z * dt]))
+        # Rotate the acceleration vector using the orientation
+        rotated_accel = self._current_orientation_quaternions.apply([x_accel, y_accel, z_accel])
 
-        # Update the current orientation by applying the delta rotation
-        current_orientation = current_orientation * delta_rotation
-
-        # Rotate the acceleration vector using the updated orientation
-        rotated_accel = current_orientation.apply([x_accel, y_accel, z_accel])
-        # Update the class attribute with the latest quaternion orientation
-        self._current_orientation_quaternions = current_orientation
         # Vertical acceleration will always be the 3rd element of the rotated vector,
         # regardless of orientation.
         return -rotated_accel[2]
