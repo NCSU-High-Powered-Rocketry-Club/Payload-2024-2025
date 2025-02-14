@@ -3,10 +3,14 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from payload.constants import ALTITUDE_DEADBAND_METERS
+from payload.constants import (
+    ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
+    ALTITUDE_DEADBAND_METERS,
+    GRAVITY_METERS_PER_SECOND_SQUARED,
+)
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
-from payload.utils import convert_milliseconds_to_seconds
+from payload.utils import convert_milliseconds_to_seconds, deadband
 
 
 class DataProcessor:
@@ -24,10 +28,12 @@ class DataProcessor:
         "_last_data_packet",
         "_last_velocity_calculation_packet",
         "_max_altitude",
-        "_max_vertical_velocity",
+        "_max_velocity_from_acceleration",
+        "_previous_vertical_velocity",
         "_rotated_acceleration",
         "_time_difference",
-        "_vertical_velocity",
+        "_velocity_from_acceleration",
+        "_velocity_from_altitude",
     )
 
     def __init__(self):
@@ -40,8 +46,8 @@ class DataProcessor:
         maximum velocity of the rocket.
         """
         self._max_altitude: np.float64 = np.float64(0.0)
-        self._vertical_velocity: np.float64 = np.float64(0.0)
-        self._max_vertical_velocity: np.float64 = np.float64(0.0)
+        self._velocity_from_acceleration: np.float64 = np.float64(0.0)
+        self._max_velocity_from_acceleration: np.float64 = np.float64(0.0)
         self._initial_altitude: np.float64 | None = None
         self._current_altitude: np.float64 = np.float64(0.0)
         self._last_data_packet: IMUDataPacket | None = None
@@ -49,6 +55,8 @@ class DataProcessor:
         self._rotated_acceleration: np.float64 = np.float64(0.0)
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
+        self._previous_vertical_velocity: np.float64 = np.float64(0.0)
+        self._velocity_from_altitude: np.float64 = np.float64(0.0)
         self._last_velocity_calculation_packet: IMUDataPacket | None = None
 
     @property
@@ -68,15 +76,23 @@ class DataProcessor:
         return float(self._current_altitude)
 
     @property
-    def vertical_velocity(self) -> float:
-        """The current vertical velocity of the rocket in m/s. Calculated by integrating the
-        compensated acceleration."""
-        return float(self._vertical_velocity)
+    def velocity_from_altitude(self) -> float:
+        """
+        Returns the vertical velocity of the rocket in m/s. Calculated by differentiating the
+        altitude.
+        """
+        return float(self._velocity_from_altitude)
 
     @property
-    def max_vertical_velocity(self) -> float:
+    def velocity_from_acceleration(self) -> float:
+        """The current vertical velocity of the rocket in m/s. Calculated by integrating the
+        compensated acceleration."""
+        return float(self._velocity_from_acceleration)
+
+    @property
+    def max_velocity_from_acceleration(self) -> float:
         """The maximum vertical velocity the rocket has attained during the flight, in m/s."""
-        return float(self._max_vertical_velocity)
+        return float(self._max_velocity_from_acceleration)
 
     @property
     def vertical_acceleration(self) -> float:
@@ -112,8 +128,11 @@ class DataProcessor:
         self._time_difference = self._calculate_time_difference()
 
         self._rotated_acceleration = self._calculate_rotated_acceleration()
-        self._vertical_velocity = self._calculate_vertical_velocity()
-        self._max_vertical_velocity = max(self._vertical_velocity, self._max_vertical_velocity)
+        self._velocity_from_acceleration = self._calculate_velocity_from_acceleration()
+        self._velocity_from_altitude = self._calculate_velocity_from_altitude()
+        self._max_velocity_from_acceleration = max(
+            self._velocity_from_acceleration, self._max_velocity_from_acceleration
+        )
 
         self._current_altitude = self._calculate_current_altitude()
         self._max_altitude = max(self._current_altitude, self._max_altitude)
@@ -129,11 +148,12 @@ class DataProcessor:
         """
         return ProcessorDataPacket(
             current_altitude=self._current_altitude,
-            vertical_velocity=self._vertical_velocity,
+            velocity_from_acceleration=self._velocity_from_acceleration,
+            velocity_from_altitude=self._velocity_from_altitude,
             vertical_acceleration=self._rotated_acceleration,
             time_since_last_data_packet=self._time_difference,
             maximum_altitude=np.float64(self.max_altitude),
-            maximum_velocity=np.float64(self.max_vertical_velocity),
+            maximum_velocity=np.float64(self.max_velocity_from_acceleration),
             # TODO: Implement these
             pitch=0.0,
             roll=0.0,
@@ -213,7 +233,30 @@ class DataProcessor:
         # regardless of orientation.
         return -rotated_accel[2]
 
-    def _calculate_vertical_velocity(self) -> np.float64:
+    def _calculate_velocity_from_acceleration(self) -> np.float64:
+        """
+        Calculates the velocity of the rocket based on the rotated compensated acceleration.
+        Integrates that acceleration to get the velocity.
+        :return: A numpy array of the velocity of the rocket at each data packet
+        """
+        # Gets the vertical acceleration from the rotated vertical acceleration. gravity needs to be
+        # subtracted from vertical acceleration, Then deadbanded.
+        vertical_acceleration = deadband(
+            self._rotated_acceleration - GRAVITY_METERS_PER_SECOND_SQUARED,
+            ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
+        )
+
+        # Integrate the acceleration to get the velocity
+        vertical_velocity = (
+            self._previous_vertical_velocity + vertical_acceleration * self._time_difference
+        )
+
+        # Store the last calculated velocity vector
+        self._previous_vertical_velocity = vertical_velocity
+
+        return vertical_velocity
+
+    def _calculate_velocity_from_altitude(self) -> np.float64:
         """
         Calculates the velocity of the rocket based by differentiating the altitude.
         :return: The velocity of the rocket in m/s.
@@ -239,7 +282,7 @@ class DataProcessor:
             self._last_velocity_calculation_packet = self._data_packet
         else:
             # If the altitude hasn't changed, we use the last velocity
-            velocity = self._vertical_velocity
+            velocity = self._velocity_from_altitude
         return velocity
 
     def _calculate_time_difference(self) -> np.float64:

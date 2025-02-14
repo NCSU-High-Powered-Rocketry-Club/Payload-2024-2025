@@ -82,7 +82,7 @@ class StandbyState(State):
         # Ideally we would directly communicate with the motor, but we don't have that capability.
         data = self.context.data_processor
 
-        if data.vertical_velocity > TAKEOFF_VELOCITY_METERS_PER_SECOND:
+        if data.velocity_from_acceleration > TAKEOFF_VELOCITY_METERS_PER_SECOND:
             self.next_state()
             return
 
@@ -108,7 +108,10 @@ class MotorBurnState(State):
         # accelerating. This is the same thing as checking if our accel sign has flipped
         # We make sure that it is not just a temporary fluctuation by checking if the velocity is a
         # bit less than the max velocity
-        if data.vertical_velocity < data.max_vertical_velocity * MAX_VELOCITY_THRESHOLD:
+        if (
+            data.velocity_from_acceleration
+            < data.max_velocity_from_acceleration * MAX_VELOCITY_THRESHOLD
+        ):
             self.next_state()
             return
 
@@ -126,7 +129,7 @@ class CoastState(State):
         data = self.context.data_processor
 
         # if our velocity is close to zero or negative, we are in free fall.
-        if data.vertical_velocity <= 0:
+        if data.velocity_from_acceleration <= 0:
             self.next_state()
             return
 
