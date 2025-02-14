@@ -5,19 +5,18 @@ import argparse
 import time
 
 from payload.constants import (
-    ARDUINO_SERIAL_PORT,
     ARDUINO_BAUD_RATE,
+    ARDUINO_SERIAL_PORT,
     DIREWOLF_CONFIG_PATH,
     LOGS_PATH,
     MOCK_RECEIVER_INITIAL_DELAY,
     MOCK_RECEIVER_RECEIVE_DELAY,
     RECEIVER_BAUD_RATE,
     RECEIVER_SERIAL_PORT,
-    STOP_MESSAGE,
     TRANSMIT_MESSAGE,
     TRANSMITTER_PIN,
 )
-from payload.data_handling.data_processor import IMUDataProcessor
+from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
 from payload.hardware.imu import IMU
 from payload.hardware.receiver import Receiver
@@ -60,7 +59,7 @@ def run_flight(args: argparse.Namespace) -> None:
 
 def create_components(
     args: argparse.Namespace,
-) -> tuple[BaseIMU, Logger, IMUDataProcessor, Transmitter, BaseReceiver]:
+) -> tuple[BaseIMU, Logger, DataProcessor, Transmitter, BaseReceiver]:
     """
     Creates the system components needed for the payload system. Depending on its arguments, it
     will return either mock or real components.
@@ -95,7 +94,7 @@ def create_components(
         receiver = Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)
 
     # Initialize data processing
-    data_processor = IMUDataProcessor()
+    data_processor = DataProcessor()
     return imu, logger, data_processor, transmitter, receiver
 
 
@@ -108,6 +107,7 @@ def run_flight_loop(
     :param flight_display: Display interface for flight data.
     :param args: Command line arguments determining the configuration.
     """
+    # TODO: graceful shutdown
     try:
         payload.start()
         flight_display.start()

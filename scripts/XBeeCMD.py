@@ -1,13 +1,8 @@
-from enum import Enum, auto
-import time
-import sys
 import threading
-import logging
-import math
+import time
 
 from ..spaceducks.shared.utils import readline
 from ..spaceducks.shared.xbee_interface import XbeeInterface
-from ..spaceducks.shared.state import MESSAGE_TYPES
 
 xbee_port = 10  # RX pin
 
@@ -41,5 +36,5 @@ class XBeeCMD:
 
             try:
                 print(data)
-            except Exception as e:
+            except Exception:
                 print("ERROR")

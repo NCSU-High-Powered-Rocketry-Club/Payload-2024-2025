@@ -17,6 +17,7 @@ class Receiver(BaseReceiver):
     def __init__(self, serial_port: str, baud_rate: int) -> None:
         self.serial_port = serial_port
         self.baud_rate = baud_rate
+        # TODO: not thread safe
         self._latest_message: str = NO_MESSAGE
         self._stop_event = threading.Event()
         self._thread = threading.Thread(target=self._listen, daemon=True)
@@ -29,16 +30,17 @@ class Receiver(BaseReceiver):
     def start(self) -> None:
         """Starts the listening thread."""
         self._stop_event.clear()
-        self._thread = threading.Thread(target=self._listen, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
         """Stops the listening thread."""
         self._stop_event.set()
+        # TODO: do this elegantly
         self._thread.join(timeout=3)
 
     def _listen(self) -> None:
         """Continuously listens for serial input."""
+        # TODO: clean up these prints and expand docstring
         try:
             with serial.Serial(self.serial_port, self.baud_rate) as ser:
                 print(f"Listening on {self.serial_port} at {self.baud_rate} baud rate...")
