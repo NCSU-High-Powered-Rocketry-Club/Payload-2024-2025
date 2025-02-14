@@ -122,6 +122,10 @@ TRANSMITTER_PIN = 8
 DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
 """The path to the Direwolf configuration file."""
 
+MOCK_MESSAGE_PATH = Path("mock_message.txt")
+"""The path to the file that holds the message that the mock transmitter sends to the mock receiver.
+This should be gitignored."""
+
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
