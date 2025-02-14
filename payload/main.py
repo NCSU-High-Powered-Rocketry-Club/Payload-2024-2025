@@ -14,7 +14,7 @@ from payload.constants import (
     RECEIVER_BAUD_RATE,
     RECEIVER_SERIAL_PORT,
     TRANSMIT_MESSAGE,
-    TRANSMITTER_PIN,
+    TRANSMITTER_PIN, MOCK_MESSAGE_PATH,
 )
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
@@ -27,6 +27,7 @@ from payload.mock.display import FlightDisplay
 from payload.mock.mock_imu import MockIMU
 from payload.mock.mock_logger import MockLogger
 from payload.mock.mock_receiver import MockReceiver
+from payload.mock.mock_transmitter import MockTransmitter
 from payload.payload import PayloadContext
 from payload.utils import arg_parser
 
@@ -77,7 +78,7 @@ def create_components(
         )
         logger = MockLogger(LOGS_PATH, delete_log_file=not args.keep_log_file)
         transmitter = (
-            Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH) if args.real_transmitter else None
+            Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH) if args.real_transmitter else MockTransmitter(MOCK_MESSAGE_PATH)
         )
         receiver = (
             Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)

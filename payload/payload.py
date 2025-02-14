@@ -9,6 +9,7 @@ from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
+from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
@@ -62,7 +63,7 @@ class PayloadContext:
         self.imu: BaseIMU = imu
         self.logger: Logger = logger
         self.data_processor: DataProcessor = data_processor
-        self.transmitter: Transmitter = transmitter
+        self.transmitter: BaseTransmitter = transmitter
         self.receiver: BaseReceiver = receiver
 
         # The rocket starts in the StandbyState
@@ -81,6 +82,7 @@ class PayloadContext:
         """
         # TODO: make threads safer by using a context manager
         self.imu.start()
+        self.transmitter.start()
         self.receiver.start()
         self.logger.start()
 
@@ -96,9 +98,8 @@ class PayloadContext:
         print("Stopped IMU")
         self.receiver.stop()
         print("Stopped Receiver")
-        if self.transmitter:
-            self.transmitter.stop()
-            print("Stopped Transmitter")
+        self.transmitter.stop()
+        print("Stopped Transmitter")
         self.logger.stop()
         print("Stopping Logger")
         self.shutdown_requested = True
@@ -146,13 +147,8 @@ class PayloadContext:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """
-        # We check here because the mock doesn't have a transmitter
-        if self.transmitter:
-            print(
-                "transmittingtransmittingtransmittingtransmittingtransmittingtransmittingtransmitting"
-            )
-            message_string = "start: " + str(self.processed_data_packet)
-            self.transmitter.send_message(message_string)
+        message_string = "start: " + str(self.processed_data_packet)
+        self.transmitter.send_message(message_string)
 
     def remote_override(self, message: str):
         """
