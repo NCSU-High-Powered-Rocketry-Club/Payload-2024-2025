@@ -131,6 +131,9 @@ class Logger:
             enc_hook=Logger._convert_unknown_type,  # converts np float to str
         )
 
+        # Let's drop the "time_since_last_data_packet" field:
+        processed_data_packet_dict.pop("time_since_last_data_packet", None)
+
         logged_data_packet.update(processed_data_packet_dict)
 
         return logged_data_packet

@@ -12,7 +12,8 @@ class ProcessorDataPacket(msgspec.Struct):
 
     current_altitude: np.float64  # This is the zeroed-out altitude of the rocket.
     # This is the velocity of the rocket, in the upward axis (whichever way is up)
-    vertical_velocity: np.float64
+    velocity_from_acceleration: np.float64
+    velocity_from_altitude: np.float64
     # This is the rotated compensated acceleration of the vertical axis
     vertical_acceleration: np.float64
     # dt is the time difference between the current and previous data point
@@ -39,7 +40,7 @@ class ProcessorDataPacket(msgspec.Struct):
         """
         return (
             f"{self.current_altitude},"
-            f"{self.vertical_velocity},"
+            f"{self.velocity_from_acceleration},"
             f"{self.vertical_acceleration},"
             f"{self.time_since_last_data_packet},"
             f"{self.maximum_altitude},"

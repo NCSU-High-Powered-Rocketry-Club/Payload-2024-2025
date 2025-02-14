@@ -39,7 +39,8 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
 
     # Processed Data Packet Fields
     current_altitude: float | None
-    vertical_velocity: float | None
+    velocity_from_acceleration: float | None
+    velocity_from_altitude: float | None
     vertical_acceleration: float | None
     maximum_altitude: float | None
     pitch: float | None

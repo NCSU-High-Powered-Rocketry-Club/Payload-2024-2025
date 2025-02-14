@@ -139,11 +139,12 @@ class FlightDisplay:
             # Format time as MM:SS:
             f"Launch time:               {G}T+{time.strftime('%M:%S', time.gmtime(time_since_launch))}{RESET}",  # noqa: E501
             f"State:                     {G}{self._payload.state.name:<15}{RESET}",
-            f"Current velocity:          {G}{data_processor.vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
-            f"Max velocity so far:       {G}{data_processor.max_vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Current accel velocity:    {G}{data_processor.velocity_from_acceleration:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Max velocity so far:       {G}{data_processor.max_velocity_from_acceleration:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Current alt velocity:      {G}{data_processor.velocity_from_altitude:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Current height:            {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
-            f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}"
+            f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}",
         ]
         # Print the output
         print("\n".join(output))
