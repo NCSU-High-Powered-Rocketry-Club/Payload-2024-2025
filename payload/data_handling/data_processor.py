@@ -125,7 +125,11 @@ class DataProcessor:
         if self._last_data_packet is None:
             self._first_update()
 
-        self._time_difference = self._calculate_time_difference()
+        self._time_difference = np.float64(
+            convert_milliseconds_to_seconds(
+                self._data_packet.timestamp - self._last_data_packet.timestamp
+            )
+        )
 
         self._rotated_acceleration = self._calculate_rotated_acceleration()
         self._velocity_from_acceleration = self._calculate_velocity_from_acceleration()
@@ -268,8 +272,11 @@ class DataProcessor:
 
         # If we have a different altitude, we can calculate the velocity
         if (
-            abs(self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt)
-            > ALTITUDE_DEADBAND_METERS
+            deadband(
+                self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt,
+                ALTITUDE_DEADBAND_METERS,
+            )
+            > 0
         ):
             # Calculate the velocity using the altitude difference and the time difference
             velocity = np.float64(
@@ -284,19 +291,3 @@ class DataProcessor:
             # If the altitude hasn't changed, we use the last velocity
             velocity = self._velocity_from_altitude
         return velocity
-
-    def _calculate_time_difference(self) -> np.float64:
-        """
-        Calculates the time difference between the data packet and the previous data packet.
-        This cannot be called on the first update as _last_data_packet is None. Units are in
-        seconds.
-        :return: A float with the time difference between the data packet and the previous
-        data packet.
-        """
-        # calculate the time difference between the data packets
-        # We are converting from ms to s, since we don't want to have a velocity in m/ms^2
-        return np.float64(
-            convert_milliseconds_to_seconds(
-                self._data_packet.timestamp - self._last_data_packet.timestamp
-            )
-        )
