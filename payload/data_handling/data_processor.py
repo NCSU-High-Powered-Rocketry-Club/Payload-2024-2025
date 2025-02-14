@@ -22,6 +22,7 @@ class IMUDataProcessor:
 
     __slots__ = (
         "_current_altitude",
+        "_current_orientation_quaternions",
         "_data_packet",
         "_initial_altitude",
         "_last_data_packet",
@@ -49,6 +50,7 @@ class IMUDataProcessor:
         self._initial_altitude: np.float64 | None = None
         self._current_altitude: np.float64 = np.float64(0.0)
         self._last_data_packet: IMUDataPacket | None = None
+        self._current_orientation_quaternions: R | None = None
         self._rotated_acceleration: np.float64 = np.float64(0.0)
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
@@ -98,6 +100,10 @@ class IMUDataProcessor:
             return self._last_data_packet.timestamp
         except AttributeError:  # If we don't have a last data packet
             return 0
+
+    @property
+    def roll_pitch_yaw(self) -> np.ndarray[np.float64]:
+        return self._current_orientation_quaternions.as_euler("xyz", degrees=True)
 
     def update(self, data_packet: IMUDataPacket) -> None:
         """
@@ -162,6 +168,20 @@ class IMUDataProcessor:
         # This is us getting the rocket's initial altitude from the first data packets
         self._initial_altitude = self._data_packet.pressureAlt
 
+        # This is us getting the rocket's initial orientation
+        # Convert initial orientation quaternion array to a scipy Rotation object
+        # This will automatically normalize the quaternion as well:
+        self._current_orientation_quaternions = R.from_quat(
+            np.array(
+                [
+                    self._data_packet.estOrientQuaternionW,
+                    self._data_packet.estOrientQuaternionX,
+                    self._data_packet.estOrientQuaternionY,
+                    self._data_packet.estOrientQuaternionZ,
+                ]
+            ),
+            scalar_first=True,  # This means the order is w, x, y, z.
+        )
 
     def _calculate_current_altitude(self) -> np.float64:
         """
@@ -177,29 +197,26 @@ class IMUDataProcessor:
 
         :return: float containing the vertical acceleration
         """
-
+        self._current_orientation_quaternions = R.from_quat(
+            np.array(
+                [
+                    self._data_packet.estOrientQuaternionW,
+                    self._data_packet.estOrientQuaternionX,
+                    self._data_packet.estOrientQuaternionY,
+                    self._data_packet.estOrientQuaternionZ,
+                ]
+            ),
+            scalar_first=True,  # This means the order is w, x, y, z.
+        )
 
         # Accelerations are in m/s^2
         x_accel = self._data_packet.estCompensatedAccelX
         y_accel = self._data_packet.estCompensatedAccelY
         z_accel = self._data_packet.estCompensatedAccelZ
-        # Angular rates are in rads/s
-        gyro_x = self._data_packet.estAngularRateX
-        gyro_y = self._data_packet.estAngularRateY
-        gyro_z = self._data_packet.estAngularRateZ
 
-        # scipy docs for more info: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html
+        # Rotate the acceleration vector using the orientation
+        rotated_accel = self._current_orientation_quaternions.apply([x_accel, y_accel, z_accel])
 
-        dt = self._time_difference
-        delta_rotation = R.from_rotvec(np.array([gyro_x * dt, gyro_y * dt, gyro_z * dt]))
-
-        # Update the current orientation by applying the delta rotation
-        current_orientation = current_orientation * delta_rotation
-
-        # Rotate the acceleration vector using the updated orientation
-        rotated_accel = current_orientation.apply([x_accel, y_accel, z_accel])
-        # Update the class attribute with the latest quaternion orientation
-        self._current_orientation_quaternions = current_orientation
         # Vertical acceleration will always be the 3rd element of the rotated vector,
         # regardless of orientation.
         return -rotated_accel[2]

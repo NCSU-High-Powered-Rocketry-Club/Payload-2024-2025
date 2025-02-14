@@ -94,7 +94,7 @@ class StandbyState(State):
         if data.current_altitude > TAKEOFF_HEIGHT_METERS:
             self.next_state()
             return
-        
+
         # self.next_state()
 
     def next_state(self):
@@ -138,7 +138,6 @@ class CoastState(State):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
         super().update()
         # self.next_state()
-
 
         data = self.context.data_processor
 
@@ -184,7 +183,6 @@ class FreeFallState(State):
         ):
             self.next_state()
         # self.next_state()
-
 
     def next_state(self):
         self.context.state = LandedState(self.context)

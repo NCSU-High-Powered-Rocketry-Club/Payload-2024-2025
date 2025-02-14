@@ -28,8 +28,8 @@ class PayloadContext:
 
     __slots__ = (
         "_last_transmission_time",
-        "_transmitting_latch",
         "_stop_latch",
+        "_transmitting_latch",
         "context_data_packet",
         "data_processor",
         "imu",
@@ -138,6 +138,7 @@ class PayloadContext:
             self.imu_data_packet,
             self.processed_data_packet,
         )
+        print(self.data_processor.roll_pitch_yaw)
 
     def transmit_data(self) -> None:
         """
@@ -145,7 +146,9 @@ class PayloadContext:
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            print("transmittingtransmittingtransmittingtransmittingtransmittingtransmittingtransmitting")
+            print(
+                "transmittingtransmittingtransmittingtransmittingtransmittingtransmittingtransmitting"
+            )
             message_string = "start: " + str(self.processed_data_packet)
             self.transmitter.send_message(message_string)
 
