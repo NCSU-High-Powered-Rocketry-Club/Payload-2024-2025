@@ -6,6 +6,7 @@ from payload.constants import STOP_MESSAGE, TRANSMIT_MESSAGE
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
+from payload.hardware.camera import Camera
 from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
@@ -30,6 +31,7 @@ class PayloadContext:
         "_last_transmission_time",
         "_stop_latch",
         "_transmitting_latch",
+        "camera",
         "context_data_packet",
         "data_processor",
         "imu",
@@ -49,6 +51,7 @@ class PayloadContext:
         data_processor: DataProcessor,
         transmitter: Transmitter,
         receiver: BaseReceiver,
+        camera: Camera,
     ) -> None:
         """
         Initializes the payload context with the specified hardware objects, logger, and data
@@ -64,6 +67,7 @@ class PayloadContext:
         self.data_processor: DataProcessor = data_processor
         self.transmitter: Transmitter = transmitter
         self.receiver: BaseReceiver = receiver
+        self.camera: Camera = camera
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
@@ -83,11 +87,12 @@ class PayloadContext:
         self.imu.start()
         self.receiver.start()
         self.logger.start()
+        self.camera.start()
 
     def stop(self) -> None:
         """
-        Handles shutting down the payload. This will cause the main loop to break. It stops the IMU
-        and stops the logger.
+        Handles shutting down the payload. This will cause the main loop to break. It stops all the
+        components like IMU, Logger, Transmitter, Receiver, and the Camera.
         """
         # TODO: make a better way to print out what is stopping
         if self.shutdown_requested:
@@ -100,7 +105,9 @@ class PayloadContext:
             self.transmitter.stop()
             print("Stopped Transmitter")
         self.logger.stop()
-        print("Stopping Logger")
+        print("Stopped Logger")
+        self.camera.stop()
+        print("Stopped Camera")
         self.shutdown_requested = True
         print("Stopped Everything")
 
@@ -148,9 +155,7 @@ class PayloadContext:
         """
         # We check here because the mock doesn't have a transmitter
         if self.transmitter:
-            print(
-                "transmittingtransmittingtransmittingtransmittingtransmittingtransmittingtransmitting"
-            )
+            print("transmitting " * 10)
             message_string = "start: " + str(self.processed_data_packet)
             self.transmitter.send_message(message_string)
 

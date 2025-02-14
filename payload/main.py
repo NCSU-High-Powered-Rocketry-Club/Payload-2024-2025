@@ -18,11 +18,13 @@ from payload.constants import (
 )
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
+from payload.hardware.camera import Camera
 from payload.hardware.imu import IMU
 from payload.hardware.receiver import Receiver
 from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
+from payload.mock.mock_camera import MockCamera
 from payload.mock.display import FlightDisplay
 from payload.mock.mock_imu import MockIMU
 from payload.mock.mock_logger import MockLogger
@@ -48,9 +50,9 @@ def run_mock_flight() -> None:
 def run_flight(args: argparse.Namespace) -> None:
     mock_time_start = time.time()
 
-    imu, logger, data_processor, transmitter, receiver = create_components(args)
+    imu, logger, data_processor, transmitter, receiver, camera = create_components(args)
     # Initialize the payload context and display
-    payload = PayloadContext(imu, logger, data_processor, transmitter, receiver)
+    payload = PayloadContext(imu, logger, data_processor, transmitter, receiver, camera)
     flight_display = FlightDisplay(payload, mock_time_start, args)
 
     # Run the main flight loop
@@ -86,16 +88,18 @@ def create_components(
                 MOCK_RECEIVER_INITIAL_DELAY, MOCK_RECEIVER_RECEIVE_DELAY, TRANSMIT_MESSAGE
             )
         )
+        camera = Camera() if args.real_camera else MockCamera()
     else:
         # Use real hardware components
         imu = IMU(ARDUINO_SERIAL_PORT, ARDUINO_BAUD_RATE)
         logger = Logger(LOGS_PATH)
         transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
         receiver = Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)
+        camera = Camera()
 
     # Initialize data processing
     data_processor = DataProcessor()
-    return imu, logger, data_processor, transmitter, receiver
+    return imu, logger, data_processor, transmitter, receiver, camera
 
 
 def run_flight_loop(

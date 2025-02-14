@@ -1,7 +1,7 @@
 [project]
 name = "Payload-2024-2025"
 description = "Codebase for the 2024 - 2025 NASA Student Launch Competition"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 version = "0.1.0"
 readme = "README.md"
 dependencies = [
@@ -30,6 +30,14 @@ rpi = [  # Dependencies which only run on the pi.
     "rpi-gpio>=0.7.1",
 ]
 
+# Need to run `sudo apt install `libcap-dev`, `libcamera-dev`,
+# `libkms++-dev`, `libfmt-dev`, `libdrm-dev` to build and install everything camera related.
+camera = [
+    "picamera2>=0.3.24",
+    "rpi-libcamera>=0.1a7",
+    "rpi-kms>=0.1a1",
+]
+
 [project.scripts]
 mock = "payload.main:run_mock_flight"
 real = "payload.main:run_real_flight"
@@ -55,7 +63,7 @@ show-fixes = true
 exclude = ["scripts"]
 
 [tool.ruff.lint]
-ignore = ["PLR2004", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PERF203", "ISC001", "T201"]
+ignore = ["PLR2004", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PERF203", "ISC001", "T201", "S603", "S607"]
 select = ["E", "F", "I", "PL", "UP", "RUF", "PTH", "C4", "B", "PIE", "SIM", "RET", "RSE",
           "G", "ISC", "PT", "ASYNC", "TCH", "SLOT", "PERF", "PYI", "FLY", "AIR", "Q", "INP", 
           "W", "YTT", "DTZ", "ARG", "T20", "FURB", "D100", "D101", "D300", "D418",

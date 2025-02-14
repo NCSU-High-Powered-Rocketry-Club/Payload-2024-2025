@@ -1,13 +1,15 @@
+"""Module for handling the transmission of data via APRS and direwolf."""
+
 import re
 import subprocess
 import threading
 import time
+from contextlib import suppress
+from pathlib import Path
 
-try:
+with suppress(ImportError):
     # TODO: convert this to gpiozero, also go through and organize methods
     from RPi import GPIO
-except ImportError:
-    pass
 
 
 class Transmitter:
@@ -18,7 +20,7 @@ class Transmitter:
 
     __slots__ = ("_stop_event", "config_path", "gpio_pin", "message_worker_thread")
 
-    def __init__(self, gpio_pin, config_path) -> None:
+    def __init__(self, gpio_pin: int, config_path: Path) -> None:
         """
         Initializes the transmitter with the specified GPIO pin and Direwolf configuration file
         path.
@@ -51,7 +53,7 @@ class Transmitter:
         :param new_comment: The new comment to set in the Direwolf configuration file.
         """
         try:
-            with open(self.config_path) as file:
+            with self.config_path.open() as file:
                 lines = file.readlines()
 
             found = False
@@ -65,7 +67,7 @@ class Transmitter:
                 print("PBEACON line not found in the configuration file.")
                 return False
 
-            with open(self.config_path, "w") as file:
+            with self.config_path.open("w") as file:
                 file.writelines(lines)
 
             return True
@@ -90,7 +92,7 @@ class Transmitter:
 
         subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
         time.sleep(2)
-        for i in range(20):
+        for _ in range(20):
             if self._stop_event.is_set():
                 self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
                 break

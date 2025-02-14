@@ -54,6 +54,12 @@ IMU_APPROXIMATE_FREQUENCY = 50
 """The frequency at which the IMU sends data packets, this is 50Hz"""
 
 # -------------------------------------------------------
+# Camera Configuration
+# -------------------------------------------------------
+
+CAMERA_SAVE_PATH = Path("logs/video.h264")
+
+# -------------------------------------------------------
 # Logging Configuration
 # -------------------------------------------------------
 
@@ -119,7 +125,7 @@ from being considered as a change in altitude."""
 TRANSMITTER_PIN = 8
 """This is the GPIO pin that the transmitter is connected to."""
 
-DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
+DIREWOLF_CONFIG_PATH = Path("/home/pi/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
 TRANSMISSION_DELAY = 10.0

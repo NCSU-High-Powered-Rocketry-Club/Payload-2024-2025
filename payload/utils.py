@@ -128,10 +128,18 @@ def arg_parser(mock_invocation: bool = False) -> argparse.Namespace:
         default=False,
     )
 
+    parser.add_argument(
+        "-c",
+        "--real-camera",
+        help="Run the mock replay with the real camera.",
+        action="store_true",
+        default=False,
+    )
+
     args = parser.parse_args()
 
     # Check if the user has passed any options that are only available in mock replay mode:
-    if any([args.keep_log_file, args.fast_replay, args.path]) and not args.mock:
+    if any([args.keep_log_file, args.fast_replay, args.path, args.real_camera]) and not args.mock:
         parser.error(
             "The, `--keep-log-file`, `--fast-replay`, and `--path` "
             "options are only available in mock replay mode. Please pass `-m` or `--mock` "
