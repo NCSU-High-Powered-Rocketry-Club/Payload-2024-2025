@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from payload.constants import STOP_MESSAGE, TRANSMIT_MESSAGE
-from payload.data_handling.data_processor import IMUDataProcessor
+from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.hardware.transmitter import Transmitter
@@ -12,7 +12,7 @@ from payload.interfaces.base_receiver import BaseReceiver
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
-    from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
+    from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
     from payload.hardware.imu import IMUDataPacket
 
 
@@ -46,7 +46,7 @@ class PayloadContext:
         self,
         imu: BaseIMU,
         logger: Logger,
-        data_processor: IMUDataProcessor,
+        data_processor: DataProcessor,
         transmitter: Transmitter,
         receiver: BaseReceiver,
     ) -> None:
@@ -61,7 +61,7 @@ class PayloadContext:
         """
         self.imu: BaseIMU = imu
         self.logger: Logger = logger
-        self.data_processor: IMUDataProcessor = data_processor
+        self.data_processor: DataProcessor = data_processor
         self.transmitter: Transmitter = transmitter
         self.receiver: BaseReceiver = receiver
 
@@ -69,7 +69,7 @@ class PayloadContext:
         self.state: State = StandbyState(self)
         self.shutdown_requested = False
         self.imu_data_packet: IMUDataPacket | None = None
-        self.processed_data_packet: ProcessedDataPacket | None = None
+        self.processed_data_packet: ProcessorDataPacket | None = None
         self.context_data_packet: ContextDataPacket | None = None
 
         self._transmitting_latch = False
@@ -79,6 +79,7 @@ class PayloadContext:
         """
         Starts logger processes. This is called before the main while loop starts.
         """
+        # TODO: make threads safer by using a context manager
         self.imu.start()
         self.receiver.start()
         self.logger.start()
@@ -88,6 +89,7 @@ class PayloadContext:
         Handles shutting down the payload. This will cause the main loop to break. It stops the IMU
         and stops the logger.
         """
+        # TODO: make a better way to print out what is stopping
         if self.shutdown_requested:
             return
         self.imu.stop()
@@ -120,7 +122,7 @@ class PayloadContext:
         self.data_processor.update(self.imu_data_packet)
 
         # Get the processed data packet from the data processor
-        self.processed_data_packet = self.data_processor.get_processed_data_packet()
+        self.processed_data_packet = self.data_processor.get_processor_data_packet()
 
         # Check if we have a message from the ground station
         self.remote_override(self.receiver.latest_message)
@@ -128,6 +130,7 @@ class PayloadContext:
         # Update the state machine
         self.state.update()
 
+        # We make a data packet with info about what the context is doing
         self.context_data_packet = ContextDataPacket(
             self.state.name[0], self.receiver.latest_message
         )

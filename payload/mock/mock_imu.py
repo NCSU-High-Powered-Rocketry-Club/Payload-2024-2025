@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from payload.constants import FREQUENCY
+from payload.constants import IMU_APPROXIMATE_FREQUENCY
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.interfaces.base_imu import BaseIMU
 
@@ -62,7 +62,7 @@ class MockIMU(BaseIMU):
         current_time = time.time()
         # We simulate the delay the real imu has in sending data by checking the time that has
         # passed since the last fetch.
-        if current_time - self._last_fetch_time < 1 / FREQUENCY:  # 50Hz = 20ms
+        if current_time - self._last_fetch_time < 1 / IMU_APPROXIMATE_FREQUENCY:  # 50Hz = 20ms
             return None  # Skip this call if 20ms hasn't passed
 
         # If we have reached the end of the data, stop the IMU

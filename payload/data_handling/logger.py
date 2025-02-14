@@ -14,8 +14,8 @@ from payload.constants import (
 )
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
-from payload.data_handling.packets.logged_data_packet import LoggedDataPacket
-from payload.data_handling.packets.processed_data_packet import ProcessedDataPacket
+from payload.data_handling.packets.logger_data_packet import LoggerDataPacket
+from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
 from payload.utils import modify_multiprocessing_queue_windows
 
 
@@ -63,14 +63,14 @@ class Logger:
         # Create a new log file with the next number in sequence
         self.log_path = log_dir / f"log_{max_suffix + 1}.csv"
         with self.log_path.open(mode="w", newline="") as file_writer:
-            writer = csv.DictWriter(file_writer, fieldnames=list(LoggedDataPacket.__annotations__))
+            writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
             writer.writeheader()
 
         # Makes a queue to store log messages, basically it's a process-safe list that you add to
         # the back and pop from front, meaning that things will be logged in the order they were
         # added.
         # Signals (like stop) are sent as strings, but data is sent as dictionaries
-        self._log_queue: multiprocessing.Queue[LoggedDataPacket | Literal["STOP"]] = (
+        self._log_queue: multiprocessing.Queue[LoggerDataPacket | Literal["STOP"]] = (
             multiprocessing.Queue()
         )
         modify_multiprocessing_queue_windows(self._log_queue)
@@ -88,23 +88,24 @@ class Logger:
         return self._log_process.is_alive()
 
     @staticmethod
-    def _convert_unknown_type(obj_type: Any) -> str:
+    def _convert_unknown_type(unknown_object: Any) -> str:
         """
         Truncates the decimal place of the object to 8 decimal places. Used by msgspec to
         convert numpy float64 to a string.
-        :param obj_type: The object to truncate.
+        :param unknown_object: The object to truncate.
         :return: The truncated object.
         """
-        return f"{obj_type:.8f}"
+        return f"{unknown_object:.8f}"
 
     @staticmethod
     def _prepare_log_dict(
         context_data_packet: ContextDataPacket,
         imu_data_packet: IMUDataPacket,
-        processed_data_packet: ProcessedDataPacket,
-    ) -> LoggedDataPacket:
+        processed_data_packet: ProcessorDataPacket,
+    ) -> LoggerDataPacket:
         """
-        Creates a data packet dictionary representing a row of data to be logged.
+        Creates a data packet dictionary representing a row of data to be logged. To control what
+        is logged, you can add or remove fields from LoggerDataPacket.
         :param context_data_packet: The context data packet to log.
         :param imu_data_packet: The IMU data packet to log.
         :param processed_data_packet: The processed data packet to log.
@@ -113,7 +114,7 @@ class Logger:
 
         # Let's first add the state field (This might be expanded into a context data pack like in
         # airbrakes code):
-        logged_data_packet: LoggedDataPacket = {}
+        logged_data_packet: LoggerDataPacket = {}
 
         # Convert the context data packet to a dictionary and add it to the logged data packet
         context_data_packet_dict: dict[str, str] = to_builtins(context_data_packet)
@@ -129,6 +130,7 @@ class Logger:
             processed_data_packet,
             enc_hook=Logger._convert_unknown_type,  # converts np float to str
         )
+
         # Let's drop the "time_since_last_data_packet" field:
         processed_data_packet_dict.pop("time_since_last_data_packet", None)
 
@@ -155,13 +157,13 @@ class Logger:
         self,
         context_data_packet: ContextDataPacket,
         imu_data_packet: IMUDataPacket,
-        processed_data_packet: ProcessedDataPacket,
+        processed_data_packet: ProcessorDataPacket,
     ) -> None:
         """
         Logs the current state and IMU data to the CSV file.
         :param context_data_packet: The context data packet to log.
-        :param imu_data_packet: The IMU data packets to log.
-        :param processed_data_packet: The processed data packets to log.
+        :param imu_data_packet: The IMU data packet to log.
+        :param processed_data_packet: The processed data packet to log.
         """
         # We are populating a dictionary with the fields of the logged data packet
         logged_data_packet = Logger._prepare_log_dict(
@@ -174,7 +176,7 @@ class Logger:
 
     # ------------------------ ALL METHODS BELOW RUN IN A SEPARATE PROCESS -------------------------
     @staticmethod
-    def _truncate_floats(data: LoggedDataPacket) -> dict[str, str | object]:
+    def _truncate_floats(data: LoggerDataPacket) -> dict[str, str | object]:
         """
         Truncates the decimal place of the floats in the dictionary to 8 decimal places.
         :param data: The dictionary to truncate.
@@ -198,11 +200,11 @@ class Logger:
 
         # Set up the csv logging in the new process
         with self.log_path.open(mode="a", newline="") as file_writer:
-            writer = csv.DictWriter(file_writer, fieldnames=list(LoggedDataPacket.__annotations__))
+            writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
             while True:
                 # Get a message from the queue (this will block until a message is available)
                 # Because there's no timeout, it will wait indefinitely until it gets a message.
-                message_fields: list[LoggedDataPacket | Literal["STOP"]] = self._log_queue.get_many(
+                message_fields: list[LoggerDataPacket | Literal["STOP"]] = self._log_queue.get_many(
                     timeout=MAX_GET_TIMEOUT_SECONDS
                 )
                 if STOP_SIGNAL in message_fields:

@@ -4,6 +4,7 @@ import threading
 import time
 
 try:
+    # TODO: convert this to gpiozero, also go through and organize methods
     from RPi import GPIO
 except ImportError:
     pass
@@ -15,7 +16,7 @@ class Transmitter:
     to our ground station.
     """
 
-    __slots__ = ("gpio_pin", "config_path", "_stop_event", "message_worker_thread")
+    __slots__ = ("_stop_event", "config_path", "gpio_pin", "message_worker_thread")
 
     def __init__(self, gpio_pin, config_path) -> None:
         """

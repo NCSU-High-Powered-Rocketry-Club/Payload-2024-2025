@@ -1,3 +1,5 @@
+"""Module for the MockReceiver class."""
+
 import threading
 import time
 
@@ -12,12 +14,12 @@ class MockReceiver(BaseReceiver):
     """
 
     __slots__ = (
-        "message",
-        "initial_delay",
-        "receive_delay",
-        "receive_message",
         "_running",
         "_thread",
+        "initial_delay",
+        "message",
+        "receive_delay",
+        "receive_message",
     )
 
     def __init__(self, initial_delay: float, receive_delay: float, receive_message: str) -> None:
