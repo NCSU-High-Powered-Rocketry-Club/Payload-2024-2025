@@ -45,11 +45,6 @@ PACKET_BYTE_SIZE = 84
 MAX_GET_TIMEOUT_SECONDS = 100  # seconds
 """The maximum amount of time in seconds to wait for a get operation on the queue."""
 
-IMU_TIMEOUT_SECONDS = 3.0
-"""The maximum amount of time in seconds the IMU process to do something (e.g. read a packet) before
-it is considered to have timed out. This is used to prevent the program from deadlocking if the IMU
-stops sending data."""
-
 IMU_APPROXIMATE_FREQUENCY = 50
 """The frequency at which the IMU sends data packets, this is 50Hz"""
 
@@ -137,6 +132,7 @@ NO_MESSAGE_TRANSMITTED = "No message transmitted"
 RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
+"""The baud rate the receiver is using"""
 
 NO_MESSAGE = "No Message Received"
 """The message that the receiver returns when there is no message to return"""
