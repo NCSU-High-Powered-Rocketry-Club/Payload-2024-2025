@@ -6,7 +6,6 @@ from payload.constants import NO_MESSAGE_TRANSMITTED, STOP_MESSAGE, TRANSMIT_MES
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
-from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
 from payload.interfaces.base_transmitter import BaseTransmitter
@@ -49,7 +48,7 @@ class PayloadContext:
         imu: BaseIMU,
         logger: Logger,
         data_processor: DataProcessor,
-        transmitter: Transmitter,
+        transmitter: BaseTransmitter,
         receiver: BaseReceiver,
     ) -> None:
         """

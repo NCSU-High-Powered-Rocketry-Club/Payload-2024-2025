@@ -4,7 +4,7 @@ import struct
 
 import serial
 
-from payload.constants import PACKET_BYTE_SIZE, PACKET_START_MARKER
+from payload.constants import ARDUINO_SERIAL_TIMEOUT, PACKET_BYTE_SIZE, PACKET_START_MARKER
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.interfaces.base_imu import BaseIMU
 
@@ -59,7 +59,7 @@ class IMU(BaseIMU):
             # Reads a single byte and checks if it is the start marker. We do this to properly sync
             # our code with the start of a packet. This will read through any junk data until it
             # finds the start marker.
-            byte = self._serial.read(1)
+            byte = self._serial.read(ARDUINO_SERIAL_TIMEOUT)
             if byte == PACKET_START_MARKER:
                 serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
                 return IMU._process_packet_data(serialized_data_packet)

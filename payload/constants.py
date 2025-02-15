@@ -35,6 +35,8 @@ connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the te
 
 ARDUINO_BAUD_RATE = 115200
 """The baud rate of the channel"""
+ARDUINO_SERIAL_TIMEOUT = 1
+"""The amount of time in seconds that the serial port waits for a message"""
 PACKET_START_MARKER = b"\xaa"
 """The start marker of the data packet. This helps use to know where a packet starts in the stream
 of bytes."""
@@ -140,6 +142,11 @@ TRANSMIT_MESSAGE = "TRANSMIT"
 """The message that the transmitter sends to the receiver to start transmitting data"""
 STOP_MESSAGE = "STOP"
 """The message that the transmitter sends to the receiver to stop transmitting data"""
+
+RECEIVER_THREAD_TIMEOUT = 3
+"""The amount of time in seconds that the receiver thread waits to force close"""
+RECEIVER_SERIAL_TIMEOUT = 1
+"""The amount of time in seconds that the receiver serial port waits for a message"""
 
 # These are in seconds
 MOCK_RECEIVER_INITIAL_DELAY = 5.0
