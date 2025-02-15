@@ -22,7 +22,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest",
-    "ruff",
+    "ruff>0.9.5",
+    "pre-commit",
 ]
 rpi = [  # Dependencies which only run on the pi.
     "rpi-gpio>=0.7.1",
