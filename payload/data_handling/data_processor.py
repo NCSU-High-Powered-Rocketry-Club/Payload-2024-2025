@@ -276,19 +276,35 @@ class DataProcessor:
 
     def _calculate_velocity_from_altitude(self) -> np.float64:
         """
-        Calculates the time difference between the data packet and the previous data packet.
-        This cannot be called on the first update as _last_data_packet is None. Units are in
-        seconds.
-        :return: A float with the time difference between the data packet and the previous
-            data packet.
+        Calculates the velocity of the rocket based by differentiating the altitude.
+        :return: The velocity of the rocket in m/s.
         """
-        # calculate the time difference between the data packets
-        # We are converting from ms to s, since we don't want to have a velocity in m/ms
-        return np.float64(
-            convert_milliseconds_to_seconds(
-                self._data_packet.timestamp - self._last_data_packet.timestamp
+        # If we don't have a last velocity timestamp, we can't calculate the velocity
+        if self._last_velocity_calculation_packet is None:
+            self._last_velocity_calculation_packet = self._data_packet
+            return np.float64(0.0)
+
+        # If we have a different altitude, we can calculate the velocity
+        if (
+            deadband(
+                self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt,
+                ALTITUDE_DEADBAND_METERS,
             )
-        )
+            != 0
+        ):
+            # Calculate the velocity using the altitude difference and the time difference
+            velocity = np.float64(
+                (self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt)
+                / convert_milliseconds_to_seconds(
+                    self._data_packet.timestamp - self._last_velocity_calculation_packet.timestamp
+                )
+            )
+            # Update the last velocity packet for the next update
+            self._last_velocity_calculation_packet = self._data_packet
+        else:
+            # If the altitude hasn't changed, we use the last velocity
+            velocity = self._velocity_from_altitude
+        return velocity
 
     def _calculate_crew_survivability(self) ->np.float64:
         """
