@@ -426,9 +426,9 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 camera = [
-    { name = "picamera2", specifier = ">=0.3.24" },
+    { name = "picamera2", specifier = ">=0.3.25" },
     { name = "rpi-kms", specifier = ">=0.1a1" },
-    { name = "rpi-libcamera", specifier = ">=0.1a7" },
+    { name = "rpi-libcamera", specifier = ">=0.1a8" },
 ]
 dev = [
     { name = "pytest" },
