@@ -109,6 +109,11 @@ GROUND_ALTITUDE_METERS = 10.0
 LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED = 35.0
 """The acceleration in m/s^2 that the rocket must be above before we consider it to have landed."""
 
+# ----------------- Landing to Program Stop -----------------
+
+STOP_AFTER_SECONDS = 5
+"""The time in seconds after which the program will stop itself."""
+
 # -------------------------------------------------------
 # Data Processor Configuration
 # -------------------------------------------------------

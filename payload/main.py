@@ -68,7 +68,7 @@ def create_components(
     Creates the system components needed for the payload system. Depending on its arguments, it
     will return either mock or real components.
     :param args: Command line arguments determining the configuration.
-    :return: A tuple containing the IMU, Logger, and data processor objects
+    :return: A tuple containing the objects needed to initalize `PayloadContext`.
     """
     if args.mock:
         # Replace hardware with mock objects for mock replay
@@ -115,11 +115,10 @@ def run_flight_loop(
     :param flight_display: Display interface for flight data.
     :param args: Command line arguments determining the configuration.
     """
-    # TODO: graceful shutdown
     try:
         payload.start()
         flight_display.start()
-        while True:
+        while not payload.shutdown_requested:
             # Update the state machine
             payload.update()
             # Stop the replay when the data is exhausted

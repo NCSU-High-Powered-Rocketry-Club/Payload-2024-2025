@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+from threading import Timer
 
 from payload.constants import (
     GROUND_ALTITUDE_METERS,
@@ -10,6 +11,7 @@ from payload.constants import (
     MAX_VELOCITY_THRESHOLD,
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
+    STOP_AFTER_SECONDS,
 )
 from payload.utils import convert_milliseconds_to_seconds
 
@@ -23,7 +25,7 @@ class State(ABC):
     method that will be called every loop iteration and a next_state method that will be called
     when the state is over.
 
-    For payload, we will have 4 states:
+    For payload, we will have 5 states:
     1. Stand By - when the rocket is on the rail on the ground
     2. Motor Burn - when the motor is burning and the rocket is accelerating
     3. Flight - when the motor has burned out and the rocket is coasting
@@ -70,6 +72,8 @@ class StandbyState(State):
     When the rocket is on the rail on the ground.
     """
 
+    __slots__ = ()
+
     def update(self):
         """
         Checks if the rocket has launched, based on our velocity and altitude.
@@ -99,6 +103,13 @@ class MotorBurnState(State):
     When the motor is burning and the rocket is accelerating.
     """
 
+    __slots__ = ()
+
+    def __init__(self, context: "PayloadContext"):
+        """Overrides the __init__ to start the camera recording."""
+        super().__init__(context)
+        self.context.camera.start_recording()
+
     def update(self):
         """Checks to see if the acceleration has dropped to zero, indicating the motor has
         burned out."""
@@ -124,6 +135,8 @@ class CoastState(State):
     When the motor has burned out and the rocket is coasting to apogee.
     """
 
+    __slots__ = ()
+
     def update(self):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
         data = self.context.data_processor
@@ -147,6 +160,8 @@ class FreeFallState(State):
     """
     When the rocket is falling back to the ground after apogee.
     """
+
+    __slots__ = ()
 
     def update(self):
         """Check if the rocket has landed, based on our altitude."""
@@ -175,14 +190,18 @@ class LandedState(State):
     When the rocket has landed.
     """
 
+    __slots__ = ("stop_program_timer")
+
     def __init__(self, context: "PayloadContext"):
         super().__init__(context)
 
         # Starts the transmission at the beginning of landed state
         self.context.transmit_data()
+        self.stop_program_timer = Timer(STOP_AFTER_SECONDS, self.context.stop)
+        self.stop_program_timer.start()
 
     def update(self):
-        """We use this method to stop the payload system after we have hit our log buffer."""
+        """This method does nothing"""
 
     def next_state(self):
         # Explicitly do nothing, there is no next state

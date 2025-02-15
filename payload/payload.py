@@ -84,7 +84,8 @@ class PayloadContext:
 
     def start(self) -> None:
         """
-        Starts logger processes. This is called before the main while loop starts.
+        Starts the components of our payload such as the IMU, Transmitter, Receiver, etc. Must be 
+        called before `self.update()`
         """
         # TODO: make threads safer by using a context manager
         self.imu.start()
