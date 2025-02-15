@@ -16,7 +16,14 @@ class MockIMU(BaseIMU):
     and returns one row at a time as an IMUDataPacket at a fixed rate of 50Hz.
     """
 
-    __slots__ = ("_current_index", "_df", "_last_fetch_time", "_log_file_path", "_data", "_valid_columns")
+    __slots__ = (
+        "_current_index",
+        "_data",
+        "_df",
+        "_last_fetch_time",
+        "_log_file_path",
+        "_valid_columns",
+    )
 
     def __init__(self, log_file_path: Path | None = None) -> None:
         """

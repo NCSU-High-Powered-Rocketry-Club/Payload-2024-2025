@@ -84,7 +84,7 @@ class PayloadContext:
 
     def start(self) -> None:
         """
-        Starts the components of our payload such as the IMU, Transmitter, Receiver, etc. Must be 
+        Starts the components of our payload such as the IMU, Transmitter, Receiver, etc. Must be
         called before `self.update()`
         """
         # TODO: make threads safer by using a context manager

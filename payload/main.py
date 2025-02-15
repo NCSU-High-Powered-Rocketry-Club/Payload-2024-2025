@@ -115,12 +115,17 @@ def run_flight_loop(
     :param flight_display: Display interface for flight data.
     :param args: Command line arguments determining the configuration.
     """
+    payload.start()
+    flight_display.start()
+
     try:
-        payload.start()
-        flight_display.start()
-        while not payload.shutdown_requested:
+        while True:
             # Update the state machine
             payload.update()
+
+            # For some reason if you put the below as a loop condition, Ctrl+C doesn't work!!
+            if payload.shutdown_requested:
+                break
             # Stop the replay when the data is exhausted
             if args.mock and (not args.real_imu and not payload.imu.is_running):
                 break
@@ -129,9 +134,6 @@ def run_flight_loop(
     except KeyboardInterrupt:
         if args.mock:
             flight_display.end_mock_interrupted.set()
-    except Exception as e:
-        print(e)
-        raise e from None
     else:  # This is run if we have landed and the program is not interrupted (see state.py)
         if args.mock:
             # Stop the mock replay naturally if not interrupted
