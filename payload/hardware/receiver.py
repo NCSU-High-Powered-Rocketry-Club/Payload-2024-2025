@@ -52,6 +52,9 @@ class Receiver(BaseReceiver):
         ) as serial_connection:
             while not self._stop_event.is_set():
                 if serial_connection.in_waiting > 0:
+                    # This reads the incoming message from the serial port and decodes it. If it has
+                    # an error decoding, it will ignore the error it and just keep going. This could
+                    # be a potential issue if we start getting junk data.
                     line = serial_connection.readline().decode("utf-8", "ignore").strip()
                     if line:
                         with self._lock:

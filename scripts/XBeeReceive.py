@@ -1,21 +1,31 @@
 import serial
-
-SERIAL_PORT = "/dev/ttyAMA0"
-BAUD_RATE = 9600
+from payload.constants import RECEIVER_SERIAL_TIMEOUT, RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE
 
 
 def read_serial():
+    """Simulates core read behavior of Receiver class without threading."""
+    latest_message = "NO_MESSAGE"
+
     try:
-        with serial.Serial(SERIAL_PORT, BAUD_RATE) as ser:
-            print(f"V3: Listening on {SERIAL_PORT} at {BAUD_RATE} baud rate...")
+        with serial.Serial(
+                port=RECEIVER_SERIAL_PORT,
+                baudrate=RECEIVER_BAUD_RATE,
+                timeout=RECEIVER_SERIAL_TIMEOUT
+        ) as ser:
+            print(f"Listening on {RECEIVER_SERIAL_PORT} at {RECEIVER_BAUD_RATE} baud...")
+
             while True:
-                line = ser.readline().decode("utf-8", errors="ignore").strip()
-                if line:
-                    print(f"Received: {line}")
+                # Check for data before reading (non-blocking check)
+                if ser.in_waiting > 0:
+                    line = ser.readline().decode("utf-8", errors="ignore").strip()
+                    if line:
+                        latest_message = line
+                        print(f"Received: {latest_message}")
+
     except serial.SerialException as e:
-        print(f"Error: {e}")
+        print(f"Serial error: {e}")
     except KeyboardInterrupt:
-        print("Serial reading stopped.")
+        print("\nStopped listening. Final message:", latest_message)
 
 
 if __name__ == "__main__":

@@ -40,7 +40,7 @@ class IMU(BaseIMU):
         return IMUDataPacket(*unpacked_data)
 
     def start(self):
-        self._serial = serial.Serial(self._port, self._baud_rate, timeout=1)
+        self._serial = serial.Serial(self._port, self._baud_rate, timeout=ARDUINO_SERIAL_TIMEOUT)
 
     def stop(self):
         self._serial.close()
@@ -59,7 +59,7 @@ class IMU(BaseIMU):
             # Reads a single byte and checks if it is the start marker. We do this to properly sync
             # our code with the start of a packet. This will read through any junk data until it
             # finds the start marker.
-            byte = self._serial.read(ARDUINO_SERIAL_TIMEOUT)
+            byte = self._serial.read(1)
             if byte == PACKET_START_MARKER:
                 serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
                 return IMU._process_packet_data(serialized_data_packet)
