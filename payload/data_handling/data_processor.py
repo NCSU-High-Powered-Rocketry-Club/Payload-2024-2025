@@ -332,7 +332,10 @@ class DataProcessor:
         return updated_survival_chance
 
     #TODO: implement real landing velocity here    
-    def _finalize_crew_survivability(self):
+    def finalize_crew_survivability(self):
+        """
+        Deducts a percentage of survival chance based on the ground hit velocity
+        """
         landing_velocity = 0
         if(landing_velocity > 10):
             self.data_processor._crew_survivability = self.data_processor._crew_survivability*0.8
