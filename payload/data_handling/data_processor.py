@@ -283,7 +283,7 @@ class DataProcessor:
             data packet.
         """
         # calculate the time difference between the data packets
-        # We are converting from ms to s, since we don't want to have a velocity in m/ms^2
+        # We are converting from ms to s, since we don't want to have a velocity in m/ms
         return np.float64(
             convert_milliseconds_to_seconds(
                 self._data_packet.timestamp - self._last_data_packet.timestamp
@@ -298,20 +298,20 @@ class DataProcessor:
         :return: A float with the percent chance that our crew is still alive
         """
         
-        #Calculate the current 'intensity' of the flight
-        #Each iteration we subtract an amount from their survival 
-        #chance based on the intensity of the flight
 
         updated_survival_chance = self._crew_survivability
         
-        #TODO: Tweak constants in formula so that chance doesnt go straight to zero
-        intensity_percent = (np.abs(self.vertical_acceleration)*0.25 + 
-                             np.abs(self._data_packet.estAngularRateY) + 
-                             np.sin(self.roll_pitch_yaw[1] / 2) * 10
+        #These constants are optimized so that no constant alone largely affects the chance
+        #of survival
+        intensity_percent = (np.abs(self.vertical_acceleration)*       0.25 + 
+                             np.abs(self._data_packet.estAngularRateY)*1.00 + 
+                             np.sin(self.roll_pitch_yaw[1] / 2)*       10
                              )/100.0
 
-        if(intensity_percent > 0.15):
-            updated_survival_chance = self._crew_survivability*(1.0-intensity_percent)
+        if(intensity_percent > 0.20):
+            #Since the code is updated so frequently, intensity percent is divided by large
+            #factor to not instantly remove all survival chance 
+            updated_survival_chance = self._crew_survivability*( (1.0-intensity_percent/100) )
 
         return updated_survival_chance
 
