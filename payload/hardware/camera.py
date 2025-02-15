@@ -1,4 +1,4 @@
-"""Module to handle recording of the airbrakes with a camera."""
+"""Module to handle video recording of the payload with a camera."""
 
 import os
 from contextlib import suppress
@@ -16,7 +16,7 @@ with suppress(ImportError):
 class Camera:
     """
     This is the class used to interact with the camera on our rocket. It records on a separate
-    process.
+    thread.
     """
 
     __slots__ = ("camera_control_thread", "motor_burn_started", "stop_context_event")
@@ -32,7 +32,7 @@ class Camera:
         return self.camera_control_thread.is_alive()
 
     def start(self):
-        """Start the video recording, with a buffer. This starts recording in a different process"""
+        """Start the video recording, with a buffer. This starts recording in a different thread."""
         self.camera_control_thread.start()
 
     def stop(self):
@@ -46,8 +46,8 @@ class Camera:
         self.motor_burn_started.set()
 
     # ------------------------ ALL METHODS BELOW RUN IN A SEPARATE THREAD -------------------------
-    def _camera_control_loop(self):  # pragma: no cover
-        """Controls the camera recording process."""
+    def _camera_control_loop(self):
+        """Controls the camera recording thread."""
         # set logging level-
         os.environ["LIBCAMERA_LOG_LEVELS"] = "ERROR"
 

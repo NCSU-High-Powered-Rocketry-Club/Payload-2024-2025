@@ -17,7 +17,6 @@
   - [Running the Linter](#running-the-linter)
 - [Pi Usage](#pi-usage)
   - [Connecting to the Pi (SSH)](#connecting-to-the-pi-ssh)
-  - [Install and start the pigpio daemon on the Raspberry Pi](#install-and-start-the-pigpio-daemon-on-the-raspberry-pi)
   - [Run a real flight with real hardware](#run-a-real-flight-with-real-hardware)
   - [Running Test Scripts](#running-test-scripts)
 - [Contributing](#contributing)

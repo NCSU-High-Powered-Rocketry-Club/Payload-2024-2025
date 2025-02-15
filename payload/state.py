@@ -108,7 +108,7 @@ class MotorBurnState(State):
     def __init__(self, context: "PayloadContext"):
         """Overrides the __init__ to start the camera recording."""
         super().__init__(context)
-        self.context.camera.start_recording()
+        self.context.start_saving_camera_recording()
 
     def update(self):
         """Checks to see if the acceleration has dropped to zero, indicating the motor has

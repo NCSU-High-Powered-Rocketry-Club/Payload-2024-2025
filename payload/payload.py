@@ -96,8 +96,8 @@ class PayloadContext:
 
     def stop(self) -> None:
         """
-        Handles shutting down the payload. This will cause the main loop to break. It stops all the
-        components like IMU, Logger, Transmitter, Receiver, and the Camera.
+        Handles shutting down the payload. This will cause the main loop to break. It stops
+        components like the IMU, Logger, Transmitter, Receiver, etc.
         """
         # TODO: make a better way to print out what is stopping
         if self.shutdown_requested:
@@ -159,6 +159,12 @@ class PayloadContext:
         """
         self.transmitted_message = f"start: {self.processed_data_packet}"
         self.transmitter.send_message(self.transmitted_message)
+
+    def start_saving_camera_recording(self) -> None:
+        """
+        Starts recording the camera when the motor burn has started. See `MotorBurnState`.
+        """
+        self.camera.start_recording()
 
     def remote_override(self, message: str):
         """

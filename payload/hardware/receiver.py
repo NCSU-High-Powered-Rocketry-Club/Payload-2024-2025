@@ -1,4 +1,4 @@
-"""Module for implementing the actual receiver."""
+"""."""
 
 import threading
 
