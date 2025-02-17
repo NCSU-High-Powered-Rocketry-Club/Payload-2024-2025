@@ -39,7 +39,8 @@ class DataProcessor:
         "_yaw",
         "_roll",
         "calculating_crew_survivability",
-        "_velocity_rolling_average"
+        "_velocity_rolling_average",
+        "_landing_velocity"
     )
 
     def __init__(self):
@@ -70,6 +71,7 @@ class DataProcessor:
         self._velocity_from_altitude: np.float64 = np.float64(0.0)
         self._last_velocity_calculation_packet: IMUDataPacket | None = None
         self._velocity_rolling_average: list[np.float64] = []
+        self._landing_velocity: np.float64 = np.float64(0.0)
 
     @property
     def max_altitude(self) -> float:
@@ -188,9 +190,7 @@ class DataProcessor:
             roll=self.roll_pitch_yaw[0],
             pitch=self.roll_pitch_yaw[1],
             yaw=self.roll_pitch_yaw[2],
-            # TODO: Implement these
-            
-            landing_velocity=0.0,
+            landing_velocity = self._landing_velocity
         )
 
     def _first_update(self) -> None:
@@ -319,6 +319,13 @@ class DataProcessor:
             self._velocity_rolling_average.pop(0)
         return sum(self._velocity_rolling_average) / len(self._velocity_rolling_average)
 
+    def calculate_landing_velocity(self):
+        """Called upon landing state detection and gathers the last velocity reading"""
+
+        #Uses the first 5 values in the moving average to ensure there are no values
+        #of zero in the landing veleocity calculation if landing is detected slightly late
+        self._landing_velocity = sum(self._velocity_rolling_average[:5]) / 5
+
     def _calculate_crew_survivability(self) ->np.float64:
         """
         Calculates the probability that our crew of STEMnauts is alive depending on 
@@ -349,6 +356,5 @@ class DataProcessor:
         """
         Deducts a percentage of survival chance based on the ground hit velocity
         """
-        landing_velocity = 0
-        if(landing_velocity > 10):
+        if(self._landing_velocity > 10):
             self.data_processor._crew_survivability = self.data_processor._crew_survivability*0.8

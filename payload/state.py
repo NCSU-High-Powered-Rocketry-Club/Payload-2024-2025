@@ -185,6 +185,7 @@ class LandedState(State):
         # Starts the transmission at the beginning of landed state
         self.context.transmit_data()
         self.context.stop_survivability_calculation()
+        self.context.data_processor.calculate_landing_velocity()
     def update(self):
         """We use this method to stop the payload system after we have hit our log buffer."""
 
