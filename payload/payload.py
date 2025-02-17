@@ -165,16 +165,17 @@ class PayloadContext:
             self._stop_latch = True
             self._transmitting_latch = False
 
-    def start_survivability(self):
+    def start_survivability_calculation(self):
         """
         Starts the calculation of crew survivability percent. 
         Called upon motor burn out
         """
         self.data_processor.calculating_crew_survivability = True
 
-    def ground_hit_intensity(self):
+    def stop_survivability_calculation(self):
         """
         Calls function in data_processor which finalizes the crew
         survivability percentage based on ground hit velocity.
         """
+        self.data_processor.calculating_crew_survivability = False
         self.data_processor.finalize_crew_survivability()
