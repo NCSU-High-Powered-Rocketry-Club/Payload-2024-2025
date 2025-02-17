@@ -12,17 +12,22 @@ class BaseIMU(ABC):
     IMUDataPacket that can be fetched with the fetch_data method.
     """
 
-    @abstractmethod
+    __slots__ = ("is_running",)
+
+    def __init__(self):
+        self.is_running: bool = False
+
     def start(self) -> None:
         """
         Starts the IMU.
         """
+        self.is_running = True
 
-    @abstractmethod
     def stop(self) -> None:
         """
         Stops the IMU.
         """
+        self.is_running = False
 
     @abstractmethod
     def fetch_data(self) -> IMUDataPacket | None:

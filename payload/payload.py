@@ -6,15 +6,16 @@ from payload.constants import NO_MESSAGE_TRANSMITTED, STOP_MESSAGE, TRANSMIT_MES
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
+from payload.hardware.camera import Camera
 from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
-from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
     from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
     from payload.hardware.imu import IMUDataPacket
+    from payload.interfaces.base_transmitter import BaseTransmitter
 
 
 class PayloadContext:
@@ -31,6 +32,7 @@ class PayloadContext:
         "_last_transmission_time",
         "_stop_latch",
         "_transmitting_latch",
+        "camera",
         "context_data_packet",
         "data_processor",
         "imu",
@@ -51,6 +53,7 @@ class PayloadContext:
         data_processor: DataProcessor,
         transmitter: Transmitter,
         receiver: BaseReceiver,
+        camera: Camera,
     ) -> None:
         """
         Initializes the payload context with the specified hardware objects, logger, and data
@@ -66,6 +69,7 @@ class PayloadContext:
         self.data_processor: DataProcessor = data_processor
         self.transmitter: BaseTransmitter = transmitter
         self.receiver: BaseReceiver = receiver
+        self.camera: Camera = camera
 
         # The rocket starts in the StandbyState
         self.state: State = StandbyState(self)
@@ -80,18 +84,20 @@ class PayloadContext:
 
     def start(self) -> None:
         """
-        Starts logger processes. This is called before the main while loop starts.
+        Starts the components of our payload such as the IMU, Transmitter, Receiver, etc. Must be
+        called before `self.update()`
         """
         # TODO: make threads safer by using a context manager
         self.imu.start()
         self.transmitter.start()
         self.receiver.start()
         self.logger.start()
+        self.camera.start()
 
     def stop(self) -> None:
         """
-        Handles shutting down the payload. This will cause the main loop to break. It stops the IMU
-        and stops the logger.
+        Handles shutting down the payload. This will cause the main loop to break. It stops
+        components like the IMU, Logger, Transmitter, Receiver, etc.
         """
         # TODO: make a better way to print out what is stopping
         if self.shutdown_requested:
@@ -103,7 +109,9 @@ class PayloadContext:
         self.transmitter.stop()
         print("Stopped Transmitter")
         self.logger.stop()
-        print("Stopping Logger")
+        print("Stopped Logger")
+        self.camera.stop()
+        print("Stopped Camera")
         self.shutdown_requested = True
         print("Stopped Everything")
 
@@ -149,8 +157,14 @@ class PayloadContext:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """
-        self.transmitted_message = "start: " + str(self.processed_data_packet)
+        self.transmitted_message = f"start: {self.processed_data_packet}"
         self.transmitter.send_message(self.transmitted_message)
+
+    def start_saving_camera_recording(self) -> None:
+        """
+        Starts recording the camera when the motor burn has started. See `MotorBurnState`.
+        """
+        self.camera.start_recording()
 
     def remote_override(self, message: str):
         """
