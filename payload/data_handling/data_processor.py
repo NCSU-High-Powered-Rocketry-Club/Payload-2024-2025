@@ -38,7 +38,8 @@ class DataProcessor:
         "_pitch",
         "_yaw",
         "_roll",
-        "calculating_crew_survivability"
+        "calculating_crew_survivability",
+        "_velocity_rolling_average"
     )
 
     def __init__(self):
@@ -68,6 +69,7 @@ class DataProcessor:
         self._previous_vertical_velocity: np.float64 = np.float64(0.0)
         self._velocity_from_altitude: np.float64 = np.float64(0.0)
         self._last_velocity_calculation_packet: IMUDataPacket | None = None
+        self._velocity_rolling_average: list[np.float64] = []
 
     @property
     def max_altitude(self) -> float:
@@ -121,6 +123,12 @@ class DataProcessor:
     def roll_pitch_yaw(self) -> tuple[np.float64, np.float64, np.float64]:
         """The roll pitch and yaw of the rocket, in degrees."""
         return tuple(self._current_orientation_quaternions.as_euler("xyz", degrees=True))
+
+    @property
+    def velocity_moving_average(self):
+        """List of the 10 previous velocity calculations for use in a moving average"""
+        return self._velocity_rolling_average
+
 
     def update(self, data_packet: IMUDataPacket) -> None:
         """
@@ -304,7 +312,12 @@ class DataProcessor:
         else:
             # If the altitude hasn't changed, we use the last velocity
             velocity = self._velocity_from_altitude
-        return velocity
+
+        self._velocity_rolling_average.append(velocity)
+
+        if len(self._velocity_rolling_average) > 10:
+            self._velocity_rolling_average.pop(0)
+        return sum(self._velocity_rolling_average) / len(self._velocity_rolling_average)
 
     def _calculate_crew_survivability(self) ->np.float64:
         """
