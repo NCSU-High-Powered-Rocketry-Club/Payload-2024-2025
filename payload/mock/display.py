@@ -35,7 +35,6 @@ class FlightDisplay:
         "_coast_time",
         "_launch_file",
         "_launch_time",
-        "_mock",
         "_payload",
         "_running",
         "_start_time",
@@ -100,7 +99,7 @@ class FlightDisplay:
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
-            # if not self._args.mock and self._payload.state.name == "MotorBurnState":
+            # if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
             #     self._update_display(DisplayEndingType.TAKEOFF)
             #     break
 
@@ -132,7 +131,7 @@ class FlightDisplay:
 
         # Prepare output
         output = [
-            f"{Y}{'=' * 15} {'REPLAY' if self._args.mock else 'STANDBY'} INFO {'=' * 15}{RESET}",
+            f"{Y}{'=' * 15} {'REPLAY' if self._args.mode == 'mock' else 'STANDBY'} INFO {'=' * 15}{RESET}",  # noqa: E501
             f"Replay file:                  {C}{self._launch_file}{RESET}",
             f"Time since replay start:      {C}{time.time() - self._start_time:<10.2f}{RESET} {R}s{RESET}",  # noqa: E501
             f"{Y}{'=' * 12} REAL TIME FLIGHT DATA {'=' * 12}{RESET}",
