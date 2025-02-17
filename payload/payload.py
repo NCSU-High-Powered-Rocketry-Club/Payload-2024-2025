@@ -1,5 +1,6 @@
 """Module which provides a high level interface to the payload system on the rocket."""
 
+import time
 from typing import TYPE_CHECKING
 
 from payload.constants import NO_MESSAGE_TRANSMITTED, STOP_MESSAGE, TRANSMIT_MESSAGE
@@ -135,7 +136,10 @@ class PayloadContext:
 
         # We make a data packet with info about what the context is doing
         self.context_data_packet = ContextDataPacket(
-            self.state.name[0], self.transmitted_message, self.receiver.latest_message
+            self.state.name[0],
+            self.transmitted_message,
+            self.receiver.latest_message,
+            time.time_ns(),
         )
 
         # Logs the current state, extension, IMU data, and processed data
