@@ -1,7 +1,6 @@
 """Module for the finite state machine that represents which state of flight we are in."""
 
 from abc import ABC, abstractmethod
-from threading import Timer
 from typing import TYPE_CHECKING
 
 from payload.constants import (
@@ -9,7 +8,6 @@ from payload.constants import (
     LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED,
     MAX_FREE_FALL_SECONDS,
     MAX_VELOCITY_THRESHOLD,
-    STOP_AFTER_SECONDS,
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
 )
@@ -190,15 +188,13 @@ class LandedState(State):
     When the rocket has landed.
     """
 
-    __slots__ = ("stop_program_timer",)
+    __slots__ = ()
 
     def __init__(self, context: "PayloadContext"):
         super().__init__(context)
 
         # Starts the transmission at the beginning of landed state
         self.context.transmit_data()
-        self.stop_program_timer = Timer(STOP_AFTER_SECONDS, self.context.stop)
-        self.stop_program_timer.start()
 
     def update(self):
         """This method does nothing"""
