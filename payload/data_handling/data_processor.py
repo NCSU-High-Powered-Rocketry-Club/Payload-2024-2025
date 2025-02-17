@@ -205,8 +205,8 @@ class DataProcessor:
         )
 
         # ahrs outputs as (w,x,y,z)
-        aqua = ahrs.filters.AQUA()
-        ahrs_inital_quaternion = ahrs.filters.AQUA.estimate(aqua, acc, mag)
+        aqua = ahrs.filters.AQUA(acc=acc, mag=mag)
+        ahrs_inital_quaternion = aqua.estimate(acc=acc, mag=mag)
         self._current_orientation_quaternions = R.from_quat(
             ahrs_inital_quaternion,
             scalar_first=True,  # This means the order is w, x, y, z.
