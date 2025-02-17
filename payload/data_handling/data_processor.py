@@ -361,5 +361,5 @@ class DataProcessor:
         """
         Deducts a percentage of survival chance based on the ground hit velocity
         """
-        if(self._landing_velocity > LANDING_VELOCITY_THRESHOLD):
+        if(self._landing_velocity < LANDING_VELOCITY_THRESHOLD):
             self.data_processor._crew_survivability *= LANDING_VELOCITY_DEDUCTION
