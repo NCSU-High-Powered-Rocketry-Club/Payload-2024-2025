@@ -29,7 +29,7 @@ class DataProcessor:
         "_initial_altitude",
         "_last_data_packet",
         "_last_velocity_calculation_packet",
-        "_madgwick",
+        "_madgwick_orientation_filter",
         "_max_altitude",
         "_max_velocity_from_acceleration",
         "_previous_vertical_velocity",
@@ -205,13 +205,13 @@ class DataProcessor:
         )
 
         # ahrs outputs as (w,x,y,z)
-        aqua = ahrs.filters.AQUA()
-        ahrs_inital_quaternion = ahrs.filters.AQUA.estimate(aqua, acc, mag)
+        aqua = ahrs.filters.AQUA(acc=acc, mag=mag)
+        ahrs_initial_quaternion = aqua.estimate(acc=acc, mag=mag)
         self._current_orientation_quaternions = R.from_quat(
-            ahrs_inital_quaternion,
+            ahrs_initial_quaternion,
             scalar_first=True,  # This means the order is w, x, y, z.
         )
-        self._madgwick = ahrs.filters.Madgwick(
+        self._madgwick_orientation_filter = ahrs.filters.Madgwick(
             q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY
         )
 
@@ -255,9 +255,9 @@ class DataProcessor:
         quat = R.as_quat(self._current_orientation_quaternions, scalar_first=True)
         # update quaternion heading with ahrs, use MARG if magnetometer is available
         if all(mag_data_point is not None for mag_data_point in mag):
-            quat = self._madgwick.updateMARG(quat, gyro, acc, mag)
+            quat = self._madgwick_orientation_filter.updateMARG(quat, gyro, acc, mag)
         else:
-            quat = self._madgwick.updateIMU(self._current_orientation_quaternions, gyro, acc)
+            quat = self._madgwick_orientation_filter.updateIMU(self._current_orientation_quaternions, gyro, acc)
         # putting back into scipy format
         self._current_orientation_quaternions = R.from_quat(quat, scalar_first=True)
 

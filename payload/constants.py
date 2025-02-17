@@ -54,6 +54,12 @@ IMU_APPROXIMATE_FREQUENCY = 35
 """The frequency at which the IMU sends data packets, this is 50Hz"""
 
 # -------------------------------------------------------
+# Camera Configuration
+# -------------------------------------------------------
+
+CAMERA_SAVE_PATH = Path("logs/video.h264")
+
+# -------------------------------------------------------
 # Logging Configuration
 # -------------------------------------------------------
 
@@ -103,6 +109,11 @@ GROUND_ALTITUDE_METERS = 10.0
 LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED = 35.0
 """The acceleration in m/s^2 that the rocket must be above before we consider it to have landed."""
 
+# ----------------- Landing to Program Stop -----------------
+
+STOP_AFTER_SECONDS = 5
+"""The time in seconds after which the program will stop itself."""
+
 # -------------------------------------------------------
 # Data Processor Configuration
 # -------------------------------------------------------
@@ -119,7 +130,7 @@ from being considered as a change in altitude."""
 TRANSMITTER_PIN = 8
 """This is the GPIO pin that the transmitter is connected to."""
 
-DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
+DIREWOLF_CONFIG_PATH = Path("/home/pi/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
 MOCK_MESSAGE_PATH = Path("mock_message.txt")

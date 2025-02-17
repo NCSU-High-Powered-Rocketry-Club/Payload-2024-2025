@@ -1,12 +1,10 @@
 [project]
 name = "Payload-2024-2025"
 description = "Codebase for the 2024 - 2025 NASA Student Launch Competition"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 version = "0.1.0"
 readme = "README.md"
 dependencies = [
-    "gpiozero",
-    "pigpio", # Run sudo pigpiod before running the program
     "msgspec",
     "numpy",
     "colorama",
@@ -25,10 +23,21 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest",
-    "ruff",
+    "ruff>0.9.5",
+    "pre-commit",
 ]
 rpi = [  # Dependencies which only run on the pi.
     "rpi-gpio>=0.7.1",
+]
+
+# Need to run `sudo apt install `libcap-dev`, `libcamera-dev`,
+# `libkms++-dev`, `libfmt-dev`, `libdrm-dev` to build and install everything camera related.
+# Run `uv pip install rpi-libcamera -C setup-args="-Drepository=https://github.com/raspberrypi/libcamera.git" -C setup-args="-Dversion=v0.4.0+53-29156679"`
+# if you are installing this and you have a version mismatch of rpi-libcamera and libcamera installed via apt.
+camera = [
+    "picamera2>=0.3.25",
+    "rpi-libcamera>=0.1a8",
+    "rpi-kms>=0.1a1",
 ]
 
 [project.scripts]
@@ -47,6 +56,9 @@ python-preference = "only-managed"
 [tool.hatch.build.targets.wheel]
 packages = ["payload"]
 
+[tool.hatch.build.targets.wheel.force-include]
+# specify one launch file so that the mock flight can be run as a demo with uvx.
+"launch_data/legacy_launch_1_payload.csv" = "/launch_data/legacy_launch_1_payload.csv"
 
 # RUFF:
 [tool.ruff]
@@ -56,8 +68,10 @@ show-fixes = true
 exclude = ["scripts"]
 
 [tool.ruff.lint]
-ignore = ["PLR2004", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PERF203", "ISC001", "T201"]
+ignore = ["PLR2004", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PERF203", "ISC001", "T201", "S603", "S607"]
 select = ["E", "F", "I", "PL", "UP", "RUF", "PTH", "C4", "B", "PIE", "SIM", "RET", "RSE",
           "G", "ISC", "PT", "ASYNC", "TCH", "SLOT", "PERF", "PYI", "FLY", "AIR", "Q", "INP", 
           "W", "YTT", "DTZ", "ARG", "T20", "FURB", "D100", "D101", "D300", "D418",
           "D419", "S", "NPY"]
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["T20", "S101", "D100", "ARG001", "RUF012"]
