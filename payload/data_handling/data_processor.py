@@ -6,7 +6,14 @@ from scipy.spatial.transform import Rotation as R
 from payload.constants import (
     ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
     ALTITUDE_DEADBAND_METERS,
+    ANGULAR_RATE_WEIGHT,
     GRAVITY_METERS_PER_SECOND_SQUARED,
+    INTENSITY_PERCENT_THRESHOLD,
+    LANDING_VELOCITY_DEDUCTION,
+    LANDING_VELOCITY_THRESHOLD,
+    PITCH_WEIGHT,
+    VELOCITY_FROM_ALTITUDE_WINDOW_SIZE,
+    VERTICAL_ACCELERATION_WEIGHT,
 )
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
@@ -315,16 +322,16 @@ class DataProcessor:
 
         self._velocity_rolling_average.append(velocity)
 
-        if len(self._velocity_rolling_average) > 10:
+        if len(self._velocity_rolling_average) > VELOCITY_FROM_ALTITUDE_WINDOW_SIZE:
             self._velocity_rolling_average.pop(0)
         return sum(self._velocity_rolling_average) / len(self._velocity_rolling_average)
 
     def calculate_landing_velocity(self):
         """Called upon landing state detection and gathers the last velocity reading"""
 
-        #Uses the first 5 values in the moving average to ensure there are no values
-        #of zero in the landing veleocity calculation if landing is detected slightly late
-        self._landing_velocity = sum(self._velocity_rolling_average[:5]) / 5
+        #Uses the first half of the moving average to find landing velocity upon landing detection
+        landing_velocity_size = VELOCITY_FROM_ALTITUDE_WINDOW_SIZE//2
+        self._landing_velocity = sum(self._velocity_rolling_average[:landing_velocity_size]) / landing_velocity_size
 
     def _calculate_crew_survivability(self) ->np.float64:
         """
@@ -338,12 +345,12 @@ class DataProcessor:
 
         #These constants are optimized so that no constant alone largely affects the chance
         #of survival
-        intensity_percent = (np.abs(self.vertical_acceleration)*       0.25 +
-                             np.abs(self._data_packet.estAngularRateY)*1.00 +
-                             np.sin(self.roll_pitch_yaw[1] / 2)*       10
+        intensity_percent = (np.abs(self.vertical_acceleration)*       VERTICAL_ACCELERATION_WEIGHT+
+                             np.abs(self._data_packet.estAngularRateY)*ANGULAR_RATE_WEIGHT+
+                             np.sin(self.roll_pitch_yaw[1] / 2)*       PITCH_WEIGHT
                              )/100.0
 
-        if(intensity_percent > 0.20):
+        if(intensity_percent > INTENSITY_PERCENT_THRESHOLD):
             #Since the code is updated so frequently, intensity percent is divided by large
             #factor to not instantly remove all survival chance
             updated_survival_chance = self._crew_survivability*( 1.0-intensity_percent/100 )
@@ -354,5 +361,5 @@ class DataProcessor:
         """
         Deducts a percentage of survival chance based on the ground hit velocity
         """
-        if(self._landing_velocity > 10):
-            self.data_processor._crew_survivability = self.data_processor._crew_survivability*0.8
+        if(self._landing_velocity > LANDING_VELOCITY_THRESHOLD):
+            self.data_processor._crew_survivability *= LANDING_VELOCITY_DEDUCTION

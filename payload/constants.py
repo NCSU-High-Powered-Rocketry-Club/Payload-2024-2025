@@ -1,6 +1,6 @@
 """Contains the constants used in the payload module"""
 
-from enum import StrEnum
+from enum import StrEnum, Enum
 from pathlib import Path
 
 # -------------------------------------------------------
@@ -113,6 +113,8 @@ ALTITUDE_DEADBAND_METERS = 0.05
 """The deadband for the altitude in meters. This is used to prevent small fluctuations in altitude
 from being considered as a change in altitude."""
 
+VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 10
+
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
@@ -148,3 +150,20 @@ STOP_MESSAGE = "STOP"
 # These are in seconds
 MOCK_RECEIVER_INITIAL_DELAY = 5.0
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
+
+# -------------------------------------------------------
+# Survivability metrics
+# -------------------------------------------------------
+
+
+LANDING_VELOCITY_THRESHOLD = 10.0 #m/s
+
+VERTICAL_ACCELERATION_WEIGHT = 0.25
+ANGULAR_RATE_WEIGHT = 1.00
+PITCH_WEIGHT = 10.1
+
+INTENSITY_PERCENT_THRESHOLD = 0.20
+
+LANDING_VELOCITY_DEDUCTION = 0.8
+
+
