@@ -47,7 +47,7 @@ class DataProcessor:
         "_velocity_from_altitude",
         "_velocity_rolling_average",
         "_yaw",
-        "calculating_crew_survivability"
+        "calculating_crew_survivability",
     )
 
     def __init__(self):
@@ -138,7 +138,6 @@ class DataProcessor:
         """List of the 10 previous velocity calculations for use in a moving average"""
         return self._velocity_rolling_average
 
-
     def update(self, data_packet: IMUDataPacket) -> None:
         """
         Updates the data points to process. This will recompute all information and handle math
@@ -173,7 +172,7 @@ class DataProcessor:
         self._current_altitude = self._calculate_current_altitude()
         self._max_altitude = max(self._current_altitude, self._max_altitude)
 
-        if(self.calculating_crew_survivability):
+        if self.calculating_crew_survivability:
             self._crew_survivability = self._calculate_crew_survivability()
 
         # Store the last data point for the next update
@@ -197,7 +196,7 @@ class DataProcessor:
             roll=self.roll_pitch_yaw[0],
             pitch=self.roll_pitch_yaw[1],
             yaw=self.roll_pitch_yaw[2],
-            landing_velocity = self._landing_velocity
+            landing_velocity=self._landing_velocity,
         )
 
     def _first_update(self) -> None:
@@ -329,11 +328,13 @@ class DataProcessor:
     def calculate_landing_velocity(self):
         """Called upon landing state detection and gathers the last velocity reading"""
 
-        #Uses the first half of the moving average to find landing velocity upon landing detection
-        landing_velocity_size = VELOCITY_FROM_ALTITUDE_WINDOW_SIZE//2
-        self._landing_velocity = sum(self._velocity_rolling_average[:landing_velocity_size]) / landing_velocity_size
+        # Uses the first half of the moving average to find landing velocity upon landing detection
+        landing_velocity_size = VELOCITY_FROM_ALTITUDE_WINDOW_SIZE // 2
+        self._landing_velocity = (
+            sum(self._velocity_rolling_average[:landing_velocity_size]) / landing_velocity_size
+        )
 
-    def _calculate_crew_survivability(self) ->np.float64:
+    def _calculate_crew_survivability(self) -> np.float64:
         """
         Calculates the probability that our crew of STEMnauts is alive depending on
         conditions during the flight. The surviabililty is only dependent on events after
@@ -343,17 +344,18 @@ class DataProcessor:
 
         updated_survival_chance = self._crew_survivability
 
-        #These constants are optimized so that no constant alone largely affects the chance
-        #of survival
-        intensity_percent = (np.abs(self.vertical_acceleration)*       VERTICAL_ACCELERATION_WEIGHT+
-                             np.abs(self._data_packet.estAngularRateY)*ANGULAR_RATE_WEIGHT+
-                             np.sin(self.roll_pitch_yaw[1] / 2)*       PITCH_WEIGHT
-                             )/100.0
+        # These constants are optimized so that no constant alone largely affects the chance
+        # of survival
+        intensity_percent = (
+            np.abs(self.vertical_acceleration) * VERTICAL_ACCELERATION_WEIGHT
+            + np.abs(self._data_packet.estAngularRateY) * ANGULAR_RATE_WEIGHT
+            + np.sin(self.roll_pitch_yaw[1] / 2) * PITCH_WEIGHT
+        ) / 100.0
 
-        if(intensity_percent > INTENSITY_PERCENT_THRESHOLD):
-            #Since the code is updated so frequently, intensity percent is divided by large
-            #factor to not instantly remove all survival chance
-            updated_survival_chance = self._crew_survivability*( 1.0-intensity_percent/100 )
+        if intensity_percent > INTENSITY_PERCENT_THRESHOLD:
+            # Since the code is updated so frequently, intensity percent is divided by large
+            # factor to not instantly remove all survival chance
+            updated_survival_chance = self._crew_survivability * (1.0 - intensity_percent / 100)
 
         return updated_survival_chance
 
@@ -361,5 +363,5 @@ class DataProcessor:
         """
         Deducts a percentage of survival chance based on the ground hit velocity
         """
-        if(self._landing_velocity > LANDING_VELOCITY_THRESHOLD):
+        if self._landing_velocity > LANDING_VELOCITY_THRESHOLD:
             self.data_processor._crew_survivability *= LANDING_VELOCITY_DEDUCTION
