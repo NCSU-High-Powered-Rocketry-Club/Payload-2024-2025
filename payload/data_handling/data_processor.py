@@ -21,26 +21,26 @@ class DataProcessor:
     """
 
     __slots__ = (
+        "_crew_survivability",
         "_current_altitude",
         "_current_orientation_quaternions",
         "_data_packet",
         "_initial_altitude",
+        "_landing_velocity",
         "_last_data_packet",
         "_last_velocity_calculation_packet",
         "_max_altitude",
         "_max_velocity_from_acceleration",
+        "_pitch",
         "_previous_vertical_velocity",
+        "_roll",
         "_rotated_acceleration",
         "_time_difference",
         "_velocity_from_acceleration",
         "_velocity_from_altitude",
-        "_crew_survivability",
-        "_pitch",
-        "_yaw",
-        "_roll",
-        "calculating_crew_survivability",
         "_velocity_rolling_average",
-        "_landing_velocity"
+        "_yaw",
+        "calculating_crew_survivability"
     )
 
     def __init__(self):
@@ -328,30 +328,28 @@ class DataProcessor:
 
     def _calculate_crew_survivability(self) ->np.float64:
         """
-        Calculates the probability that our crew of STEMnauts is alive depending on 
+        Calculates the probability that our crew of STEMnauts is alive depending on
         conditions during the flight. The surviabililty is only dependent on events after
         motor burn out. and ground hit velocity
         :return: A float with the percent chance that our crew is still alive
         """
-        
 
         updated_survival_chance = self._crew_survivability
-        
+
         #These constants are optimized so that no constant alone largely affects the chance
         #of survival
-        intensity_percent = (np.abs(self.vertical_acceleration)*       0.25 + 
-                             np.abs(self._data_packet.estAngularRateY)*1.00 + 
+        intensity_percent = (np.abs(self.vertical_acceleration)*       0.25 +
+                             np.abs(self._data_packet.estAngularRateY)*1.00 +
                              np.sin(self.roll_pitch_yaw[1] / 2)*       10
                              )/100.0
 
         if(intensity_percent > 0.20):
             #Since the code is updated so frequently, intensity percent is divided by large
-            #factor to not instantly remove all survival chance 
-            updated_survival_chance = self._crew_survivability*( (1.0-intensity_percent/100) )
+            #factor to not instantly remove all survival chance
+            updated_survival_chance = self._crew_survivability*( 1.0-intensity_percent/100 )
 
         return updated_survival_chance
 
-    #TODO: implement real landing velocity here    
     def finalize_crew_survivability(self):
         """
         Deducts a percentage of survival chance based on the ground hit velocity

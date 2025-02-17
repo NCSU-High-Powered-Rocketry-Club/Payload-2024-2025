@@ -9,7 +9,7 @@ from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.hardware.transmitter import Transmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
-from payload.interfaces.base_transmitter import BaseTransmitter
+from payload.interfaces.base_transmitter import BaseTransmitter  # noqa: TC001
 from payload.state import StandbyState, State
 
 if TYPE_CHECKING:
@@ -167,7 +167,7 @@ class PayloadContext:
 
     def start_survivability_calculation(self):
         """
-        Starts the calculation of crew survivability percent. 
+        Starts the calculation of crew survivability percent.
         Called upon motor burn out
         """
         self.data_processor.calculating_crew_survivability = True
