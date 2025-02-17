@@ -131,7 +131,7 @@ This should be gitignored."""
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
-NO_MESSAGE_TRANSMITTED = "No message transmitted"
+NO_MESSAGE_TRANSMITTED = "NMT"
 
 # -------------------------------------------------------
 # Receiver Configuration
@@ -140,7 +140,7 @@ RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 
-NO_MESSAGE = "No Message Received"
+NO_MESSAGE = "NMR"
 """The message that the receiver returns when there is no message to return"""
 TRANSMIT_MESSAGE = "TRANSMIT"
 """The message that the transmitter sends to the receiver to start transmitting data"""
