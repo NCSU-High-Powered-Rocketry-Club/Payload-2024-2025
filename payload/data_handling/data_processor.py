@@ -189,16 +189,20 @@ class DataProcessor:
         # This is us getting the rocket's initial altitude from the first data packets
         self._initial_altitude = self._data_packet.pressureAlt
 
-        acc = np.array([
-            self._data_packet.estCompensatedAccelX,
-            self._data_packet.estCompensatedAccelY,
-            self._data_packet.estCompensatedAccelZ,
-        ])
-        mag = np.array([
-            self._data_packet.magneticFieldX,
-            self._data_packet.magneticFieldY,
-            self._data_packet.magneticFieldZ,
-        ])
+        acc = np.array(
+            [
+                self._data_packet.estCompensatedAccelX,
+                self._data_packet.estCompensatedAccelY,
+                self._data_packet.estCompensatedAccelZ,
+            ]
+        )
+        mag = np.array(
+            [
+                self._data_packet.magneticFieldX,
+                self._data_packet.magneticFieldY,
+                self._data_packet.magneticFieldZ,
+            ]
+        )
 
         # ahrs outputs as (w,x,y,z)
         aqua = ahrs.filters.AQUA()
@@ -207,7 +211,9 @@ class DataProcessor:
             ahrs_inital_quaternion,
             scalar_first=True,  # This means the order is w, x, y, z.
         )
-        self._madgwick = ahrs.filters.Madgwick(q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY)
+        self._madgwick = ahrs.filters.Madgwick(
+            q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY
+        )
 
     def _calculate_current_altitude(self) -> np.float64:
         """
@@ -223,21 +229,27 @@ class DataProcessor:
 
         :return: float containing the vertical acceleration
         """
-        acc = np.array([
-            self._data_packet.estCompensatedAccelX,
-            self._data_packet.estCompensatedAccelY,
-            self._data_packet.estCompensatedAccelZ,
-        ])
-        gyro = np.array([
-            self._data_packet.estAngularRateX,
-            self._data_packet.estAngularRateY,
-            self._data_packet.estAngularRateZ,
-        ])
-        mag = np.array([
-            self._data_packet.magneticFieldX,
-            self._data_packet.magneticFieldY,
-            self._data_packet.magneticFieldZ,
-        ])
+        acc = np.array(
+            [
+                self._data_packet.estCompensatedAccelX,
+                self._data_packet.estCompensatedAccelY,
+                self._data_packet.estCompensatedAccelZ,
+            ]
+        )
+        gyro = np.array(
+            [
+                self._data_packet.estAngularRateX,
+                self._data_packet.estAngularRateY,
+                self._data_packet.estAngularRateZ,
+            ]
+        )
+        mag = np.array(
+            [
+                self._data_packet.magneticFieldX,
+                self._data_packet.magneticFieldY,
+                self._data_packet.magneticFieldZ,
+            ]
+        )
 
         # Scipy rotation object as a np array
         quat = R.as_quat(self._current_orientation_quaternions, scalar_first=True)
@@ -254,7 +266,7 @@ class DataProcessor:
 
         # Vertical acceleration will always be the 3rd element of the rotated vector,
         # regardless of orientation.
-        #print(rotated_accel)
+        # print(rotated_accel)
         return -rotated_accel[2]
 
     def _calculate_velocity_from_acceleration(self) -> np.float64:
