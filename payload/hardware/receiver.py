@@ -1,3 +1,5 @@
+"""Module for implementing the actual receiver."""
+
 import threading
 
 import serial
