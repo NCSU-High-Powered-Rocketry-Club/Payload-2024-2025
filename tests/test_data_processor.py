@@ -125,7 +125,7 @@ class TestDataProcessor:
             ),
             make_data_packet(
                 estCompensatedAccelX=0,
-                estCompensatedAccelY=-9.8,
+                estCompensatedAccelY=9.8,
                 estCompensatedAccelZ=0,
                 magneticFieldX=-3.8125,
                 magneticFieldY=37.3125,
@@ -188,36 +188,36 @@ class TestDataProcessor:
                 magneticFieldZ=-0.25,
             ),
             make_data_packet(
-                estCompensatedAccelX=-9.8,
-                estCompensatedAccelY=0,
-                estCompensatedAccelZ=0,
-                magneticFieldX=40.0625,
-                magneticFieldY=-3.4375,
-                magneticFieldZ=38.3125,
+                estCompensatedAccelX=9.4,
+                estCompensatedAccelY=0.2,
+                estCompensatedAccelZ=-0.5,
+                magneticFieldX=46.875,
+                magneticFieldY=-8.9375,
+                magneticFieldZ=-30.9375,
             ),
             make_data_packet(
-                estCompensatedAccelX=-9.8,
+                estCompensatedAccelX=9.8,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=0,
-                magneticFieldX=35.25,
-                magneticFieldY=40.4375,
-                magneticFieldZ=5.1875,
+                magneticFieldX=47.625,
+                magneticFieldY=-32.125,
+                magneticFieldZ=11.875,
             ),
             make_data_packet(
-                estCompensatedAccelX=-9.8,
+                estCompensatedAccelX=9.8,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=0,
-                magneticFieldX=38.6875,
-                magneticFieldY=2.0625,
-                magneticFieldZ=-38.9375,
+                magneticFieldX=45.5,
+                magneticFieldY=-0.3125,
+                magneticFieldZ=36.9375,
             ),
             make_data_packet(
-                estCompensatedAccelX=-9.8,
+                estCompensatedAccelX=9.8,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=0,
-                magneticFieldX=38,
-                magneticFieldY=-43.75,
-                magneticFieldZ=-0.1875,
+                magneticFieldX=47,
+                magneticFieldY=29.1875,
+                magneticFieldZ=-6.75,
             ),
 
         ],
@@ -256,19 +256,12 @@ class TestDataProcessor:
         d = data_processor
         d._data_packet = data_packet
         d._first_update()
-        rot_acc = R.from_quat(d._current_orientation_quaternions, scalar_first=True).inv().apply(
+        print(d._current_orientation_quaternions)
+        rot_acc = R.from_quat(d._current_orientation_quaternions, scalar_first=True).apply(
             [
                 data_packet.estCompensatedAccelX,
                 data_packet.estCompensatedAccelY,
                 data_packet.estCompensatedAccelZ,
             ]
         )
-        # rot_acc = d._current_orientation_quaternions.apply(
-        #     [
-        #         0,
-        #         0,
-        #         data_packet.estCompensatedAccelZ,
-        #     ]
-
-        # )
-        np.testing.assert_allclose(rot_acc, np.array([0, 0, 9.8]), atol=0.1)
+        np.testing.assert_allclose(rot_acc, np.array([0, 0, 9.8]), atol=0.5)

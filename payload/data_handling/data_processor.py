@@ -8,7 +8,6 @@ from payload.constants import (
     ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
     ALTITUDE_DEADBAND_METERS,
     GRAVITY_METERS_PER_SECOND_SQUARED,
-    IMU_APPROXIMATE_FREQUENCY,
 )
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
@@ -26,10 +25,10 @@ class DataProcessor:
         "_current_altitude",
         "_current_orientation_quaternions",
         "_data_packet",
+        "_filter",
         "_initial_altitude",
         "_last_data_packet",
         "_last_velocity_calculation_packet",
-        "_filter",
         "_max_altitude",
         "_max_velocity_from_acceleration",
         "_previous_vertical_velocity",
@@ -113,7 +112,7 @@ class DataProcessor:
     @property
     def roll_pitch_yaw(self) -> tuple[np.float64, np.float64, np.float64]:
         """The roll pitch and yaw of the rocket, in degrees."""
-        return tuple(R.from_quat(self._current_orientation_quaternions).as_euler("xyz", degrees=True))
+        return tuple(R.from_quat(self._current_orientation_quaternions, scalar_first=True).as_euler("xyz", degrees=True))
 
     def update(self, data_packet: IMUDataPacket) -> None:
         """
@@ -204,14 +203,8 @@ class DataProcessor:
             ]
         )
 
-        # ahrs outputs as (w,x,y,z)
-        # aqua = ahrs.filters.AQUA()
-        # self._current_orientation_quaternions = np.roll(aqua.estimate(acc=acc, mag=mag*1000),shift=-1)
-        # self._filter = ahrs.filters.AngularRate(
-        #     frequency=IMU_APPROXIMATE_FREQUENCY,
-        #     q0=self._current_orientation_quaternions,
-        # )
-        self._filter = ahrs.filters.Davenport(acc=acc, mag=mag)
+        self._filter = ahrs.filters.Davenport(acc=acc, mag=mag, magnetic_dip=62, weights=[5,1])
+        self._current_orientation_quaternions = self._filter.estimate(acc=acc, mag=mag)
 
     def _calculate_current_altitude(self) -> np.float64:
         """
@@ -234,13 +227,6 @@ class DataProcessor:
                 self._data_packet.estCompensatedAccelZ,
             ]
         )
-        gyro = np.array(
-            [
-                self._data_packet.estAngularRateX,
-                self._data_packet.estAngularRateY,
-                self._data_packet.estAngularRateZ,
-            ]
-        )
         mag = np.array(
             [
                 self._data_packet.magneticFieldX,
@@ -249,20 +235,12 @@ class DataProcessor:
             ]
         )
 
-        # Scipy rotation object as a np array
-        quat = self._current_orientation_quaternions
         # update quaternion heading with ahrs, use MARG if magnetometer is available
-        #acc_test = R.from_quat(quat, scalar_first=False).inv().apply([0,-9.8,0])
         if all(mag_data_point is not None for mag_data_point in mag):
-            quat = self._filter.estimate(acc=acc, mag=mag)
-        else:
-            #quat = self._filter.update(q=quat, gyr=gyro, acc=acc)
-            pass
-        # putting back into scipy format
-        self._current_orientation_quaternions = quat
+            self._current_orientation_quaternions = self._filter.estimate(acc=acc, mag=mag)
 
         # Rotate the acceleration vector using the orientation
-        rotated_accel = R.from_quat(quat, scalar_first=True).apply([acc[0], acc[1], acc[2]])
+        rotated_accel = R.from_quat(self._current_orientation_quaternions, scalar_first=True).apply([acc[0], acc[1], acc[2]])
 
         # Vertical acceleration will always be the 3rd element of the rotated vector,
         # regardless of orientation.
