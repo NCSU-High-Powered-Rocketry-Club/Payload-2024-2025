@@ -29,7 +29,7 @@ class DataProcessor:
         "_initial_altitude",
         "_last_data_packet",
         "_last_velocity_calculation_packet",
-        "_madgwick_orientation_filter",
+        "_filter",
         "_max_altitude",
         "_max_velocity_from_acceleration",
         "_previous_vertical_velocity",
@@ -205,11 +205,13 @@ class DataProcessor:
         )
 
         # ahrs outputs as (w,x,y,z)
-        aqua = ahrs.filters.AQUA()
-        self._current_orientation_quaternions = aqua.estimate(acc=acc, mag=mag)
-        self._madgwick_orientation_filter = ahrs.filters.Madgwick(
-            q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY
-        )
+        # aqua = ahrs.filters.AQUA()
+        # self._current_orientation_quaternions = np.roll(aqua.estimate(acc=acc, mag=mag*1000),shift=-1)
+        # self._filter = ahrs.filters.AngularRate(
+        #     frequency=IMU_APPROXIMATE_FREQUENCY,
+        #     q0=self._current_orientation_quaternions,
+        # )
+        self._filter = ahrs.filters.Davenport(acc=acc, mag=mag)
 
     def _calculate_current_altitude(self) -> np.float64:
         """
@@ -250,20 +252,21 @@ class DataProcessor:
         # Scipy rotation object as a np array
         quat = self._current_orientation_quaternions
         # update quaternion heading with ahrs, use MARG if magnetometer is available
+        #acc_test = R.from_quat(quat, scalar_first=False).inv().apply([0,-9.8,0])
         if all(mag_data_point is not None for mag_data_point in mag):
-            quat = self._madgwick_orientation_filter.updateMARG(quat, gyro, acc, mag)
+            quat = self._filter.estimate(acc=acc, mag=mag)
         else:
-            quat = self._madgwick_orientation_filter.updateIMU(self._current_orientation_quaternions, gyro, acc)
+            #quat = self._filter.update(q=quat, gyr=gyro, acc=acc)
+            pass
         # putting back into scipy format
         self._current_orientation_quaternions = quat
 
         # Rotate the acceleration vector using the orientation
-        rotated_accel = R.from_quat(self._current_orientation_quaternions).apply([acc[0], acc[1], acc[2]])
+        rotated_accel = R.from_quat(quat, scalar_first=True).apply([acc[0], acc[1], acc[2]])
 
         # Vertical acceleration will always be the 3rd element of the rotated vector,
         # regardless of orientation.
-        # print(rotated_accel)
-        return -rotated_accel[2]
+        return rotated_accel[2]
 
     def _calculate_velocity_from_acceleration(self) -> np.float64:
         """
