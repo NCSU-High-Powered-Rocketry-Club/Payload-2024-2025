@@ -17,6 +17,7 @@ dependencies = [
     "pyserial",
     "sounddevice",
     "soundfile",
+    "gpiozero",
 ]
 
 [dependency-groups]
@@ -33,11 +34,11 @@ rpi = [  # Dependencies which only run on the pi.
 # `libkms++-dev`, `libfmt-dev`, `libdrm-dev` to build and install everything camera related.
 # Run `uv pip install rpi-libcamera -C setup-args="-Drepository=https://github.com/raspberrypi/libcamera.git" -C setup-args="-Dversion=v0.4.0+53-29156679"`
 # if you are installing this and you have a version mismatch of rpi-libcamera and libcamera installed via apt.
-camera = [
-    "picamera2>=0.3.25",
-    "rpi-libcamera>=0.1a8",
-    "rpi-kms>=0.1a1",
-]
+#camera = [
+#    "picamera2>=0.3.25; sys_platform == 'linux'",
+#    "rpi-libcamera>=0.1a8; sys_platform == 'linux'",
+#    "rpi-kms>=0.1a1; sys_platform == 'linux'",
+#]
 
 [project.scripts]
 mock = "payload.main:run_mock_flight"

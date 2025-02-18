@@ -1,24 +1,21 @@
+"""Module for the Transmitter class that controls the SA85 transceiver."""
+
 import re
 import subprocess
 import threading
 import time
 
+from gpiozero import OutputDevice
 from payload.interfaces.base_transmitter import BaseTransmitter
-
-try:
-    # TODO: convert this to gpiozero, also go through and organize methods
-    from RPi import GPIO
-except ImportError:
-    pass
 
 
 class Transmitter(BaseTransmitter):
     """
-    This is the class that controls the SA85transceiver. It is responsible for sending messages
+    This is the class that controls the SA85 transceiver. It is responsible for sending messages
     to our ground station.
     """
 
-    __slots__ = ("_stop_event", "config_path", "gpio_pin", "message_worker_thread")
+    __slots__ = ("_stop_event", "config_path", "transmitter_pin", "message_worker_thread")
 
     def __init__(self, gpio_pin, config_path) -> None:
         """
@@ -27,25 +24,25 @@ class Transmitter(BaseTransmitter):
         :param gpio_pin: The GPIO pin number that is connected to the PTT pin of the transceiver.
         :param config_path: The path to the Direwolf configuration file.
         """
-        self.gpio_pin = gpio_pin
+        # Sets the GPIO pin to be an output pin and has it start set high (inactive).
+        self.transmitter_pin = OutputDevice(gpio_pin, initial_value=True)
         self.config_path = config_path
         self._stop_event = threading.Event()
         self.message_worker_thread = None
-
-        GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-        GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as output, initially high
 
     def _pull_pin_low(self) -> None:
         """
         Pulls the GPIO pin low. This activates the PTT (Push-To-Talk) of the transceiver.
         """
-        GPIO.output(self.gpio_pin, GPIO.LOW)  # Pull the pin low
+        # Pull the pin low, means setting it to 0V
+        self.transmitter_pin.off()
 
     def _pull_pin_high(self) -> None:
         """
         Pulls the GPIO pin high. This deactivates the PTT (Push-To-Talk) of the transceiver.
         """
-        GPIO.output(self.gpio_pin, GPIO.HIGH)  # Pull the pin high
+        # Pull the pin high, means setting it to 3.3V (I think? Maybe 5V?)
+        self.transmitter_pin.on()
 
     def _update_beacon_comment(self, new_comment: str) -> bool:
         """
@@ -80,11 +77,7 @@ class Transmitter(BaseTransmitter):
 
     def _send_message_worker(self, message: str) -> None:
         """
-        When sending a message we sleep to give the transceiver time to start transmitting. We then
-        pull the PTT pin low to start the transmission. We then sleep for the duration of the
-        transmission before pulling the PTT pin high to stop the transmission. Because sleeping is
-        blocking, we run this in a separate thread.
-        :param message: The message to send.
+        Handles the message transmission process in a separate thread.
         """
         if not self._update_beacon_comment(message):
             print("Failed to update the configuration. Message not sent.")
@@ -113,11 +106,11 @@ class Transmitter(BaseTransmitter):
         """
         Starts the transmitter.
         """
-        return NotImplementedError("Not implmented yet")
+        raise NotImplementedError("Not implemented yet")
 
     def stop(self) -> None:
         """
-        Cleans up the GPIO pins when the transmitter is stopped.
+        Stops the transmitter and cleans up GPIO resources.
         """
         self._pull_pin_high()
         try:
@@ -130,7 +123,6 @@ class Transmitter(BaseTransmitter):
         self._stop_event.set()
         if self.message_worker_thread:
             self.message_worker_thread.join(5)
-        GPIO.cleanup()
         print("Stopped Transmitter")
 
     def send_message(self, message: str) -> None:
