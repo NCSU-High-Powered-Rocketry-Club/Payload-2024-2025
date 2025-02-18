@@ -23,6 +23,7 @@ class IMU(BaseIMU):
         :param port: the port that the Arduino is connected to
         :param baud_rate: the baud rate of the channel
         """
+        super().__init__()
         self._port = port
         self._baud_rate = baud_rate
         self._serial = None
@@ -40,9 +41,11 @@ class IMU(BaseIMU):
         return IMUDataPacket(*unpacked_data)
 
     def start(self):
+        super().start()
         self._serial = serial.Serial(self._port, self._baud_rate, timeout=ARDUINO_SERIAL_TIMEOUT)
 
     def stop(self):
+        super().stop()
         self._serial.close()
 
     def fetch_data(self) -> IMUDataPacket | None:

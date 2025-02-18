@@ -18,3 +18,8 @@ class ContextDataPacket(msgspec.Struct):
 
     received_message: str
     """The message received from the ground station."""
+
+    update_timestamp_ns: int
+    """The timestamp reported by the local computer at which we processed
+    and logged this data packet. This is used to compare the time difference between
+    what is reported by the IMU, and when we finished processing the data packet."""

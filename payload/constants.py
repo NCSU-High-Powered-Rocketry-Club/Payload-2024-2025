@@ -1,6 +1,6 @@
 """Contains the constants used in the payload module"""
 
-from enum import StrEnum
+from enum import StrEnum, Enum
 from pathlib import Path
 
 # -------------------------------------------------------
@@ -49,6 +49,12 @@ MAX_GET_TIMEOUT_SECONDS = 100  # seconds
 
 IMU_APPROXIMATE_FREQUENCY = 50
 """The frequency at which the IMU sends data packets, this is 50Hz"""
+
+# -------------------------------------------------------
+# Camera Configuration
+# -------------------------------------------------------
+
+CAMERA_SAVE_PATH = Path("logs/video.h264")
 
 # -------------------------------------------------------
 # Logging Configuration
@@ -100,6 +106,11 @@ GROUND_ALTITUDE_METERS = 10.0
 LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED = 35.0
 """The acceleration in m/s^2 that the rocket must be above before we consider it to have landed."""
 
+# ----------------- Landing to Program Stop -----------------
+
+STOP_AFTER_SECONDS = 5
+"""The time in seconds after which the program will stop itself."""
+
 # -------------------------------------------------------
 # Data Processor Configuration
 # -------------------------------------------------------
@@ -110,13 +121,15 @@ ALTITUDE_DEADBAND_METERS = 0.05
 """The deadband for the altitude in meters. This is used to prevent small fluctuations in altitude
 from being considered as a change in altitude."""
 
+VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 50
+
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
 TRANSMITTER_PIN = 8
 """This is the GPIO pin that the transmitter is connected to."""
 
-DIREWOLF_CONFIG_PATH = "/home/pi/direwolf.conf"
+DIREWOLF_CONFIG_PATH = Path("/home/pi/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
 MOCK_MESSAGE_PATH = Path("mock_message.txt")
@@ -126,7 +139,7 @@ This should be gitignored."""
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
-NO_MESSAGE_TRANSMITTED = "No message transmitted"
+NO_MESSAGE_TRANSMITTED = "NMT"
 
 # -------------------------------------------------------
 # Receiver Configuration
@@ -136,7 +149,7 @@ RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""
 
-NO_MESSAGE = "No Message Received"
+NO_MESSAGE = "NMR"
 """The message that the receiver returns when there is no message to return"""
 TRANSMIT_MESSAGE = "TRANSMIT"
 """The message that the transmitter sends to the receiver to start transmitting data"""
@@ -151,3 +164,18 @@ RECEIVER_SERIAL_TIMEOUT = 1
 # These are in seconds
 MOCK_RECEIVER_INITIAL_DELAY = 5.0
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
+
+# -------------------------------------------------------
+# Survivability metrics
+# -------------------------------------------------------
+
+
+LANDING_VELOCITY_THRESHOLD = -10.0 #m/s
+
+VERTICAL_ACCELERATION_WEIGHT = 0.25
+ANGULAR_RATE_WEIGHT = 1.00
+PITCH_WEIGHT = 10.1
+
+INTENSITY_PERCENT_THRESHOLD = 0.20
+
+LANDING_VELOCITY_DEDUCTION = 0.8

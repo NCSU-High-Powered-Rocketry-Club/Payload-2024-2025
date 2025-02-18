@@ -14,6 +14,7 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
     state_name: str
     transmitted_message: str
     received_message: str
+    update_timestamp_ns: int
 
     # IMU Data Packet Fields
     timestamp: int
