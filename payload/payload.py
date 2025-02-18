@@ -1,5 +1,6 @@
 """Module which provides a high level interface to the payload system on the rocket."""
 
+import time
 from typing import TYPE_CHECKING
 
 from payload.constants import NO_MESSAGE_TRANSMITTED, STOP_MESSAGE, TRANSMIT_MESSAGE
@@ -143,7 +144,10 @@ class PayloadContext:
 
         # We make a data packet with info about what the context is doing
         self.context_data_packet = ContextDataPacket(
-            self.state.name[0], self.transmitted_message, self.receiver.latest_message
+            self.state.name[0],
+            self.transmitted_message,
+            self.receiver.latest_message,
+            time.time_ns(),
         )
 
         # Logs the current state, extension, IMU data, and processed data
@@ -178,3 +182,18 @@ class PayloadContext:
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True
             self._transmitting_latch = False
+
+    def start_survivability_calculation(self):
+        """
+        Starts the calculation of crew survivability percent.
+        Called upon motor burn out
+        """
+        self.data_processor.calculating_crew_survivability = True
+
+    def stop_survivability_calculation(self):
+        """
+        Calls function in data_processor which finalizes the crew
+        survivability percentage based on ground hit velocity.
+        """
+        self.data_processor.calculating_crew_survivability = False
+        self.data_processor.finalize_crew_survivability()

@@ -12,13 +12,13 @@ from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 def data_processor():
     return DataProcessor()
 
+
 def make_data_packet(**kwargs) -> IMUDataPacket:
     """Creates an EstimatedDataPacket with the specified keyword arguments. Provides dummy values
     for arguments not specified."""
 
     dummy_values = {k: 1.123456789 for k in IMUDataPacket.__struct_fields__}
     return IMUDataPacket(**{**dummy_values, **kwargs})
-
 
 
 class TestDataProcessor:
@@ -219,7 +219,6 @@ class TestDataProcessor:
                 magneticFieldY=29.1875,
                 magneticFieldZ=-6.75,
             ),
-
         ],
         ids=[
             "neg_z_mag_N",

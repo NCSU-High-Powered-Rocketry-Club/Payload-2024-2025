@@ -35,7 +35,6 @@ class FlightDisplay:
         "_coast_time",
         "_launch_file",
         "_launch_time",
-        "_mock",
         "_payload",
         "_running",
         "_start_time",
@@ -100,7 +99,7 @@ class FlightDisplay:
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
-            # if not self._args.mock and self._payload.state.name == "MotorBurnState":
+            # if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
             #     self._update_display(DisplayEndingType.TAKEOFF)
             #     break
 
@@ -132,21 +131,22 @@ class FlightDisplay:
 
         # Prepare output
         output = [
-            f"{Y}{'=' * 15} {'REPLAY' if self._args.mock else 'STANDBY'} INFO {'=' * 15}{RESET}",
+            f"{Y}{'=' * 15} {'REPLAY' if self._args.mode == 'mock' else 'STANDBY'} INFO {'=' * 15}{RESET}",  # noqa: E501
             f"Replay file:                  {C}{self._launch_file}{RESET}",
             f"Time since replay start:      {C}{time.time() - self._start_time:<10.2f}{RESET} {R}s{RESET}",  # noqa: E501
             f"{Y}{'=' * 12} REAL TIME FLIGHT DATA {'=' * 12}{RESET}",
             # Format time as MM:SS:
             f"Launch time:               {G}T+{time.strftime('%M:%S', time.gmtime(time_since_launch))}{RESET}",  # noqa: E501
             f"State:                     {G}{self._payload.state.name:<15}{RESET}",
-            f"Current accel velocity:    {G}{data_processor.velocity_from_acceleration:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
-            f"Max velocity so far:       {G}{data_processor.max_velocity_from_acceleration:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
-            f"Current alt velocity:      {G}{data_processor.velocity_from_altitude:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Current altitude velocity  {G}{data_processor.velocity_moving_average:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Max velocity so far:       {G}{data_processor.max_vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Current height:            {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
+            f"Crew survivability:        {G}{100 * data_processor._crew_survivability:<10.2f}{RESET} {R}%{RESET}",  # noqa: E501
             f"Transmitter message:       {G}{self._payload.transmitted_message[:10]:<10}{RESET}",
             # TODO: maybe delete this field or at least make it say true or false
             f"Got IMU Data packet:       {G}{bool(self._payload.imu_data_packet):<10.2f}{RESET}",
+            f"Landing velocity:          {G}{data_processor._landing_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
         ]
         # Print the output
         print("\n".join(output))

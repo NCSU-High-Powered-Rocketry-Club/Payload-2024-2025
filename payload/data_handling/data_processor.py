@@ -5,9 +5,14 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from payload.constants import (
-    ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED,
     ALTITUDE_DEADBAND_METERS,
-    GRAVITY_METERS_PER_SECOND_SQUARED,
+    ANGULAR_RATE_WEIGHT,
+    INTENSITY_PERCENT_THRESHOLD,
+    LANDING_VELOCITY_DEDUCTION,
+    LANDING_VELOCITY_THRESHOLD,
+    PITCH_WEIGHT,
+    VELOCITY_FROM_ALTITUDE_WINDOW_SIZE,
+    VERTICAL_ACCELERATION_WEIGHT,
 )
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
@@ -22,16 +27,21 @@ class DataProcessor:
     """
 
     __slots__ = (
+        "_crew_survivability",
         "_current_altitude",
         "_data_packet",
         "_filter",
         "_initial_altitude",
+        "_landing_velocity",
         "_last_data_packet",
         "_last_velocity_calculation_packet",
         "_max_altitude",
+        "_max_velocity",
         "_previous_vertical_velocity",
         "_time_difference",
+        "_velocity_rolling_average",
         "_vertical_velocity",
+        "calculating_crew_survivability",
     )
 
     def __init__(self):
@@ -44,15 +54,20 @@ class DataProcessor:
         maximum velocity of the rocket.
         """
         self._max_altitude: np.float64 = np.float64(0.0)
+        self._max_velocity: np.float64 = np.float64(0.0)
         self._initial_altitude: np.float64 | None = None
         self._current_altitude: np.float64 = np.float64(0.0)
         self._last_data_packet: IMUDataPacket | None = None
         self._data_packet: IMUDataPacket | None = None
         self._time_difference: np.float64 = np.float64(0.0)
+        self._crew_survivability: np.float64 = np.float64(1.0)
+        self.calculating_crew_survivability = False
         self._previous_vertical_velocity: np.float64 = np.float64(0.0)
         self._vertical_velocity: np.float64 = np.float64(0.0)
         self._last_velocity_calculation_packet: IMUDataPacket | None = None
-        self._filter = ahrs.filters.Davenport(magnetic_dip=62, weights=[3,1])
+        self._velocity_rolling_average: list[np.float64] = []
+        self._landing_velocity: np.float64 = np.float64(0.0)
+        self._filter = ahrs.filters.Davenport(magnetic_dip=62, weights=[3, 1])
 
     @property
     def max_altitude(self) -> float:
@@ -94,6 +109,12 @@ class DataProcessor:
         except AttributeError:  # If we don't have a last data packet
             return 0
 
+    @property
+    def velocity_moving_average(self):
+        """Average of the last 10 previous velocity calculations for use in a moving average."""
+        if self._velocity_rolling_average:
+            return np.mean(self._velocity_rolling_average)
+        return self.vertical_velocity
 
     def update(self, data_packet: IMUDataPacket) -> None:
         """
@@ -122,7 +143,10 @@ class DataProcessor:
 
         self._current_altitude = self._calculate_current_altitude()
         self._max_altitude = max(self._current_altitude, self._max_altitude)
-        self._max_velocity = max(self._vertical_velocity, self._max_velocity)
+        self._max_velocity = max(self.velocity_moving_average, self._max_velocity)
+
+        if self.calculating_crew_survivability:
+            self._crew_survivability = self._calculate_crew_survivability()
 
         # Store the last data point for the next update
         self._last_data_packet = data_packet
@@ -136,12 +160,12 @@ class DataProcessor:
         return ProcessorDataPacket(
             current_altitude=self._current_altitude,
             vertical_velocity=self._vertical_velocity,
+            velocity_moving_average=self.velocity_moving_average,
             time_since_last_data_packet=self._time_difference,
             maximum_altitude=np.float64(self.max_altitude),
             maximum_velocity=np.float64(self.max_vertical_velocity),
-            # TODO: Implement these
-            crew_survivability=0.0,
-            landing_velocity=0.0,
+            crew_survivability=self._crew_survivability,
+            landing_velocity=self._landing_velocity,
         )
 
     def _first_update(self) -> None:
@@ -195,7 +219,52 @@ class DataProcessor:
         else:
             # If the altitude hasn't changed, we use the last velocity
             velocity = self._vertical_velocity
-        return velocity
+
+        self._velocity_rolling_average.append(velocity)
+
+        if len(self._velocity_rolling_average) > VELOCITY_FROM_ALTITUDE_WINDOW_SIZE:
+            self._velocity_rolling_average.pop(0)
+        return sum(self._velocity_rolling_average) / len(self._velocity_rolling_average)
+
+    def calculate_landing_velocity(self):
+        """Called upon landing state detection and gathers the last velocity reading"""
+
+        # Uses the first half of the moving average to find landing velocity upon landing detection
+        landing_velocity_size = VELOCITY_FROM_ALTITUDE_WINDOW_SIZE // 2
+        self._landing_velocity = (
+            sum(self._velocity_rolling_average[:landing_velocity_size]) / landing_velocity_size
+        )
+
+    def _calculate_crew_survivability(self) -> np.float64:
+        """
+        Calculates the probability that our crew of STEMnauts is alive depending on
+        conditions during the flight. The surviabililty is only dependent on events after
+        motor burn out. and ground hit velocity
+        :return: A float with the percent chance that our crew is still alive
+        """
+
+        updated_survival_chance = self._crew_survivability
+
+        # These constants are optimized so that no constant alone largely affects the chance
+        # of survival
+        intensity_percent = (
+            np.abs(self._data_packet.estCompensatedAccelZ) * VERTICAL_ACCELERATION_WEIGHT
+            + np.abs(self._data_packet.estAngularRateY) * ANGULAR_RATE_WEIGHT
+        ) / 75
+
+        if intensity_percent > INTENSITY_PERCENT_THRESHOLD:
+            # Since the code is updated so frequently, intensity percent is divided by large
+            # factor to not instantly remove all survival chance
+            updated_survival_chance = self._crew_survivability * (1.0 - intensity_percent / 100)
+
+        return updated_survival_chance
+
+    def finalize_crew_survivability(self):
+        """
+        Deducts a percentage of survival chance based on the ground hit velocity
+        """
+        if self._landing_velocity < LANDING_VELOCITY_THRESHOLD:
+            self._crew_survivability *= LANDING_VELOCITY_DEDUCTION
 
     def calculate_orientation(self) -> tuple:
         """

@@ -14,6 +14,7 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
     state_name: str
     transmitted_message: str
     received_message: str
+    update_timestamp_ns: int
 
     # IMU Data Packet Fields
     timestamp: int
@@ -40,13 +41,9 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
 
     # Processed Data Packet Fields
     current_altitude: float | None
-    velocity_from_acceleration: float | None
-    velocity_from_altitude: float | None
-    vertical_acceleration: float | None
+    vertical_velocity: float | None
+    velocity_moving_average: float | None
     maximum_altitude: float | None
-    pitch: float | None
-    roll: float | None
-    yaw: float | None
     maximum_velocity: float | None
     landing_velocity: float | None
     crew_survivability: float | None
