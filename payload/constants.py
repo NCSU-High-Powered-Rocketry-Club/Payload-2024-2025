@@ -121,7 +121,7 @@ ALTITUDE_DEADBAND_METERS = 0.05
 """The deadband for the altitude in meters. This is used to prevent small fluctuations in altitude
 from being considered as a change in altitude."""
 
-VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 50
+VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 
 # -------------------------------------------------------
 # Transmitter Configuration
