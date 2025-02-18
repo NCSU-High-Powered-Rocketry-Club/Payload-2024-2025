@@ -206,7 +206,7 @@ class DataProcessor:
 
         # ahrs outputs as (w,x,y,z)
         aqua = ahrs.filters.AQUA()
-        self._current_orientation_quaternions = aqua.estimate(acc=acc, mag=None)
+        self._current_orientation_quaternions = aqua.estimate(acc=acc, mag=mag)
         # self._madgwick_orientation_filter = ahrs.filters.Madgwick(
         #     q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY
         # )
