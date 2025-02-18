@@ -19,12 +19,6 @@ def make_data_packet(**kwargs) -> IMUDataPacket:
     dummy_values = {k: 1.123456789 for k in IMUDataPacket.__struct_fields__}
     return IMUDataPacket(**{**dummy_values, **kwargs})
 
-def make_data_packet(**kwargs) -> IMUDataPacket:
-    """Creates an EstimatedDataPacket with the specified keyword arguments. Provides dummy values
-    for arguments not specified."""
-
-    dummy_values = {k: 1.123456789 for k in IMUDataPacket.__struct_fields__}
-    return IMUDataPacket(**{**dummy_values, **kwargs})
 
 
 class TestDataProcessor:
@@ -165,11 +159,19 @@ class TestDataProcessor:
         d = data_processor
         d._data_packet = data_packet
         d._first_update()
-        rot_acc = d._current_orientation_quaternions.apply(
+        rot_acc = R.from_quat(d._current_orientation_quaternions, scalar_first=True).inv().apply(
             [
                 data_packet.estCompensatedAccelX,
                 data_packet.estCompensatedAccelY,
                 data_packet.estCompensatedAccelZ,
             ]
         )
+        # rot_acc = d._current_orientation_quaternions.apply(
+        #     [
+        #         0,
+        #         0,
+        #         data_packet.estCompensatedAccelZ,
+        #     ]
+
+        # )
         np.testing.assert_allclose(rot_acc, np.array([0, 0, 9.8]), rtol=0.1)

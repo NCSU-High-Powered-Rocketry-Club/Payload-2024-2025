@@ -205,15 +205,11 @@ class DataProcessor:
         )
 
         # ahrs outputs as (w,x,y,z)
-        aqua = ahrs.filters.AQUA(acc=acc, mag=mag)
-        ahrs_initial_quaternion = aqua.estimate(acc=acc, mag=mag)
-        self._current_orientation_quaternions = R.from_quat(
-            ahrs_initial_quaternion,
-            scalar_first=True,  # This means the order is w, x, y, z.
-        )
-        self._madgwick_orientation_filter = ahrs.filters.Madgwick(
-            q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY
-        )
+        aqua = ahrs.filters.AQUA()
+        self._current_orientation_quaternions = aqua.estimate(acc=acc, mag=None)
+        # self._madgwick_orientation_filter = ahrs.filters.Madgwick(
+        #     q0=self._current_orientation_quaternions, frequency=IMU_APPROXIMATE_FREQUENCY
+        # )
 
     def _calculate_current_altitude(self) -> np.float64:
         """
