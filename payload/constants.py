@@ -1,6 +1,6 @@
 """Contains the constants used in the payload module"""
 
-from enum import StrEnum
+from enum import StrEnum, Enum
 from pathlib import Path
 
 # -------------------------------------------------------
@@ -124,6 +124,8 @@ ALTITUDE_DEADBAND_METERS = 0.05
 """The deadband for the altitude in meters. This is used to prevent small fluctuations in altitude
 from being considered as a change in altitude."""
 
+VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 50
+
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
@@ -140,7 +142,7 @@ This should be gitignored."""
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
-NO_MESSAGE_TRANSMITTED = "No message transmitted"
+NO_MESSAGE_TRANSMITTED = "NMT"
 
 # -------------------------------------------------------
 # Receiver Configuration
@@ -149,7 +151,7 @@ RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 
-NO_MESSAGE = "No Message Received"
+NO_MESSAGE = "NMR"
 """The message that the receiver returns when there is no message to return"""
 TRANSMIT_MESSAGE = "TRANSMIT"
 """The message that the transmitter sends to the receiver to start transmitting data"""
@@ -159,3 +161,18 @@ STOP_MESSAGE = "STOP"
 # These are in seconds
 MOCK_RECEIVER_INITIAL_DELAY = 5.0
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
+
+# -------------------------------------------------------
+# Survivability metrics
+# -------------------------------------------------------
+
+
+LANDING_VELOCITY_THRESHOLD = -10.0 #m/s
+
+VERTICAL_ACCELERATION_WEIGHT = 0.25
+ANGULAR_RATE_WEIGHT = 1.00
+PITCH_WEIGHT = 10.1
+
+INTENSITY_PERCENT_THRESHOLD = 0.20
+
+LANDING_VELOCITY_DEDUCTION = 0.8

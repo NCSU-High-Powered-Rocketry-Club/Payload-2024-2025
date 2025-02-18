@@ -135,6 +135,10 @@ class CoastState(State):
 
     __slots__ = ()
 
+    def __init__(self, context: "PayloadContext"):
+        super().__init__(context)
+        self.context.start_survivability_calculation()
+
     def update(self):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
         data = self.context.data_processor
@@ -195,6 +199,8 @@ class LandedState(State):
 
         # Starts the transmission at the beginning of landed state
         self.context.transmit_data()
+        self.context.stop_survivability_calculation()
+        self.context.data_processor.calculate_landing_velocity()
 
     def update(self):
         """This method does nothing"""
