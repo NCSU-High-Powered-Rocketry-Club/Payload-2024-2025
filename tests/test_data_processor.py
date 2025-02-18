@@ -28,7 +28,6 @@ class TestDataProcessor:
         "data_packet",
         [
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=-9.8,
@@ -37,7 +36,6 @@ class TestDataProcessor:
                 magneticFieldZ=-43.0625,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=-9.8,
@@ -46,7 +44,6 @@ class TestDataProcessor:
                 magneticFieldZ=-43.375,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=-9.8,
@@ -55,7 +52,6 @@ class TestDataProcessor:
                 magneticFieldZ=-40.5,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=-9.8,
@@ -64,7 +60,6 @@ class TestDataProcessor:
                 magneticFieldZ=-41.6875,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=9.8,
@@ -73,7 +68,6 @@ class TestDataProcessor:
                 magneticFieldZ=46.0,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=9.8,
@@ -82,7 +76,6 @@ class TestDataProcessor:
                 magneticFieldZ=46.9375,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=9.8,
@@ -91,7 +84,6 @@ class TestDataProcessor:
                 magneticFieldZ=40.8125,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=0,
                 estCompensatedAccelZ=9.8,
@@ -100,7 +92,6 @@ class TestDataProcessor:
                 magneticFieldZ=41.625,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=-9.8,
                 estCompensatedAccelZ=0,
@@ -109,7 +100,6 @@ class TestDataProcessor:
                 magneticFieldZ=-40.3125,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=-9.8,
                 estCompensatedAccelZ=0,
@@ -118,7 +108,6 @@ class TestDataProcessor:
                 magneticFieldZ=0.8125,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=-9.8,
                 estCompensatedAccelZ=0,
@@ -127,7 +116,6 @@ class TestDataProcessor:
                 magneticFieldZ=44.625,
             ),
             make_data_packet(
-                timestamp=0 * 1000.0,
                 estCompensatedAccelX=0,
                 estCompensatedAccelY=-9.8,
                 estCompensatedAccelZ=0,
@@ -135,6 +123,103 @@ class TestDataProcessor:
                 magneticFieldY=-37.75,
                 magneticFieldZ=0.9375,
             ),
+            make_data_packet(
+                estCompensatedAccelX=0,
+                estCompensatedAccelY=-9.8,
+                estCompensatedAccelZ=0,
+                magneticFieldX=-3.8125,
+                magneticFieldY=37.3125,
+                magneticFieldZ=-41.0625,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=0,
+                estCompensatedAccelY=9.8,
+                estCompensatedAccelZ=0,
+                magneticFieldX=44.375,
+                magneticFieldY=37.3125,
+                magneticFieldZ=-4.4375,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=0,
+                estCompensatedAccelY=9.8,
+                estCompensatedAccelZ=0,
+                magneticFieldX=4.875,
+                magneticFieldY=33.875,
+                magneticFieldZ=42.5,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=0,
+                estCompensatedAccelY=9.8,
+                estCompensatedAccelZ=0,
+                magneticFieldX=-45.375,
+                magneticFieldY=33.6875,
+                magneticFieldZ=-4.5625,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=-42.5,
+                magneticFieldY=-2.3125,
+                magneticFieldZ=-38.6875,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=-41.375,
+                magneticFieldY=40.5625,
+                magneticFieldZ=-3.0,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=-36.0625,
+                magneticFieldY=-1.875,
+                magneticFieldZ=43.00,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=-40.9375,
+                magneticFieldY=-41.9375,
+                magneticFieldZ=-0.25,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=40.0625,
+                magneticFieldY=-3.4375,
+                magneticFieldZ=38.3125,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=35.25,
+                magneticFieldY=40.4375,
+                magneticFieldZ=5.1875,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=38.6875,
+                magneticFieldY=2.0625,
+                magneticFieldZ=-38.9375,
+            ),
+            make_data_packet(
+                estCompensatedAccelX=-9.8,
+                estCompensatedAccelY=0,
+                estCompensatedAccelZ=0,
+                magneticFieldX=38,
+                magneticFieldY=-43.75,
+                magneticFieldZ=-0.1875,
+            ),
+
         ],
         ids=[
             "neg_z_mag_N",
@@ -149,6 +234,18 @@ class TestDataProcessor:
             "neg_y_mag_E",
             "neg_y_mag_S",
             "neg_y_mag_W",
+            "pos_y_mag_N",
+            "pos_y_mag_E",
+            "pos_y_mag_S",
+            "pos_y_mag_W",
+            "neg_x_mag_N",
+            "neg_x_mag_E",
+            "neg_x_mag_S",
+            "neg_x_mag_W",
+            "pos_x_mag_N",
+            "pos_x_mag_E",
+            "pos_x_mag_S",
+            "pos_x_mag_W",
         ],
     )
     def test_first_update_orientation(self, data_processor, data_packet):
@@ -174,4 +271,4 @@ class TestDataProcessor:
         #     ]
 
         # )
-        np.testing.assert_allclose(rot_acc, np.array([0, 0, 9.8]), rtol=0.1)
+        np.testing.assert_allclose(rot_acc, np.array([0, 0, 9.8]), atol=0.1)
