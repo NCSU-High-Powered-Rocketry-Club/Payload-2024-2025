@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import TextIO
 
+from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.interfaces.base_transmitter import BaseTransmitter
 
 
@@ -29,13 +30,17 @@ class MockTransmitter(BaseTransmitter):
         if self.file:
             self.file.close()
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: TransmitterDataPacket | str) -> None:
         """
         Sends a message to the ground station.
-        :param message: The message to send.
+        :param message: The message to send. Will be a string if it is a mock message, or a
+        `TransmitterDataPacket` if it is a real message.
         """
         if self.file:
-            self.file.write(message + "\n")
+            if isinstance(message, str):
+                self.file.write(message + "\n")
+            else:
+                self.file.write(message.compress_packet() + "\n")
             # Makes sure the message is written to the file immediately rather than waiting for the
             # buffer to fill
             self.file.flush()
