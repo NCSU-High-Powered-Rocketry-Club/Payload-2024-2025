@@ -5,7 +5,7 @@ import time
 from RPi import GPIO
 
 # GPIO pin setup
-GPIO_PIN = 8
+GPIO_PIN = 18
 
 
 def setup_gpio():
@@ -63,16 +63,19 @@ def main():
         print("Configuration updated successfully.")
         pull_pin_low()  # Activate PTT via GPIO pin pull-down
         restart_direwolf()
-        time.sleep(5)  # Duration for which the pin should remain low
+        time.sleep(10)  # Duration for which the pin should remain low
         pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
         print("Transmission complete. Pin reset.")
         subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
+        pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
 
     else:
         print("Failed to update the configuration. Please check the file and try again.")
 
-    cleanup_gpio()
+    # setup_gpio()
+    # cleanup_gpio()
 
 
 if __name__ == "__main__":
+    # pull_pin_high()
     main()
