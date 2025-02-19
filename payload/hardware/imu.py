@@ -4,7 +4,7 @@ import struct
 
 import serial
 
-from payload.constants import PACKET_BYTE_SIZE, PACKET_START_MARKER
+from payload.constants import ARDUINO_SERIAL_TIMEOUT, PACKET_BYTE_SIZE, PACKET_START_MARKER
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.interfaces.base_imu import BaseIMU
 
@@ -24,9 +24,9 @@ class IMU(BaseIMU):
         :param baud_rate: the baud rate of the channel
         """
         super().__init__()
-        self._serial = None
         self._port = port
         self._baud_rate = baud_rate
+        self._serial = None
 
     @staticmethod
     def _process_packet_data(binary_packet) -> IMUDataPacket:
@@ -42,7 +42,7 @@ class IMU(BaseIMU):
 
     def start(self):
         super().start()
-        self._serial = serial.Serial(self._port, self._baud_rate, timeout=10)
+        self._serial = serial.Serial(self._port, self._baud_rate, timeout=ARDUINO_SERIAL_TIMEOUT)
 
     def stop(self):
         super().stop()

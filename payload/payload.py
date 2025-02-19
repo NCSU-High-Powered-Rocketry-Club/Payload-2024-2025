@@ -9,7 +9,7 @@ from payload.data_handling.logger import Logger
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.hardware.camera import Camera
-from payload.hardware.transmitter import Transmitter
+from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
 from payload.state import StandbyState, State
@@ -17,7 +17,6 @@ from payload.state import StandbyState, State
 if TYPE_CHECKING:
     from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
     from payload.hardware.imu import IMUDataPacket
-    from payload.interfaces.base_transmitter import BaseTransmitter
 
 
 class PayloadContext:
@@ -53,7 +52,7 @@ class PayloadContext:
         imu: BaseIMU,
         logger: Logger,
         data_processor: DataProcessor,
-        transmitter: Transmitter,
+        transmitter: BaseTransmitter,
         receiver: BaseReceiver,
         camera: Camera,
     ) -> None:
