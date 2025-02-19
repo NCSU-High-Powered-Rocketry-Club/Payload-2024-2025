@@ -1,11 +1,12 @@
 """Module for the Transmitter class that controls the SA85 transceiver."""
 
-import re
 import subprocess
 import threading
 import time
 
 from gpiozero import OutputDevice
+
+from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.interfaces.base_transmitter import BaseTransmitter
 
 
@@ -15,7 +16,7 @@ class Transmitter(BaseTransmitter):
     to our ground station.
     """
 
-    __slots__ = ("_stop_event", "config_path", "transmitter_pin", "message_worker_thread")
+    __slots__ = ("_stop_event", "config_path", "message_worker_thread", "transmitter_pin")
 
     def __init__(self, gpio_pin, config_path) -> None:
         """
@@ -44,19 +45,47 @@ class Transmitter(BaseTransmitter):
         # Pull the pin high, means setting it to 3.3V (I think? Maybe 5V?)
         self.transmitter_pin.on()
 
-    def _update_beacon_comment(self, new_comment: str) -> bool:
+    def _update_beacon_comment(self, new_comment: str, lat: float, long: float) -> bool:
         """
         Updates the Direwolf configuration file with the new comment.
         :param new_comment: The new comment to set in the Direwolf configuration file.
+        :param lat: The latitude of the landing site.
+        :param long: The longitude of the landing site.
         """
         try:
-            with open(self.config_path) as file:
+            # Read the existing configuration file
+            with self.config_path.open() as file:
                 lines = file.readlines()
 
             found = False
             for i, line in enumerate(lines):
                 if line.startswith("PBEACON"):
-                    lines[i] = re.sub(r'comment="[^"]*"', f'comment="{new_comment}"', line)
+                    # Split the line into parts (words)
+                    parts = line.strip().split()
+
+                    # Find and update the comment field
+                    updated_parts = []
+                    for part in parts:
+                        if part.startswith("comment="):
+                            # Replace the comment value, keeping the "comment=" prefix
+                            updated_parts.append(f'comment="{new_comment}"')
+                        elif part.startswith("lat="):
+                            # Update latitude, formatting it to match APRS format (DD^MM.MM)
+                            lat_deg = int(lat)
+                            lat_min = (lat - lat_deg) * 60
+                            lat_str = f"{lat_deg:02d}^{lat_min:05.2f}N"
+                            updated_parts.append(f"lat={lat_str}")
+                        elif part.startswith("long="):
+                            # Update longitude, formatting it to match APRS format (DDD^MM.MM)
+                            long_deg = int(long)
+                            long_min = (long - long_deg) * 60
+                            long_str = f"{long_deg:03d}^{long_min:05.2f}W"
+                            updated_parts.append(f"long={long_str}")
+                        else:
+                            updated_parts.append(part)
+
+                    # Reconstruct the line
+                    lines[i] = " ".join(updated_parts) + "\n"
                     found = True
                     break
 
@@ -64,7 +93,8 @@ class Transmitter(BaseTransmitter):
                 print("PBEACON line not found in the configuration file.")
                 return False
 
-            with open(self.config_path, "w") as file:
+            # Write the updated configuration back to the file
+            with self.config_path.open("w") as file:
                 file.writelines(lines)
 
             return True
@@ -75,17 +105,20 @@ class Transmitter(BaseTransmitter):
             print(f"Error updating configuration: {e}")
             return False
 
-    def _send_message_worker(self, message: str) -> None:
+    def _send_message_worker(self, message: TransmitterDataPacket) -> None:
         """
         Handles the message transmission process in a separate thread.
         """
-        if not self._update_beacon_comment(message):
+        lat, long = message.landing_coords
+        compressed_message = message.compress_packet()
+
+        if not self._update_beacon_comment(compressed_message, lat, long):
             print("Failed to update the configuration. Message not sent.")
             return
 
         subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
         time.sleep(2)
-        for i in range(20):
+        for _i in range(20):
             if self._stop_event.is_set():
                 self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
                 break
