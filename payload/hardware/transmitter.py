@@ -1,6 +1,5 @@
 """Module for the Transmitter class that controls the SA85 transceiver."""
 
-import subprocess
 import threading
 import time
 import socket
@@ -9,7 +8,6 @@ from RPi import GPIO
 
 from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.interfaces.base_transmitter import BaseTransmitter
-from payload.constants import DIREWOLF_CONFIG_PATH
 from payload.constants import TRANSMITTER_PIN
 
 class Transmitter(BaseTransmitter):
@@ -33,19 +31,8 @@ class Transmitter(BaseTransmitter):
         self.message_worker_thread = None
 
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-        GPIO.setup(TRANSMITTER_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high 
-
-    def _pull_pin_low(self) -> None:
-        """
-        Pulls the GPIO pin low. This deactivates the PTT (Push-To-Talk) of the transceiver.
-        """
-        GPIO.output(TRANSMITTER_PIN, GPIO.LOW)
-
-    def _pull_pin_high(self) -> None:
-        """
-        Pulls the GPIO pin high. This activates the PTT (Push-To-Talk) of the transceiver.
-        """
-        GPIO.output(TRANSMITTER_PIN, GPIO.HIGH)
+        # Set pin as an output and initially high
+        GPIO.setup(TRANSMITTER_PIN, GPIO.OUT, initial=GPIO.LOW)
 
     def _send_message_worker(self, message: TransmitterDataPacket) -> None:
         """
@@ -54,10 +41,10 @@ class Transmitter(BaseTransmitter):
         lat, long = message.landing_coords
         compressed_message = message.compress_packet()
         for i in range(2):
-            self._pull_pin_high()
-            self.send_kiss_packet(message.compress_packet())
+            GPIO.output(TRANSMITTER_PIN, GPIO.HIGH)
+            self.send_kiss_packet(compressed_message)
             time.sleep(5)
-            self._pull_pin_low()    
+            GPIO.output(TRANSMITTER_PIN, GPIO.LOW)
 
     def start(self) -> None:
         """
