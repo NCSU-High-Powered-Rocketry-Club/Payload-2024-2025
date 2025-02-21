@@ -1,1 +1,0 @@
-/usr/bin/cc  -Wall -Wvla -ffast-math -ftree-vectorize -D_GNU_SOURCE  -fmax-errors=1 -DUSE_ALSA -O3 -DNDEBUG CMakeFiles/tnctest.dir/tnctest.c.o CMakeFiles/tnctest.dir/textcolor.c.o CMakeFiles/tnctest.dir/dtime_now.c.o CMakeFiles/tnctest.dir/serial_port.c.o -o tnctest  -lrt -lm ../external/misc/libmisc.a -lrt -lm 

@@ -1,1 +1,0 @@
-/usr/bin/cc  -Wall -Wvla -ffast-math -ftree-vectorize -D_GNU_SOURCE  -fmax-errors=1 -DUSE_ALSA -O3 -DNDEBUG CMakeFiles/tt2text.dir/tt_text.c.o -o tt2text  -lrt -lm ../external/misc/libmisc.a -lrt -lm 

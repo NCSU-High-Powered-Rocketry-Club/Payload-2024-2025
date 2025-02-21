@@ -1,1 +1,0 @@
-/usr/bin/cc  -Wall -Wvla -ffast-math -ftree-vectorize -D_GNU_SOURCE  -fmax-errors=1 -DUSE_ALSA -O3 -DNDEBUG CMakeFiles/aclients.dir/aclients.c.o CMakeFiles/aclients.dir/ax25_pad.c.o CMakeFiles/aclients.dir/fcs_calc.c.o CMakeFiles/aclients.dir/textcolor.c.o -o aclients  -lrt -lm ../external/misc/libmisc.a -lrt -lm 
