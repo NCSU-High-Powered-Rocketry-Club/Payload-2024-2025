@@ -1,5 +1,10 @@
 import time
 import socket
+from gpiozero import OutputDevice
+
+# GPIO pin setup
+GPIO_PIN = 8
+ptt = OutputDevice(GPIO_PIN, initial_value=True)  # Default to high (inactive)
 
 # Direwolf KISS TCP connection details
 KISS_HOST = "127.0.0.1"  # Localhost where Direwolf is running
@@ -24,8 +29,12 @@ def main():
         "3749.00N/12224.00W-This is a test message"
     )  # Replace with actual callsign & lat/lon
 
+    ptt.off()
     send_kiss_packet(aprs_message)  # Send packet via KISS
+    # pull low
     time.sleep(2)  # Short delay to ensure transmission completes
+    # pull high
+    ptt.on()
 
 if __name__ == "__main__":
     main()
