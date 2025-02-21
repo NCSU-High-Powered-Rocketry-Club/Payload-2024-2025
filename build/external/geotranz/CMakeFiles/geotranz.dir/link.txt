@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgeotranz.a CMakeFiles/geotranz.dir/error_string.c.o CMakeFiles/geotranz.dir/mgrs.c.o CMakeFiles/geotranz.dir/polarst.c.o CMakeFiles/geotranz.dir/tranmerc.c.o CMakeFiles/geotranz.dir/ups.c.o CMakeFiles/geotranz.dir/usng.c.o CMakeFiles/geotranz.dir/utm.c.o
+/usr/bin/ranlib libgeotranz.a

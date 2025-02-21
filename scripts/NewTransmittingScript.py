@@ -1,14 +1,25 @@
 import time
 import socket
 from gpiozero import OutputDevice
+from RPi import GPIO
 
-# GPIO pin setup
-GPIO_PIN = 8
-ptt = OutputDevice(GPIO_PIN, initial_value=True)  # Default to high (inactive)
+# # GPIO pin setup
+GPIO_PIN = 18
+# ptt = OutputDevice(GPIO_PIN, initial_value=False)  # Default to high (inactive)
 
 # Direwolf KISS TCP connection details
 KISS_HOST = "127.0.0.1"  # Localhost where Direwolf is running
 KISS_PORT = 8001  # KISS TCP port
+GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
+GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high 
+
+
+def pull_pin_low():
+    GPIO.output(GPIO_PIN, GPIO.LOW)  # Pull the pin low
+
+
+def pull_pin_high():
+    GPIO.output(GPIO_PIN, GPIO.HIGH)  # Pull the pin high
 
 def send_kiss_packet(payload):
     """Send an APRS packet using the KISS TCP interface to Direwolf."""
@@ -23,18 +34,23 @@ def send_kiss_packet(payload):
         print(f"❌ Failed to send APRS packet: {e}")
 
 def main():
+
     # Construct an APRS packet
     aprs_message = (
-        "YOURCALL-1>APRS,TCPIP*:="
+        "KQ4VOH-1>APRS,TCPIP*:="
         "3749.00N/12224.00W-This is a test message"
     )  # Replace with actual callsign & lat/lon
 
-    ptt.off()
+    #ptt.on()
+    pull_pin_high()
+
     send_kiss_packet(aprs_message)  # Send packet via KISS
     # pull low
-    time.sleep(2)  # Short delay to ensure transmission completes
+    time.sleep(5)  # Short delay to ensure transmission completes
     # pull high
-    ptt.on()
+    
+    # ptt.off()
+    pull_pin_low()
 
 if __name__ == "__main__":
     main()

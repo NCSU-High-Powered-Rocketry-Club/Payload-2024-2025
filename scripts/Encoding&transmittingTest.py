@@ -1,6 +1,7 @@
 import re
 import subprocess
 import time
+from payload.constants import DIREWOLF_CONFIG_PATH
 
 from RPi import GPIO
 
@@ -10,7 +11,7 @@ GPIO_PIN = 18
 
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-    GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as an output and initially high
+    GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high
 
 
 def pull_pin_low():
@@ -26,6 +27,8 @@ def cleanup_gpio():
 
 
 def update_beacon_comment(config_path, new_comment):
+
+    return True
     with open(config_path) as file:
         lines = file.readlines()
 
@@ -49,25 +52,25 @@ def update_beacon_comment(config_path, new_comment):
 def restart_direwolf():
     subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
     time.sleep(2)  # Wait for a moment to ensure the process has terminated
-    subprocess.Popen(["direwolf"])  # Start Direwolf again
+    subprocess.Popen(["direwolf", "-c", DIREWOLF_CONFIG_PATH])  # Start Direwolf again
     print("Direwolf has been restarted.")
 
 
 def main():
     setup_gpio()
-    config_path = "/home/pi/direwolf.conf"
     print("Please enter the new beacon comment:")
     new_comment = input()  # Take user input for the new comment
 
-    if update_beacon_comment(config_path, new_comment):
+    if update_beacon_comment(DIREWOLF_CONFIG_PATH, new_comment):
         print("Configuration updated successfully.")
-        pull_pin_low()  # Activate PTT via GPIO pin pull-down
+        pull_pin_high()  # Activate PTT via GPIO pin pull-down
         restart_direwolf()
+        pull_pin_high()  # Activate PTT via GPIO pin pull-down
         time.sleep(10)  # Duration for which the pin should remain low
-        pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+        pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
         print("Transmission complete. Pin reset.")
         subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
-        pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+        pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
 
     else:
         print("Failed to update the configuration. Please check the file and try again.")

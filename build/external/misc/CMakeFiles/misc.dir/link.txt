@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmisc.a CMakeFiles/misc.dir/strlcpy.c.o CMakeFiles/misc.dir/strlcat.c.o
+/usr/bin/ranlib libmisc.a

@@ -1,0 +1,1 @@
+/usr/bin/cc  -Wall -Wvla -ffast-math -ftree-vectorize -D_GNU_SOURCE  -fmax-errors=1 -DUSE_ALSA -O3 -DNDEBUG CMakeFiles/utm2ll.dir/utm2ll.c.o CMakeFiles/utm2ll.dir/textcolor.c.o -o utm2ll  -lrt -lm ../external/geotranz/libgeotranz.a ../external/misc/libmisc.a -lrt -lm 

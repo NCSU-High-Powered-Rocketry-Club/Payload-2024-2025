@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/decode_aprs.dir/ais.c.o"
+  "CMakeFiles/decode_aprs.dir/ais.c.o.d"
+  "CMakeFiles/decode_aprs.dir/ax25_pad.c.o"
+  "CMakeFiles/decode_aprs.dir/ax25_pad.c.o.d"
+  "CMakeFiles/decode_aprs.dir/decode_aprs.c.o"
+  "CMakeFiles/decode_aprs.dir/decode_aprs.c.o.d"
+  "CMakeFiles/decode_aprs.dir/deviceid.c.o"
+  "CMakeFiles/decode_aprs.dir/deviceid.c.o.d"
+  "CMakeFiles/decode_aprs.dir/dwgps.c.o"
+  "CMakeFiles/decode_aprs.dir/dwgps.c.o.d"
+  "CMakeFiles/decode_aprs.dir/dwgpsd.c.o"
+  "CMakeFiles/decode_aprs.dir/dwgpsd.c.o.d"
+  "CMakeFiles/decode_aprs.dir/dwgpsnmea.c.o"
+  "CMakeFiles/decode_aprs.dir/dwgpsnmea.c.o.d"
+  "CMakeFiles/decode_aprs.dir/fcs_calc.c.o"
+  "CMakeFiles/decode_aprs.dir/fcs_calc.c.o.d"
+  "CMakeFiles/decode_aprs.dir/kiss_frame.c.o"
+  "CMakeFiles/decode_aprs.dir/kiss_frame.c.o.d"
+  "CMakeFiles/decode_aprs.dir/latlong.c.o"
+  "CMakeFiles/decode_aprs.dir/latlong.c.o.d"
+  "CMakeFiles/decode_aprs.dir/log.c.o"
+  "CMakeFiles/decode_aprs.dir/log.c.o.d"
+  "CMakeFiles/decode_aprs.dir/serial_port.c.o"
+  "CMakeFiles/decode_aprs.dir/serial_port.c.o.d"
+  "CMakeFiles/decode_aprs.dir/symbols.c.o"
+  "CMakeFiles/decode_aprs.dir/symbols.c.o.d"
+  "CMakeFiles/decode_aprs.dir/telemetry.c.o"
+  "CMakeFiles/decode_aprs.dir/telemetry.c.o.d"
+  "CMakeFiles/decode_aprs.dir/textcolor.c.o"
+  "CMakeFiles/decode_aprs.dir/textcolor.c.o.d"
+  "CMakeFiles/decode_aprs.dir/tt_text.c.o"
+  "CMakeFiles/decode_aprs.dir/tt_text.c.o.d"
+  "decode_aprs"
+  "decode_aprs.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/decode_aprs.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

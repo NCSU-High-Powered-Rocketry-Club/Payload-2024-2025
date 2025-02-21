@@ -1,0 +1,1 @@
+/usr/bin/cc  -Wall -Wvla -ffast-math -ftree-vectorize -D_GNU_SOURCE  -fmax-errors=1 -DUSE_ALSA -O3 -DNDEBUG CMakeFiles/ttcalc.dir/ttcalc.c.o CMakeFiles/ttcalc.dir/ax25_pad.c.o CMakeFiles/ttcalc.dir/fcs_calc.c.o CMakeFiles/ttcalc.dir/textcolor.c.o -o ttcalc  -lrt -lm ../external/misc/libmisc.a -lrt -lm 

@@ -8,6 +8,7 @@ from gpiozero import OutputDevice
 
 from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.interfaces.base_transmitter import BaseTransmitter
+from payload.constants import DIREWOLF_CONFIG_PATH
 
 
 class Transmitter(BaseTransmitter):
@@ -116,7 +117,7 @@ class Transmitter(BaseTransmitter):
             print("Failed to update the configuration. Message not sent.")
             return
 
-        subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
+        subprocess.Popen(["direwolf", "-c", DIREWOLF_CONFIG_PATH], stdout=subprocess.DEVNULL)  # Start Direwolf
         time.sleep(2)
         for _i in range(20):
             if self._stop_event.is_set():

@@ -1,0 +1,1 @@
+/usr/bin/cc  -Wall -Wvla -ffast-math -ftree-vectorize -D_GNU_SOURCE  -fmax-errors=1 -DUSE_ALSA -O3 -DNDEBUG CMakeFiles/log2gpx.dir/log2gpx.c.o CMakeFiles/log2gpx.dir/textcolor.c.o -o log2gpx  -lrt -lm ../external/misc/libmisc.a -lrt -lm 
