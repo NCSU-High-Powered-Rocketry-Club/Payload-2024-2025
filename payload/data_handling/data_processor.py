@@ -238,7 +238,7 @@ class DataProcessor:
         """
         Calculates the probability that our crew of STEMnauts is alive depending on
         conditions during the flight. The surviabililty is only dependent on events after
-        motor burn out. and ground hit velocity
+        motor burn out, and the velocity with which we hit the ground.
         :return: A float with the percent chance that our crew is still alive
         """
 

@@ -149,7 +149,7 @@ class FlightDisplay:
             output.extend(
                 [
                     f"{Y}{'=' * 18} DEBUG INFO {'=' * 17}{RESET}",
-                    f"Max accel velocity:        {G}{data_processor.max_velocity_from_acceleration:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+                    f"Max accel velocity:        {G}{data_processor._max_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
                     f"Landing velocity:          {G}{data_processor._landing_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
                     f"Transmitter message:       {G}{self._payload.transmitted_message[:14]:<14}{RESET}",  # noqa: E501
                     f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]:<14}{RESET}"  # noqa: E501
