@@ -76,10 +76,10 @@ struct DataPacket collect(struct DataPacket packet) {
   int raw_voltage = analogRead(VOLTAGE_PIN);
   packet.voltage = float((raw_voltage * 3.3) / 1023.0);
 
-  uint8_t executed_cases = 0b000; // Bitmask for 5 cases (5 bits, all initially 0)
-  const uint8_t all_cases_executed = 0b111  ; // All cases executed when all bits are 1
+  uint8_t executed_cases = 0b00; // Bitmask for 5 cases (5 bits, all initially 0)
+  const uint8_t all_cases_executed = 0b11  ; // All cases executed when all bits are 1
 
-  // We wait to send a packet until the com accel, gyro, and quaternion fields are added
+  // We wait to send a packet until the com accel and gyro fields are added
   while (executed_cases != all_cases_executed) {
     sh2_SensorValue_t sensor_value;
     if (bno.getSensorEvent(&sensor_value)) {
@@ -103,7 +103,7 @@ struct DataPacket collect(struct DataPacket packet) {
           packet.quat_y = float(sensor_value.un.rotationVector.j);
           packet.quat_z = float(sensor_value.un.rotationVector.k);
           packet.quat_w = float(sensor_value.un.rotationVector.real);
-          executed_cases |= (1 << 2); // Mark case 2 as executed
+          // quaternions are not actually used, so we don't want them blocking
           break;
 
         case SH2_MAGNETIC_FIELD_CALIBRATED:
