@@ -3,13 +3,14 @@
 import subprocess
 import threading
 import time
+import socket
 
-from gpiozero import OutputDevice
+from RPi import GPIO
 
 from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.constants import DIREWOLF_CONFIG_PATH
-
+from payload.constants import TRANSMITTER_PIN
 
 class Transmitter(BaseTransmitter):
     """
@@ -27,84 +28,24 @@ class Transmitter(BaseTransmitter):
         :param config_path: The path to the Direwolf configuration file.
         """
         # Sets the GPIO pin to be an output pin and has it start set high (inactive).
-        self.transmitter_pin = OutputDevice(gpio_pin, initial_value=True)
         self.config_path = config_path
         self._stop_event = threading.Event()
         self.message_worker_thread = None
 
+        GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
+        GPIO.setup(TRANSMITTER_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high 
+
     def _pull_pin_low(self) -> None:
         """
-        Pulls the GPIO pin low. This activates the PTT (Push-To-Talk) of the transceiver.
+        Pulls the GPIO pin low. This deactivates the PTT (Push-To-Talk) of the transceiver.
         """
-        # Pull the pin low, means setting it to 0V
-        self.transmitter_pin.off()
+        GPIO.output(TRANSMITTER_PIN, GPIO.LOW)
 
     def _pull_pin_high(self) -> None:
         """
-        Pulls the GPIO pin high. This deactivates the PTT (Push-To-Talk) of the transceiver.
+        Pulls the GPIO pin high. This activates the PTT (Push-To-Talk) of the transceiver.
         """
-        # Pull the pin high, means setting it to 3.3V (I think? Maybe 5V?)
-        self.transmitter_pin.on()
-
-    def _update_beacon_comment(self, new_comment: str, lat: float, long: float) -> bool:
-        """
-        Updates the Direwolf configuration file with the new comment.
-        :param new_comment: The new comment to set in the Direwolf configuration file.
-        :param lat: The latitude of the landing site.
-        :param long: The longitude of the landing site.
-        """
-        try:
-            # Read the existing configuration file
-            with self.config_path.open() as file:
-                lines = file.readlines()
-
-            found = False
-            for i, line in enumerate(lines):
-                if line.startswith("PBEACON"):
-                    # Split the line into parts (words)
-                    parts = line.strip().split()
-
-                    # Find and update the comment field
-                    updated_parts = []
-                    for part in parts:
-                        if part.startswith("comment="):
-                            # Replace the comment value, keeping the "comment=" prefix
-                            updated_parts.append(f'comment="{new_comment}"')
-                        elif part.startswith("lat="):
-                            # Update latitude, formatting it to match APRS format (DD^MM.MM)
-                            lat_deg = int(lat)
-                            lat_min = (lat - lat_deg) * 60
-                            lat_str = f"{lat_deg:02d}^{lat_min:05.2f}N"
-                            updated_parts.append(f"lat={lat_str}")
-                        elif part.startswith("long="):
-                            # Update longitude, formatting it to match APRS format (DDD^MM.MM)
-                            long_deg = int(long)
-                            long_min = (long - long_deg) * 60
-                            long_str = f"{long_deg:03d}^{long_min:05.2f}W"
-                            updated_parts.append(f"long={long_str}")
-                        else:
-                            updated_parts.append(part)
-
-                    # Reconstruct the line
-                    lines[i] = " ".join(updated_parts) + "\n"
-                    found = True
-                    break
-
-            if not found:
-                print("PBEACON line not found in the configuration file.")
-                return False
-
-            # Write the updated configuration back to the file
-            with self.config_path.open("w") as file:
-                file.writelines(lines)
-
-            return True
-        except FileNotFoundError:
-            print("Configuration file not found.")
-            return False
-        except Exception as e:
-            print(f"Error updating configuration: {e}")
-            return False
+        GPIO.output(TRANSMITTER_PIN, GPIO.HIGH)
 
     def _send_message_worker(self, message: TransmitterDataPacket) -> None:
         """
@@ -112,48 +53,23 @@ class Transmitter(BaseTransmitter):
         """
         lat, long = message.landing_coords
         compressed_message = message.compress_packet()
-
-        if not self._update_beacon_comment(compressed_message, lat, long):
-            print("Failed to update the configuration. Message not sent.")
-            return
-
-        subprocess.Popen(["direwolf", "-c", DIREWOLF_CONFIG_PATH], stdout=subprocess.DEVNULL)  # Start Direwolf
-        time.sleep(2)
-        for _i in range(20):
-            if self._stop_event.is_set():
-                self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
-                break
-            self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
-
-            time.sleep(5)  # Keep the pin low for the transmission duration
-
-            if self._stop_event.is_set():
-                break
-
-            self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
-
-            time.sleep(5)  # Keep the pin low for the transmission duration
-
-        self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+        for i in range(2):
+            self._pull_pin_high()
+            self.send_kiss_packet(message.compress_packet())
+            time.sleep(5)
+            self._pull_pin_low()    
 
     def start(self) -> None:
         """
         Starts the transmitter.
         """
-        raise NotImplementedError("Not implemented yet")
+        # TODO
 
     def stop(self) -> None:
         """
         Stops the transmitter and cleans up GPIO resources.
         """
-        self._pull_pin_high()
-        try:
-            subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
-        except subprocess.CalledProcessError as e:
-            if e.returncode == 1:
-                print("Direwolf is not running. Nothing to kill.")
-            else:
-                print(f"Error while stopping Direwolf: {e}")
+        self._pull_pin_low()
         self._stop_event.set()
         if self.message_worker_thread:
             self.message_worker_thread.join(5)
@@ -167,3 +83,17 @@ class Transmitter(BaseTransmitter):
             target=self._send_message_worker, args=(message,)
         )
         self.message_worker_thread.start()
+
+    def send_kiss_packet(self, message):
+        """Send an APRS packet using the KISS TCP interface to Direwolf."""
+        KISS_HOST = "127.0.0.1"  # Localhost where Direwolf is running
+        KISS_PORT = 8001  # KISS TCP port
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((KISS_HOST, KISS_PORT))
+                # KISS frame: 0xC0 (Start), 0x00 (Data Frame), message, 0xC0 (End)
+                kiss_frame = b"\xc0\x00" + message.encode() + b"\xc0"
+                sock.sendall(kiss_frame)
+            print("✅ APRS packet sent successfully via KISS mode.")
+        except Exception as e:
+            print(f"❌ Failed to send APRS packet: {e}")

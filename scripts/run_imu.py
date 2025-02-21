@@ -4,7 +4,7 @@ import struct
 import numpy
 
 # Configure your serial port and baud rate
-SERIAL_PORT = "COM8"
+SERIAL_PORT = "/dev/ttyUSB0"
 BAUD_RATE = 115200
 BYTE_SIZE = 80
 CSV_FILE = 'test_data.csv'

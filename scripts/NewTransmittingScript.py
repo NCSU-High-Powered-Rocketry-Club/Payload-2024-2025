@@ -3,23 +3,22 @@ import socket
 from gpiozero import OutputDevice
 from RPi import GPIO
 
-# # GPIO pin setup
-GPIO_PIN = 18
-# ptt = OutputDevice(GPIO_PIN, initial_value=False)  # Default to high (inactive)
+from payload.constants import TRANSMITTER_PIN
+# ptt = OutputDevice(TRANSMITTER_PIN, initial_value=False)  # Default to high (inactive)
 
 # Direwolf KISS TCP connection details
 KISS_HOST = "127.0.0.1"  # Localhost where Direwolf is running
 KISS_PORT = 8001  # KISS TCP port
 GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high 
+GPIO.setup(TRANSMITTER_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high 
 
 
 def pull_pin_low():
-    GPIO.output(GPIO_PIN, GPIO.LOW)  # Pull the pin low
+    GPIO.output(TRANSMITTER_PIN, GPIO.LOW)  # Pull the pin low
 
 
 def pull_pin_high():
-    GPIO.output(GPIO_PIN, GPIO.HIGH)  # Pull the pin high
+    GPIO.output(TRANSMITTER_PIN, GPIO.HIGH)  # Pull the pin high
 
 def send_kiss_packet(payload):
     """Send an APRS packet using the KISS TCP interface to Direwolf."""

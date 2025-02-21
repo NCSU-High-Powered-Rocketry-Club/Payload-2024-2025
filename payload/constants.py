@@ -126,7 +126,7 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 50
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
-TRANSMITTER_PIN = 8
+TRANSMITTER_PIN = 18
 """This is the GPIO pin that the transmitter is connected to."""
 
 DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025/build/direwolf.conf")
