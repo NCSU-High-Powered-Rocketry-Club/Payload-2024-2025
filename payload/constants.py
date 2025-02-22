@@ -166,7 +166,7 @@ RECEIVER_SERIAL_TIMEOUT = 1
 """The amount of time in seconds that the receiver serial port waits for a message"""
 
 # These are in seconds
-MOCK_RECEIVER_INITIAL_DELAY = 5.0
+MOCK_RECEIVER_INITIAL_DELAY = 50.0
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
 
 # -------------------------------------------------------
