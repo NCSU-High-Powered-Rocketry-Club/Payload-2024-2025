@@ -129,7 +129,7 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 TRANSMITTER_PIN = 18
 """This is the GPIO pin that the transmitter is connected to."""
 
-DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2025-2025/direwolf.conf")
+DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
 MOCK_MESSAGE_PATH = Path("mock_message.txt")
