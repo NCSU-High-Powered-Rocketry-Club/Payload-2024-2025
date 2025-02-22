@@ -134,7 +134,6 @@ def run_flight_loop(
                 break
             # Stop the replay when the data is exhausted
             if args.mode == "mock" and (not args.real_imu and not payload.imu.is_running):
-                time.sleep(20)
                 break
 
     # handle user interrupt gracefully

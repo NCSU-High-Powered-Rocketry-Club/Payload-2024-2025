@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB1"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -104,9 +104,9 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 10.0
+GROUND_ALTITUDE_METERS = 5.0
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
-LANDED_VELOCITY_METERS_PER_SECOND = 5.5
+LANDED_VELOCITY_METERS_PER_SECOND = 2.0
 # ----------------- Landing to Program Stop -----------------
 
 STOP_AFTER_SECONDS = 5
@@ -149,7 +149,7 @@ NO_MESSAGE_TRANSMITTED = "NMT"
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
-RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
+RECEIVER_SERIAL_PORT = "/dev/ttyUSB0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""

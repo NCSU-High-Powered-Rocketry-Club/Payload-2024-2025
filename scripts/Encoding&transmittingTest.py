@@ -12,14 +12,17 @@ from RPi import GPIO
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
     GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high
+    GPIO.setup(27, GPIO.OUT, initial=GPIO.LOW)
+    GPIO.setup(2, GPIO.OUT, initial=GPIO.LOW)
 
 
 def pull_pin_low():
-    GPIO.output(GPIO_PIN, GPIO.LOW)  # Pull the pin low
-
+    GPIO.output(27, GPIO.LOW)
+    GPIO.output(2, GPIO.LOW)
 
 def pull_pin_high():
-    GPIO.output(GPIO_PIN, GPIO.HIGH)  # Pull the pin high
+    GPIO.output(2, GPIO.HIGH)  # Pull the pin high
+    GPIO.output(27, GPIO.HIGH)
 
 
 def cleanup_gpio():
@@ -69,13 +72,12 @@ def main():
         pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
         print("Transmission complete. Pin reset.")
         subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
-        pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
 
     else:
         print("Failed to update the configuration. Please check the file and try again.")
 
-    cleanup_gpio()
-
+    # cleanup_gpio()
+    setup_gpio()
 
 if __name__ == "__main__":
     main()
