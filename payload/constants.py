@@ -106,7 +106,7 @@ deploying at apogee."""
 
 GROUND_ALTITUDE_METERS = 10.0
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
-LANDED_VELOCITY_METERS_PER_SECOND = 3.5
+LANDED_VELOCITY_METERS_PER_SECOND = 5.5
 # ----------------- Landing to Program Stop -----------------
 
 STOP_AFTER_SECONDS = 5
@@ -130,7 +130,7 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 TRANSMITTER_PIN = 18
 """This is the GPIO pin that the transmitter is connected to."""
 
-DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025-2024-2025/direwolf.conf")
+DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
 MOCK_MESSAGE_PATH = Path("mock_message.txt")

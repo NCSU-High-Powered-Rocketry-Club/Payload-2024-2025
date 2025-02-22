@@ -70,7 +70,6 @@ class MockIMU(BaseIMU):
 
         # If we have reached the end of the data, stop the IMU
         if self._current_index >= len(self._df):
-            time.sleep(20)
             self.stop()
             return None
 

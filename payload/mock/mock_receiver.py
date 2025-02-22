@@ -37,10 +37,10 @@ class MockReceiver(BaseReceiver):
 
     def _listen(self) -> None:
         """Simulates listening by periodically updating the message."""
-        time.sleep(self.initial_delay)
-        while self._running:
-            self.message = self.receive_message
-            time.sleep(self.receive_delay)
+        # time.sleep(self.initial_delay)
+        # while self._running:
+        #     self.message = self.receive_message
+        #     time.sleep(self.receive_delay)
 
     def start(self) -> None:
         """Starts the listening process in a separate thread."""
