@@ -47,7 +47,7 @@ PACKET_BYTE_SIZE = 84
 MAX_GET_TIMEOUT_SECONDS = 100  # seconds
 """The maximum amount of time in seconds to wait for a get operation on the queue."""
 
-IMU_APPROXIMATE_FREQUENCY = 50
+IMU_APPROXIMATE_FREQUENCY = 35
 """The frequency at which the IMU sends data packets, this is 50Hz"""
 
 # -------------------------------------------------------
@@ -121,7 +121,7 @@ ALTITUDE_DEADBAND_METERS = 0.05
 """The deadband for the altitude in meters. This is used to prevent small fluctuations in altitude
 from being considered as a change in altitude."""
 
-VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 50
+VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 
 # -------------------------------------------------------
 # Transmitter Configuration
@@ -166,11 +166,11 @@ MOCK_RECEIVER_INITIAL_DELAY = 5.0
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
 
 # -------------------------------------------------------
-# Survivability metrics
+# Survivability Metrics
 # -------------------------------------------------------
 
 
-LANDING_VELOCITY_THRESHOLD = -10.0 #m/s
+LANDING_VELOCITY_THRESHOLD = -10.0  # m/s
 
 VERTICAL_ACCELERATION_WEIGHT = 0.25
 ANGULAR_RATE_WEIGHT = 1.00

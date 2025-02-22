@@ -17,6 +17,7 @@ dependencies = [
     "pyserial",
     "sounddevice",
     "soundfile",
+    "ahrs",
 ]
 
 [dependency-groups]
@@ -51,6 +52,9 @@ build-backend = "hatchling.build"
 [tool.uv]
 python-preference = "only-managed"
 
+[tool.uv.sources]
+ahrs = { git = "https://github.com/Mayitzin/ahrs.git" }
+
 # HATCH:
 [tool.hatch.build.targets.wheel]
 packages = ["payload"]
@@ -72,3 +76,5 @@ select = ["E", "F", "I", "PL", "UP", "RUF", "PTH", "C4", "B", "PIE", "SIM", "RET
           "G", "ISC", "PT", "ASYNC", "TCH", "SLOT", "PERF", "PYI", "FLY", "AIR", "Q", "INP", 
           "W", "YTT", "DTZ", "ARG", "T20", "FURB", "D100", "D101", "D300", "D418",
           "D419", "S", "NPY"]
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["T20", "S101", "D100", "ARG001", "RUF012"]
