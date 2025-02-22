@@ -133,6 +133,7 @@ class PayloadContext:
         # The mock sim works with old files
         if (
             last_imu_data_packet is not None
+            and self.imu_data_packet is not None
             and self.imu_data_packet.gpsLatitude == 0.0
             and last_imu_data_packet.gpsLatitude != 0.0
         ):
