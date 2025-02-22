@@ -1,3 +1,5 @@
+"""Module for the Transmitter class that controls the SA85 transceiver."""
+
 import re
 import subprocess
 import threading
@@ -11,10 +13,18 @@ try:
 except ImportError:
     pass
 
+from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
+from payload.interfaces.base_transmitter import BaseTransmitter
+from payload.constants import (
+    TRANSMITTER_PIN,
+    NUMBER_OF_TRANSMISSIONS,
+    TRANSMISSION_WINDOW_SECONDS,
+)
+
 
 class Transmitter(BaseTransmitter):
     """
-    This is the class that controls the SA85transceiver. It is responsible for sending messages
+    This is the class that controls the SA85 transceiver. It is responsible for sending messages
     to our ground station.
     """
 
@@ -35,19 +45,19 @@ class Transmitter(BaseTransmitter):
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
         GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as output, initially high
 
-    def _pull_pin_low(self) -> None:
+    def _turn_ptt_on(self) -> None:
         """
-        Pulls the GPIO pin low. This activates the PTT (Push-To-Talk) of the transceiver.
+        Pulls the GPIO pin high. This pulls the PTT low. This activates the PTT (Push-To-Talk) of the transceiver.
         """
-        GPIO.output(self.gpio_pin, GPIO.LOW)  # Pull the pin low
+        GPIO.output(self.gpio_pin, GPIO.HIGH)
 
-    def _pull_pin_high(self) -> None:
+    def _turn_ptt_off(self) -> None:
         """
-        Pulls the GPIO pin high. This deactivates the PTT (Push-To-Talk) of the transceiver.
+        Pulls the GPIO pin low. This pulls the PTT high. This deactivates the PTT (Push-To-Talk) of the transceiver.
         """
-        GPIO.output(self.gpio_pin, GPIO.HIGH)  # Pull the pin high
+        GPIO.output(self.gpio_pin, GPIO.LOW)
 
-    def _update_beacon_comment(self, new_comment: str) -> bool:
+    def _update_beacon_comment(self, message: TransmitterDataPacket) -> bool:
         """
         Updates the Direwolf configuration file with the new comment.
         :param new_comment: The new comment to set in the Direwolf configuration file.
@@ -59,6 +69,7 @@ class Transmitter(BaseTransmitter):
             found = False
             for i, line in enumerate(lines):
                 if line.startswith("PBEACON"):
+                    new_comment = message.compress_packet()
                     lines[i] = re.sub(r'comment="[^"]*"', f'comment="{new_comment}"', line)
                     found = True
                     break
@@ -78,7 +89,7 @@ class Transmitter(BaseTransmitter):
             print(f"Error updating configuration: {e}")
             return False
 
-    def _send_message_worker(self, message: str) -> None:
+    def _send_message_worker(self, message: TransmitterDataPacket) -> None:
         """
         When sending a message we sleep to give the transceiver time to start transmitting. We then
         pull the PTT pin low to start the transmission. We then sleep for the duration of the
@@ -94,20 +105,20 @@ class Transmitter(BaseTransmitter):
         time.sleep(2)
         for i in range(20):
             if self._stop_event.is_set():
-                self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+                self._turn_ptt_off
                 break
-            self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
+            self._turn_ptt_on()
 
             time.sleep(5)  # Keep the pin low for the transmission duration
 
             if self._stop_event.is_set():
                 break
 
-            self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+            self._turn_ptt_off()
 
             time.sleep(5)  # Keep the pin low for the transmission duration
 
-        self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+        self._turn_ptt_off()
 
     def start(self) -> None:
         """
@@ -119,7 +130,7 @@ class Transmitter(BaseTransmitter):
         """
         Cleans up the GPIO pins when the transmitter is stopped.
         """
-        self._pull_pin_high()
+        self._turn_ptt_off()
         try:
             subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
         except subprocess.CalledProcessError as e:
@@ -133,7 +144,7 @@ class Transmitter(BaseTransmitter):
         GPIO.cleanup()
         print("Stopped Transmitter")
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: TransmitterDataPacket) -> None:
         """
         Sends a message to the ground station.
         """

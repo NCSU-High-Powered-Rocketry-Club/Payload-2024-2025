@@ -1,16 +1,17 @@
 import re
 import subprocess
 import time
+from payload.constants import DIREWOLF_CONFIG_PATH
+from payload.constants import TRANSMITTER_PIN as GPIO_PIN
 
 from RPi import GPIO
 
 # GPIO pin setup
-GPIO_PIN = 8
 
 
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-    GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as an output and initially high
+    GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high
 
 
 def pull_pin_low():
@@ -55,18 +56,20 @@ def restart_direwolf():
 
 def main():
     setup_gpio()
-    config_path = "/home/pi/direwolf.conf"
+    config_path = DIREWOLF_CONFIG_PATH
     print("Please enter the new beacon comment:")
     new_comment = input()  # Take user input for the new comment
 
     if update_beacon_comment(config_path, new_comment):
         print("Configuration updated successfully.")
-        pull_pin_low()  # Activate PTT via GPIO pin pull-down
+        pull_pin_high()  # Activate PTT via GPIO pin pull-down
         restart_direwolf()
-        time.sleep(5)  # Duration for which the pin should remain low
-        pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+        pull_pin_high()  # Activate PTT via GPIO pin pull-down
+        time.sleep(10)  # Duration for which the pin should remain low
+        pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
         print("Transmission complete. Pin reset.")
         subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
+        pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
 
     else:
         print("Failed to update the configuration. Please check the file and try again.")

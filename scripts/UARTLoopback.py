@@ -1,6 +1,6 @@
 import serial
 
-ser = serial.Serial(port="/dev/ttyAMA0", baudrate=9600, timeout=1)
+ser = serial.Serial(port="/dev/ttyUSB0", baudrate=9600, timeout=1)
 
 try:
     test_message = "Hello, UART!\n"

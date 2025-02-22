@@ -1,6 +1,6 @@
 """Contains the constants used in the payload module"""
 
-from enum import StrEnum, Enum
+from enum import StrEnum
 from pathlib import Path
 
 # -------------------------------------------------------
@@ -126,10 +126,10 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
-TRANSMITTER_PIN = 8
+TRANSMITTER_PIN = 18
 """This is the GPIO pin that the transmitter is connected to."""
 
-DIREWOLF_CONFIG_PATH = Path("/home/pi/direwolf.conf")
+DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2025-2025/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
 MOCK_MESSAGE_PATH = Path("mock_message.txt")
@@ -138,6 +138,10 @@ This should be gitignored."""
 
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
+
+NUMBER_OF_TRANSMISSIONS = 2
+
+TRANSMISSION_WINDOW_SECONDS = 5
 
 NO_MESSAGE_TRANSMITTED = "NMT"
 
