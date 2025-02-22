@@ -1,5 +1,6 @@
 """Module for the Transmitter class that controls the SA85 transceiver."""
 
+import math
 import re
 import subprocess
 import threading
@@ -57,6 +58,24 @@ class Transmitter(BaseTransmitter):
         """
         GPIO.output(self.gpio_pin, GPIO.LOW)
 
+    def _create_beacon_line(self, message: TransmitterDataPacket) -> str:
+        lat = message.landing_coords[0]
+        lon = message.landing_coords[1]
+
+        lat_hemi = "N" if lat > 0 else "S"
+        lat_frac, lat_degrees = math.modf(abs(lat))
+        lat_degrees = int(lat_degrees)
+        lat_minutes = lat_frac * 60.0
+        lat_str = f"{lat_degrees:02}^{lat_minutes:05.2f}{lat_hemi}"
+
+        lon_hemi = "E" if lon > 0 else "W"
+        lon_frac, lon_degrees = math.modf(abs(lon))
+        lon_degrees = int(lon_degrees)
+        lon_minutes = lon_frac * 60.0
+        lon_str = f"{lon_degrees:03}^{lon_minutes:05.2f}{lon_hemi}"
+
+        return f'PBEACON delay=0:1 every=0:5 overlay=S symbol=\O lat={lat_str} long={lon_str} comment="{message.compress_packet()}"'
+
     def _update_beacon_comment(self, message: TransmitterDataPacket) -> bool:
         """
         Updates the Direwolf configuration file with the new comment.
@@ -69,8 +88,7 @@ class Transmitter(BaseTransmitter):
             found = False
             for i, line in enumerate(lines):
                 if line.startswith("PBEACON"):
-                    new_comment = message.compress_packet()
-                    lines[i] = re.sub(r'comment="[^"]*"', f'comment="{new_comment}"', line)
+                    lines[i] = self._create_beacon_line(message)
                     found = True
                     break
 
