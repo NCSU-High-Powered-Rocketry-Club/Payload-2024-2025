@@ -161,15 +161,12 @@ class PayloadContext:
         """
         Transmits the processed data packet to the ground station using the transmitter.
         """
+        (roll, pitch, yaw) = self.data_processor.calculate_orientation()
         self.transmission_packet = TransmitterDataPacket(
             temperature=self.imu_data_packet.ambientTemperature,
             apogee=self.processed_data_packet.maximum_altitude,
             battery_level=self.imu_data_packet.voltage,
-            orientation=(
-                self.processed_data_packet.roll,
-                self.processed_data_packet.pitch,
-                self.processed_data_packet.yaw,
-            ),
+            orientation=(roll, pitch, yaw),
             time_of_landing=time.strftime("%H:%M:%S", time.gmtime()),
             max_velocity=self.processed_data_packet.maximum_velocity,
             landing_velocity=self.processed_data_packet.landing_velocity,
