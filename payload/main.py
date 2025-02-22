@@ -68,12 +68,12 @@ def run_flight(args: argparse.Namespace) -> None:
 
 def create_components(
     args: argparse.Namespace,
-) -> tuple[BaseIMU, Logger, DataProcessor, Transmitter, BaseReceiver]:
+) -> tuple[BaseIMU, Logger, DataProcessor, Transmitter, BaseReceiver, Camera]:
     """
     Creates the system components needed for the payload system. Depending on its arguments, it
     will return either mock or real components.
     :param args: Command line arguments determining the configuration.
-    :return: A tuple containing the objects needed to initalize `PayloadContext`.
+    :return: A tuple containing the objects needed to initialize `PayloadContext`.
     """
     if args.mode == "mock":
         # Replace hardware with mock objects for mock replay

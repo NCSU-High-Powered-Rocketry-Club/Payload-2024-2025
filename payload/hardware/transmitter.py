@@ -79,7 +79,8 @@ class Transmitter(BaseTransmitter):
     def _update_beacon_comment(self, message: TransmitterDataPacket) -> bool:
         """
         Updates the Direwolf configuration file with the new comment.
-        :param new_comment: The new comment to set in the Direwolf configuration file.
+        :param message: The new comment to set in the Direwolf configuration file.
+        :return: True if the configuration was updated successfully, False otherwise.
         """
         try:
             with open(self.config_path) as file:
@@ -123,7 +124,7 @@ class Transmitter(BaseTransmitter):
         time.sleep(2)
         for i in range(20):
             if self._stop_event.is_set():
-                self._turn_ptt_off
+                self._turn_ptt_off()
                 break
             self._turn_ptt_on()
 
@@ -142,7 +143,7 @@ class Transmitter(BaseTransmitter):
         """
         Starts the transmitter.
         """
-        return NotImplementedError("Not implmented yet")
+        pass
 
     def stop(self) -> None:
         """

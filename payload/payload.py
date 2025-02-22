@@ -209,3 +209,9 @@ class PayloadContext:
         """
         self.data_processor.calculating_crew_survivability = False
         self.data_processor.finalize_crew_survivability()
+
+    def end_video_recording(self) -> None:
+        """
+        Ends the video recording.
+        """
+        self.camera.stop()

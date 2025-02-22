@@ -200,6 +200,9 @@ class LandedState(State):
         self.context.stop_survivability_calculation()
         self.context.data_processor.calculate_landing_velocity()
 
+        # Once we land we stop the camera recording
+        self.context.end_video_recording()
+
     def update(self):
         """This method does nothing"""
 
