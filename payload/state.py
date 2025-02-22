@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from payload.constants import (
     GROUND_ALTITUDE_METERS,
-    LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED,
+    LANDED_VELOCITY_METERS_PER_SECOND,
     MAX_FREE_FALL_SECONDS,
     MAX_VELOCITY_THRESHOLD,
     TAKEOFF_HEIGHT_METERS,
@@ -169,8 +169,8 @@ class FreeFallState(State):
         # If our altitude is around 0, and we have an acceleration spike, we have landed
         if (
             data.current_altitude <= GROUND_ALTITUDE_METERS
-            and abs(data._data_packet.estCompensatedAccelZ)
-            >= LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED
+            and abs(data.velocity_moving_average)
+            <= LANDED_VELOCITY_METERS_PER_SECOND
         ):
             self.next_state()
 

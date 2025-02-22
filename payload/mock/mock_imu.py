@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from payload.constants import IMU_APPROXIMATE_FREQUENCY
+from payload.constants import IMU_APPROXIMATE_FREQUENCY, PROJECT_DIRECTORY_NAME
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.interfaces.base_imu import BaseIMU
 
@@ -38,7 +38,7 @@ class MockIMU(BaseIMU):
             # `uvx --from git+... mock` on any machine from any state. Otherwise a Path().cwd()
             # would be enough.
             path = Path(__file__)
-            payload_index = path.parts.index("Payload-2024-2025")  # Find the Payload directory
+            payload_index = path.parts.index(PROJECT_DIRECTORY_NAME)  # Find the Payload-2024-2025 directory
             root_dir = Path(*path.parts[: payload_index + 1])  # Make a new path to that dir
             self._log_file_path = next(iter(Path(root_dir / "launch_data").glob("*.csv")))
 
