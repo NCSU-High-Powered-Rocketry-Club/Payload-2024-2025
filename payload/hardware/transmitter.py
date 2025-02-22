@@ -8,7 +8,9 @@ from RPi import GPIO
 
 from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.interfaces.base_transmitter import BaseTransmitter
-from payload.constants import TRANSMITTER_PIN
+from payload.constants import TRANSMITTER_PIN, KISS_HOST, KISS_PORT, NUMBER_OF_TRANSMISSIONS, \
+    TRANSMISSION_WINDOW_SECONDS
+
 
 class Transmitter(BaseTransmitter):
     """
@@ -30,37 +32,24 @@ class Transmitter(BaseTransmitter):
         self._stop_event = threading.Event()
         self.message_worker_thread = None
 
-        GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-        # Set pin as an output and initially high
-        GPIO.setup(TRANSMITTER_PIN, GPIO.OUT, initial=GPIO.LOW)
-
-    def _send_message_worker(self, message: TransmitterDataPacket) -> None:
-        """
-        Handles the message transmission process in a separate thread.
-        """
-        lat, long = message.landing_coords
-        compressed_message = message.compress_packet()
-        for i in range(2):
-            GPIO.output(TRANSMITTER_PIN, GPIO.HIGH)
-            self.send_kiss_packet(compressed_message)
-            time.sleep(5)
-            GPIO.output(TRANSMITTER_PIN, GPIO.LOW)
-
     def start(self) -> None:
         """
         Starts the transmitter.
         """
-        # TODO
+        GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
+        # Set pin as an output and initially high
+        GPIO.setup(TRANSMITTER_PIN, GPIO.OUT, initial=GPIO.LOW)
 
     def stop(self) -> None:
         """
         Stops the transmitter and cleans up GPIO resources.
         """
-        self._pull_pin_low()
+        # Pull the pin low to stop transmitting
+        GPIO.output(TRANSMITTER_PIN, GPIO.LOW)
         self._stop_event.set()
+        # If we stop the program before a message is sent, the thread won't exist
         if self.message_worker_thread:
             self.message_worker_thread.join(5)
-        print("Stopped Transmitter")
 
     def send_message(self, message: str) -> None:
         """
@@ -71,10 +60,12 @@ class Transmitter(BaseTransmitter):
         )
         self.message_worker_thread.start()
 
-    def send_kiss_packet(self, message):
-        """Send an APRS packet using the KISS TCP interface to Direwolf."""
-        KISS_HOST = "127.0.0.1"  # Localhost where Direwolf is running
-        KISS_PORT = 8001  # KISS TCP port
+    @staticmethod
+    def _send_kiss_packet(message: str) -> None:
+        """
+        Send an APRS packet using the KISS TCP interface to Direwolf.
+        :param message: The APRS message to send.
+        """
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.connect((KISS_HOST, KISS_PORT))
@@ -84,3 +75,17 @@ class Transmitter(BaseTransmitter):
             print("✅ APRS packet sent successfully via KISS mode.")
         except Exception as e:
             print(f"❌ Failed to send APRS packet: {e}")
+
+    def _send_message_worker(self, message: TransmitterDataPacket) -> None:
+        """
+        Handles the message transmission process in a separate thread.
+        """
+        # TODO: add the lat and long
+        lat, long = message.landing_coords
+        compressed_message = message.compress_packet()
+        for i in range(NUMBER_OF_TRANSMISSIONS):
+            GPIO.output(TRANSMITTER_PIN, GPIO.HIGH)
+            # TODO: test if we can move this outside of the for loop
+            self._send_kiss_packet(compressed_message)
+            time.sleep(TRANSMISSION_WINDOW_SECONDS)
+            GPIO.output(TRANSMITTER_PIN, GPIO.LOW)

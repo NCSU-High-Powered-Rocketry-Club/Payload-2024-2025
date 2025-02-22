@@ -129,6 +129,11 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 50
 TRANSMITTER_PIN = 18
 """This is the GPIO pin that the transmitter is connected to."""
 
+KISS_HOST = "127.0.0.1"
+"""Localhost where Direwolf is running"""
+KISS_PORT = 8001
+"""The port that Direwolf is listening on"""
+
 DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025/build/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
@@ -138,6 +143,10 @@ This should be gitignored."""
 
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
+
+NUMBER_OF_TRANSMISSIONS = 2
+
+TRANSMISSION_WINDOW_SECONDS = 5
 
 NO_MESSAGE_TRANSMITTED = "NMT"
 
