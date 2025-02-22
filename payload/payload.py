@@ -124,7 +124,21 @@ class PayloadContext:
         """
 
         # We only get one data packet at a time from the IMU as it runs very slowly
+        last_imu_data_packet = self.imu_data_packet
         self.imu_data_packet = self.imu.fetch_data()
+
+        # If the GPS returns (0,0,0), use the last data
+        # This happens if there was no gps update that cycle
+        # We have to do it here and not in IMU so that
+        # The mock sim works with old files
+        if (
+            last_imu_data_packet is not None
+            and self.imu_data_packet.gpsLatitude == 0.0
+            and last_imu_data_packet.gpsLatitude != 0.0
+        ):
+            self.imu_data_packet.gpsLatitude = last_imu_data_packet.gpsLatitude
+            self.imu_data_packet.gpsLongitude = last_imu_data_packet.gpsLongitude
+            self.imu_data_packet.gpsAltitude = last_imu_data_packet.gpsAltitude
 
         # If we don't have a data packet, return early
         if not self.imu_data_packet:
