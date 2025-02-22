@@ -18,6 +18,7 @@ dependencies = [
     "sounddevice",
     "soundfile",
     "gpiozero",
+    "ahrs",
 ]
 
 [dependency-groups]
@@ -34,11 +35,11 @@ rpi = [  # Dependencies which only run on the pi.
 # `libkms++-dev`, `libfmt-dev`, `libdrm-dev` to build and install everything camera related.
 # Run `uv pip install rpi-libcamera -C setup-args="-Drepository=https://github.com/raspberrypi/libcamera.git" -C setup-args="-Dversion=v0.4.0+53-29156679"`
 # if you are installing this and you have a version mismatch of rpi-libcamera and libcamera installed via apt.
-#camera = [
-#    "picamera2>=0.3.25; sys_platform == 'linux'",
-#    "rpi-libcamera>=0.1a8; sys_platform == 'linux'",
-#    "rpi-kms>=0.1a1; sys_platform == 'linux'",
-#]
+camera = [
+    "picamera2>=0.3.25",
+    "rpi-libcamera>=0.1a8",
+    "rpi-kms>=0.1a1",
+]
 
 [project.scripts]
 mock = "payload.main:run_mock_flight"
@@ -51,6 +52,9 @@ build-backend = "hatchling.build"
 # UV:
 [tool.uv]
 python-preference = "only-managed"
+
+[tool.uv.sources]
+ahrs = { git = "https://github.com/Mayitzin/ahrs.git" }
 
 # HATCH:
 [tool.hatch.build.targets.wheel]
@@ -73,3 +77,5 @@ select = ["E", "F", "I", "PL", "UP", "RUF", "PTH", "C4", "B", "PIE", "SIM", "RET
           "G", "ISC", "PT", "ASYNC", "TCH", "SLOT", "PERF", "PYI", "FLY", "AIR", "Q", "INP", 
           "W", "YTT", "DTZ", "ARG", "T20", "FURB", "D100", "D101", "D300", "D418",
           "D419", "S", "NPY"]
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["T20", "S101", "D100", "ARG001", "RUF012"]
