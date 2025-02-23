@@ -99,9 +99,9 @@ class FlightDisplay:
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
-            # if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
-            #     self._update_display(DisplayEndingType.TAKEOFF)
-            #     break
+            if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
+                self._update_display(DisplayEndingType.TAKEOFF)
+                break
 
         # The program has ended, so we print the final display, depending on how it ended:
         if self.end_mock_natural.is_set():
@@ -151,8 +151,8 @@ class FlightDisplay:
                     f"{Y}{'=' * 18} DEBUG INFO {'=' * 17}{RESET}",
                     f"Max accel velocity:        {G}{data_processor._max_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
                     f"Landing velocity:          {G}{data_processor._landing_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
-                    f"Transmitter message:       {G}{self._payload.transmitted_message[:14]:<14}{RESET}",  # noqa: E501
-                    f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]:<14}{RESET}"  # noqa: E501
+                    f"Transmitter message:       {G}{str(self._payload.transmission_packet)[:14]}{RESET}",  # noqa: E501
+                    f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]}{RESET}",  # noqa: E501
                 ]
             )
 

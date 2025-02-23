@@ -73,3 +73,5 @@ build/
 direwolf/
 
 mock_message.txt
+
+direwolf.conf

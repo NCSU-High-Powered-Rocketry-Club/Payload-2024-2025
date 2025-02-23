@@ -109,10 +109,10 @@ class DataProcessor:
             return 0
 
     @property
-    def velocity_moving_average(self):
+    def velocity_moving_average(self) -> float:
         """Average of the last 10 previous velocity calculations for use in a moving average."""
         if self._velocity_rolling_average:
-            return np.mean(self._velocity_rolling_average)
+            return float(np.mean(self._velocity_rolling_average))
         return self.vertical_velocity
 
     def update(self, data_packet: IMUDataPacket) -> None:

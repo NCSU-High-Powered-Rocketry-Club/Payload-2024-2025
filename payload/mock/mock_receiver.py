@@ -23,12 +23,12 @@ class MockReceiver(BaseReceiver):
     )
 
     def __init__(self, initial_delay: float, receive_delay: float, receive_message: str) -> None:
-        self.message = NO_MESSAGE
-        self.initial_delay = initial_delay
-        self.receive_delay = receive_delay
-        self.receive_message = receive_message
-        self._running = False
-        self._thread = None
+        self.message: str = NO_MESSAGE
+        self.initial_delay: float = initial_delay
+        self.receive_delay: float = receive_delay
+        self.receive_message: str = receive_message
+        self._running: bool = False
+        self._thread: threading.Thread = threading.Thread(target=self._listen, daemon=True)
 
     @property
     def latest_message(self) -> str:
@@ -46,13 +46,10 @@ class MockReceiver(BaseReceiver):
         """Starts the listening process in a separate thread."""
         if not self._running:
             self._running = True
-            self._thread = threading.Thread(target=self._listen, daemon=True)
             self._thread.start()
 
     def stop(self) -> None:
         """Stops the listening process."""
         if self._running:
             self._running = False
-            if self._thread is not None:
-                self._thread.join()
-                self._thread = None
+            self._thread.join(3)

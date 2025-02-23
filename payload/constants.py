@@ -1,6 +1,6 @@
 """Contains the constants used in the payload module"""
 
-from enum import StrEnum, Enum
+from enum import StrEnum
 from pathlib import Path
 
 # -------------------------------------------------------
@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB1"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -49,6 +49,9 @@ MAX_GET_TIMEOUT_SECONDS = 100  # seconds
 
 IMU_APPROXIMATE_FREQUENCY = 35
 """The frequency at which the IMU sends data packets, this is 50Hz"""
+
+PROJECT_DIRECTORY_NAME = "Payload-2024-2025"
+"""The name of the directory for the project"""
 
 # -------------------------------------------------------
 # Camera Configuration
@@ -101,11 +104,9 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 10.0
+GROUND_ALTITUDE_METERS = 5.0
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
-LANDED_ACCELERATION_METERS_PER_SECOND_SQUARED = 35.0
-"""The acceleration in m/s^2 that the rocket must be above before we consider it to have landed."""
-
+LANDED_VELOCITY_METERS_PER_SECOND = 2.0
 # ----------------- Landing to Program Stop -----------------
 
 STOP_AFTER_SECONDS = 5
@@ -126,10 +127,10 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
-TRANSMITTER_PIN = 8
+TRANSMITTER_PIN = 18
 """This is the GPIO pin that the transmitter is connected to."""
 
-DIREWOLF_CONFIG_PATH = Path("/home/pi/direwolf.conf")
+DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025/direwolf.conf")
 """The path to the Direwolf configuration file."""
 
 MOCK_MESSAGE_PATH = Path("mock_message.txt")
@@ -139,12 +140,16 @@ This should be gitignored."""
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
+NUMBER_OF_TRANSMISSIONS = 2
+
+TRANSMISSION_WINDOW_SECONDS = 5
+
 NO_MESSAGE_TRANSMITTED = "NMT"
 
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
-RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
+RECEIVER_SERIAL_PORT = "/dev/ttyUSB0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""
@@ -162,7 +167,7 @@ RECEIVER_SERIAL_TIMEOUT = 1
 """The amount of time in seconds that the receiver serial port waits for a message"""
 
 # These are in seconds
-MOCK_RECEIVER_INITIAL_DELAY = 5.0
+MOCK_RECEIVER_INITIAL_DELAY = 50.0
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
 
 # -------------------------------------------------------

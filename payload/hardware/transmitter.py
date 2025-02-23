@@ -1,3 +1,6 @@
+"""Module for the Transmitter class that controls the SA85 transceiver."""
+
+import math
 import re
 import subprocess
 import threading
@@ -11,10 +14,19 @@ try:
 except ImportError:
     pass
 
+from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
+from payload.interfaces.base_transmitter import BaseTransmitter
+from payload.constants import (
+    DIREWOLF_CONFIG_PATH,
+    TRANSMITTER_PIN,
+    NUMBER_OF_TRANSMISSIONS,
+    TRANSMISSION_WINDOW_SECONDS,
+)
+
 
 class Transmitter(BaseTransmitter):
     """
-    This is the class that controls the SA85transceiver. It is responsible for sending messages
+    This is the class that controls the SA85 transceiver. It is responsible for sending messages
     to our ground station.
     """
 
@@ -35,22 +47,60 @@ class Transmitter(BaseTransmitter):
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
         GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as output, initially high
 
-    def _pull_pin_low(self) -> None:
-        """
-        Pulls the GPIO pin low. This activates the PTT (Push-To-Talk) of the transceiver.
-        """
-        GPIO.output(self.gpio_pin, GPIO.LOW)  # Pull the pin low
+    # def _turn_ptt_on(self) -> None:
+    #     """
+    #     Pulls the GPIO pin high. This pulls the PTT low. This activates the PTT (Push-To-Talk) of the transceiver.
+    #     """
+    #     GPIO.output(self.gpio_pin, GPIO.HIGH)
 
-    def _pull_pin_high(self) -> None:
-        """
-        Pulls the GPIO pin high. This deactivates the PTT (Push-To-Talk) of the transceiver.
-        """
-        GPIO.output(self.gpio_pin, GPIO.HIGH)  # Pull the pin high
+    # def _turn_ptt_off(self) -> None:
+    #     """
+    #     Pulls the GPIO pin low. This pulls the PTT high. This deactivates the PTT (Push-To-Talk) of the transceiver.
+    #     """
+    #     GPIO.output(self.gpio_pin, GPIO.LOW)
 
-    def _update_beacon_comment(self, new_comment: str) -> bool:
+    def setup_gpio(self):
+        GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
+        # GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high
+        GPIO.setup(27, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(2, GPIO.OUT, initial=GPIO.LOW)
+
+    def pull_pin_low(self):
+        GPIO.output(27, GPIO.LOW)
+        GPIO.output(2, GPIO.LOW)
+
+    def pull_pin_high(self):
+        GPIO.output(2, GPIO.HIGH)  # Pull the pin high
+        GPIO.output(27, GPIO.HIGH)
+
+
+    def cleanup_gpio(self):
+        GPIO.cleanup()  # Clean up GPIO to ensure no resources are left hanging
+
+
+    def _create_beacon_line(self, message: TransmitterDataPacket) -> str:
+        lat = message.landing_coords[0]
+        lon = message.landing_coords[1]
+
+        lat_hemi = "N" if lat > 0 else "S"
+        lat_frac, lat_degrees = math.modf(abs(lat))
+        lat_degrees = int(lat_degrees)
+        lat_minutes = lat_frac * 60.0
+        lat_str = f"{lat_degrees:02}^{lat_minutes:05.2f}{lat_hemi}"
+
+        lon_hemi = "E" if lon > 0 else "W"
+        lon_frac, lon_degrees = math.modf(abs(lon))
+        lon_degrees = int(lon_degrees)
+        lon_minutes = lon_frac * 60.0
+        lon_str = f"{lon_degrees:03}^{lon_minutes:05.2f}{lon_hemi}"
+
+        return f'PBEACON delay=0:1 every=0:5 overlay=S symbol=\\O lat={lat_str} long={lon_str} comment="{message.compress_packet()}"'
+
+    def _update_beacon_comment(self, message: TransmitterDataPacket) -> bool:
         """
         Updates the Direwolf configuration file with the new comment.
-        :param new_comment: The new comment to set in the Direwolf configuration file.
+        :param message: The new comment to set in the Direwolf configuration file.
+        :return: True if the configuration was updated successfully, False otherwise.
         """
         try:
             with open(self.config_path) as file:
@@ -59,7 +109,7 @@ class Transmitter(BaseTransmitter):
             found = False
             for i, line in enumerate(lines):
                 if line.startswith("PBEACON"):
-                    lines[i] = re.sub(r'comment="[^"]*"', f'comment="{new_comment}"', line)
+                    lines[i] = self._create_beacon_line(message)
                     found = True
                     break
 
@@ -78,7 +128,12 @@ class Transmitter(BaseTransmitter):
             print(f"Error updating configuration: {e}")
             return False
 
-    def _send_message_worker(self, message: str) -> None:
+    def restart_direwolf(self):
+        subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
+        time.sleep(2)  # Wait for a moment to ensure the process has terminated
+        subprocess.Popen(["direwolf"])  # Start Direwolf again
+
+    def _send_message_worker(self, message: TransmitterDataPacket) -> None:
         """
         When sending a message we sleep to give the transceiver time to start transmitting. We then
         pull the PTT pin low to start the transmission. We then sleep for the duration of the
@@ -86,40 +141,63 @@ class Transmitter(BaseTransmitter):
         blocking, we run this in a separate thread.
         :param message: The message to send.
         """
-        if not self._update_beacon_comment(message):
-            print("Failed to update the configuration. Message not sent.")
-            return
 
-        subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
-        time.sleep(2)
-        for i in range(20):
-            if self._stop_event.is_set():
-                self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
-                break
-            self._pull_pin_low()  # Activate PTT via GPIO pin pull-down
+        self.setup_gpio()
+        config_path = DIREWOLF_CONFIG_PATH
 
-            time.sleep(5)  # Keep the pin low for the transmission duration
+        # if not self._update_beacon_comment(message):
+        #     print("Failed to update the configuration. Message not sent.")
+        #     return
+        
+        if self._update_beacon_comment(message):
+            for i in range(5):
+                print("Configuration updated successfully.")
+                self.pull_pin_high()  # Activate PTT via GPIO pin pull-down
+                self.restart_direwolf()
+                self.pull_pin_high()  # Activate PTT via GPIO pin pull-down
+                time.sleep(10)  # Duration for which the pin should remain low
+                self.pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
+                print("Transmission complete. Pin reset.")
+                subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
+                self.setup_gpio()
+        else:
+            print("Failed to update the configuration. Please check the file and try again.")
 
-            if self._stop_event.is_set():
-                break
+        # cleanup_gpio()
+        self.setup_gpio()
 
-            self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+        # subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
+        # time.sleep(2)
+        # for i in range(20):
+        #     if self._stop_event.is_set():
+        #         self._turn_ptt_off()
+        #         break
+        #     self._turn_ptt_on()
 
-            time.sleep(5)  # Keep the pin low for the transmission duration
+        #     time.sleep(10)  # Keep the pin low for the transmission duration
 
-        self._pull_pin_high()  # Deactivate PTT via GPIO pin pull-up
+        #     if self._stop_event.is_set():
+        #         break
+
+        #     self._turn_ptt_off()
+
+        #     time.sleep(10)  # Keep the pin low for the transmission duration
+
+        # self._turn_ptt_off()
 
     def start(self) -> None:
         """
         Starts the transmitter.
         """
-        return NotImplementedError("Not implmented yet")
+        pass
 
     def stop(self) -> None:
         """
         Cleans up the GPIO pins when the transmitter is stopped.
         """
-        self._pull_pin_high()
+        self.setup_gpio()
+        self.pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
+        # self._turn_ptt_off()
         try:
             subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
         except subprocess.CalledProcessError as e:
@@ -133,7 +211,7 @@ class Transmitter(BaseTransmitter):
         GPIO.cleanup()
         print("Stopped Transmitter")
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: TransmitterDataPacket) -> None:
         """
         Sends a message to the ground station.
         """
