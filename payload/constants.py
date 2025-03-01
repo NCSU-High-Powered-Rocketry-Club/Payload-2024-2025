@@ -59,6 +59,14 @@ PROJECT_DIRECTORY_NAME = "Payload-2024-2025"
 
 CAMERA_SAVE_PATH = Path("logs/video.h264")
 
+CAMERA_START_RECORDING_TIMEOUT = 2 * 60
+"""The amount of time in seconds that the camera waits for the motor burn to start before it starts
+recording anyway. This is here because the IMU may not work."""
+
+CAMERA_STOP_RECORDING_TIMEOUT = 30 * 60
+"""The maximum amount of time in seconds that the camera waits for the rocket to land before it
+stops recording. This is here because the IMU or some other part of the code may not work."""
+
 # -------------------------------------------------------
 # Logging Configuration
 # -------------------------------------------------------
