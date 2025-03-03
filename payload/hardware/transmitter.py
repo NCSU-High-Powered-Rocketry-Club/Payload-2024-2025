@@ -21,6 +21,7 @@ from payload.constants import (
     TRANSMITTER_PIN,
     NUMBER_OF_TRANSMISSIONS,
     TRANSMISSION_WINDOW_SECONDS,
+    TRANSMISSION_DELAY
 )
 
 
@@ -39,13 +40,13 @@ class Transmitter(BaseTransmitter):
         :param gpio_pin: The GPIO pin number that is connected to the PTT pin of the transceiver.
         :param config_path: The path to the Direwolf configuration file.
         """
-        self.gpio_pin = gpio_pin
+        self.gpio_pin = TRANSMITTER_PIN
         self.config_path = config_path
         self._stop_event = threading.Event()
         self.message_worker_thread = None
 
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-        GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.HIGH)  # Set pin as output, initially high
+        GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.LOW)  # Set pin as output, initially high
 
     # def _turn_ptt_on(self) -> None:
     #     """
@@ -61,17 +62,15 @@ class Transmitter(BaseTransmitter):
 
     def setup_gpio(self):
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-        # GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high
-        GPIO.setup(27, GPIO.OUT, initial=GPIO.LOW)
-        GPIO.setup(2, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.LOW)
 
     def pull_pin_low(self):
-        GPIO.output(27, GPIO.LOW)
-        GPIO.output(2, GPIO.LOW)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.output(self.gpio_pin, GPIO.LOW)
 
     def pull_pin_high(self):
-        GPIO.output(2, GPIO.HIGH)  # Pull the pin high
-        GPIO.output(27, GPIO.HIGH)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.output(self.gpio_pin, GPIO.HIGH)
 
 
     def cleanup_gpio(self):
@@ -150,21 +149,24 @@ class Transmitter(BaseTransmitter):
         #     return
         
         if self._update_beacon_comment(message):
-            for i in range(5):
+            for i in range(NUMBER_OF_TRANSMISSIONS):
                 print("Configuration updated successfully.")
                 self.pull_pin_high()  # Activate PTT via GPIO pin pull-down
                 self.restart_direwolf()
-                self.pull_pin_high()  # Activate PTT via GPIO pin pull-down
-                time.sleep(10)  # Duration for which the pin should remain low
+
+                time.sleep(TRANSMISSION_WINDOW_SECONDS)  # Duration for which the pin should remain low
+
                 self.pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
                 print("Transmission complete. Pin reset.")
                 subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
-                self.setup_gpio()
+
+                time.sleep(TRANSMISSION_DELAY)
+
         else:
             print("Failed to update the configuration. Please check the file and try again.")
 
-        # cleanup_gpio()
-        self.setup_gpio()
+        self.cleanup_gpio()
+        # self.setup_gpio()
 
         # subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
         # time.sleep(2)

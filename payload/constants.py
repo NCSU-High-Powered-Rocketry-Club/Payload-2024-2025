@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB1"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -106,10 +106,10 @@ deploying at apogee."""
 
 GROUND_ALTITUDE_METERS = 5.0
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
-LANDED_VELOCITY_METERS_PER_SECOND = 2.0
+LANDED_VELOCITY_METERS_PER_SECOND = 7
 # ----------------- Landing to Program Stop -----------------
 
-STOP_AFTER_SECONDS = 5
+STOP_AFTER_SECONDS = 30
 """The time in seconds after which the program will stop itself."""
 
 # -------------------------------------------------------
@@ -127,7 +127,7 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
-TRANSMITTER_PIN = 18
+TRANSMITTER_PIN = 1
 """This is the GPIO pin that the transmitter is connected to."""
 
 DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025/direwolf.conf")
@@ -149,7 +149,7 @@ NO_MESSAGE_TRANSMITTED = "NMT"
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
-RECEIVER_SERIAL_PORT = "/dev/ttyUSB0"
+RECEIVER_SERIAL_PORT = "/dev/ttyUSB1"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""
@@ -167,7 +167,7 @@ RECEIVER_SERIAL_TIMEOUT = 1
 """The amount of time in seconds that the receiver serial port waits for a message"""
 
 # These are in seconds
-MOCK_RECEIVER_INITIAL_DELAY = 50.0
+MOCK_RECEIVER_INITIAL_DELAY = 10
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
 
 # -------------------------------------------------------

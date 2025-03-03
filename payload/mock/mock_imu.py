@@ -70,7 +70,9 @@ class MockIMU(BaseIMU):
 
         # If we have reached the end of the data, stop the IMU
         if self._current_index >= len(self._df):
-            self.stop()
+            # -- Commented out to allow the transmission period to occur in mock sims
+            # self.stop()
+            
             return None
 
         row = self._df.iloc[self._current_index]

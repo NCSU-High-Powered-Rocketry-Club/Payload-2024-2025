@@ -11,18 +11,14 @@ from RPi import GPIO
 
 def setup_gpio():
     GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-    GPIO.setup(GPIO_PIN, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high
-    GPIO.setup(27, GPIO.OUT, initial=GPIO.LOW)
-    GPIO.setup(2, GPIO.OUT, initial=GPIO.LOW)
+    GPIO.setup(1, GPIO.OUT, initial=GPIO.LOW)  # Set pin as an output and initially high
 
 
 def pull_pin_low():
-    GPIO.output(27, GPIO.LOW)
-    GPIO.output(2, GPIO.LOW)
+    GPIO.output(1, GPIO.LOW)
 
 def pull_pin_high():
-    GPIO.output(2, GPIO.HIGH)  # Pull the pin high
-    GPIO.output(27, GPIO.HIGH)
+    GPIO.output(1, GPIO.HIGH)  # Pull the pin high
 
 
 def cleanup_gpio():

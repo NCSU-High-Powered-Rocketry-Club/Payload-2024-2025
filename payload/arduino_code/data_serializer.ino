@@ -1,30 +1,25 @@
-#include <Adafruit_DPS310.h>          // DPS310 Library
-#include <Adafruit_BNO08x.h>          // BNO085 Library
-#include <SparkFun_u-blox_GNSS_v3.h>  // SAM-M10Q GPS Library
-#include <Wire.h>                     // I2C Library
+#include <Wire.h>
+#include <Adafruit_DPS310.h>
+#include <Adafruit_BNO08x.h>
+#include <SparkFun_u-blox_GNSS_v3.h>  // GNSS Library for SAM-M10Q
 
-// Pin definitions
-#define VOLTAGE_PIN A0   // Analog pin for voltage sensor
-#define MIN_VOLTAGE 530  // ADC value for 0% battery (2.6V)
-#define MAX_VOLTAGE 614  // ADC value for 100% battery (3.01V)
+#define SEALEVEL_PRESSURE_HPA 1013.25f  
+#define VOLTAGE_PIN 39         // ADC pin for battery voltage
+#define SENSOR_TIMEOUT 200     // Timeout in milliseconds for sensor readings
+#define MAX_IMU_ATTEMPTS 50    // Maximum attempts to read IMU data before moving on
+#define LED_PIN 2              // ESP32's onboard LED pin (usually GPIO2)
+#define LED_INTERVAL 500       // LED blink interval in milliseconds
 
-// DPS310 sensor object
-Adafruit_DPS310 dps_310;
+// Debug settings
+#define DEBUG_MODE 0           // Set to 1 for human-readable output, 0 for binary only
+#define DEBUG_SERIAL Serial    // Which serial port to use for debug output
 
-// BNO085 IMU object
-Adafruit_BNO08x bno = Adafruit_BNO08x();
-#define BNO_REPORT_ACCELEROMETER 0x01
-#define BNO_REPORT_GYROSCOPE 0x02
-#define BNO_REPORT_MAGNETOMETER 0x03
-#define BNO_REPORT_ROTATION_VECTOR 0x05
+// Sensor objects
+Adafruit_DPS310 dps;
+Adafruit_BNO08x bno08x(-1);
+SFE_UBLOX_GNSS myGNSS;
 
-// We will send this before a packet to sync our code with the data stream
-#define START_MARKER 0xAA
-
-// GNSS object
-SFE_UBLOX_GNSS my_GNSS;
-#define mySerial Serial2  // Use Serial1 to connect to the GNSS module
-
+// Data packet structure
 struct DataPacket {
   float timestamp;
   float voltage;
@@ -36,156 +31,315 @@ struct DataPacket {
   float magnetic_x, magnetic_y, magnetic_z;
   float quat_w, quat_x, quat_y, quat_z;
   float gps_lat, gps_long, gps_alt;
+  uint8_t status_flags;  // Bit flags to indicate which sensors provided valid data
 };
 
+// Status flag bits
+#define STATUS_DPS310_OK    0x01
+#define STATUS_BNO08X_ACCEL 0x02
+#define STATUS_BNO08X_GYRO  0x04
+#define STATUS_BNO08X_ROT   0x08
+#define STATUS_GPS_OK       0x10
+
+// Battery voltage filtering
+static float filtBatteryVoltage = 0.0;
+static unsigned long lastBattReadTime = 0;
+static unsigned long lastLedToggle = 0;
+static bool ledState = false;
+
+// Function to update LED state - call this frequently
+void updateHeartbeatLED() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastLedToggle >= LED_INTERVAL) {
+    lastLedToggle = currentMillis;
+    ledState = !ledState;
+    digitalWrite(LED_PIN, ledState);
+  }
+}
+
+// Function to print human-readable data
+void printHumanReadableData(const DataPacket &data) {
+  if (!DEBUG_MODE) return;
+  
+  DEBUG_SERIAL.println("\n------ SENSOR DATA ------");
+  DEBUG_SERIAL.print("Time: "); 
+  DEBUG_SERIAL.print(data.timestamp / 1000.0, 2); 
+  DEBUG_SERIAL.println(" sec");
+  
+  DEBUG_SERIAL.print("Battery: "); 
+  DEBUG_SERIAL.print(data.voltage, 2); 
+  DEBUG_SERIAL.println(" V");
+  
+  DEBUG_SERIAL.println("\n- Environmental -");
+  if (data.status_flags & STATUS_DPS310_OK) {
+    DEBUG_SERIAL.print("Temperature: "); 
+    DEBUG_SERIAL.print(data.temperature, 1); 
+    DEBUG_SERIAL.println(" °C");
+    
+    DEBUG_SERIAL.print("Pressure: "); 
+    DEBUG_SERIAL.print(data.pressure, 1); 
+    DEBUG_SERIAL.println(" hPa");
+    
+    DEBUG_SERIAL.print("Altitude: "); 
+    DEBUG_SERIAL.print(data.altitude, 1); 
+    DEBUG_SERIAL.println(" m");
+  } else {
+    DEBUG_SERIAL.println("DPS310 data unavailable");
+  }
+  
+  DEBUG_SERIAL.println("\n- Motion -");
+  if (data.status_flags & STATUS_BNO08X_ACCEL) {
+    DEBUG_SERIAL.print("Acceleration (m/s²): X="); 
+    DEBUG_SERIAL.print(data.comp_accel_x, 2);
+    DEBUG_SERIAL.print(" Y="); 
+    DEBUG_SERIAL.print(data.comp_accel_y, 2);
+    DEBUG_SERIAL.print(" Z="); 
+    DEBUG_SERIAL.println(data.comp_accel_z, 2);
+  } else {
+    DEBUG_SERIAL.println("Acceleration data unavailable");
+  }
+  
+  if (data.status_flags & STATUS_BNO08X_GYRO) {
+    DEBUG_SERIAL.print("Gyroscope (rad/s): X="); 
+    DEBUG_SERIAL.print(data.gyro_x, 2);
+    DEBUG_SERIAL.print(" Y="); 
+    DEBUG_SERIAL.print(data.gyro_y, 2);
+    DEBUG_SERIAL.print(" Z="); 
+    DEBUG_SERIAL.println(data.gyro_z, 2);
+  } else {
+    DEBUG_SERIAL.println("Gyroscope data unavailable");
+  }
+  
+  if (data.status_flags & STATUS_BNO08X_ROT) {
+    DEBUG_SERIAL.print("Quaternion: W="); 
+    DEBUG_SERIAL.print(data.quat_w, 3);
+    DEBUG_SERIAL.print(" X="); 
+    DEBUG_SERIAL.print(data.quat_x, 3);
+    DEBUG_SERIAL.print(" Y="); 
+    DEBUG_SERIAL.print(data.quat_y, 3);
+    DEBUG_SERIAL.print(" Z="); 
+    DEBUG_SERIAL.println(data.quat_z, 3);
+  } else {
+    DEBUG_SERIAL.println("Orientation data unavailable");
+  }
+  
+  DEBUG_SERIAL.println("\n- Location -");
+  if (data.status_flags & STATUS_GPS_OK) {
+    DEBUG_SERIAL.print("GPS: Lat="); 
+    DEBUG_SERIAL.print(data.gps_lat, 6);
+    DEBUG_SERIAL.print(" Lon="); 
+    DEBUG_SERIAL.print(data.gps_long, 6);
+    DEBUG_SERIAL.print(" Alt="); 
+    DEBUG_SERIAL.print(data.gps_alt, 1);
+    DEBUG_SERIAL.println(" m");
+  } else {
+    DEBUG_SERIAL.println("GPS data unavailable");
+  }
+  
+  DEBUG_SERIAL.println("\n- Status Summary -");
+  DEBUG_SERIAL.print("Status flags: 0x"); 
+  DEBUG_SERIAL.println(data.status_flags, HEX);
+  DEBUG_SERIAL.print("DPS310: ");
+  DEBUG_SERIAL.print((data.status_flags & STATUS_DPS310_OK) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print(" | Accel: ");
+  DEBUG_SERIAL.print((data.status_flags & STATUS_BNO08X_ACCEL) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print(" | Gyro: ");
+  DEBUG_SERIAL.print((data.status_flags & STATUS_BNO08X_GYRO) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print(" | Quat: ");
+  DEBUG_SERIAL.print((data.status_flags & STATUS_BNO08X_ROT) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print(" | GPS: ");
+  DEBUG_SERIAL.println((data.status_flags & STATUS_GPS_OK) ? "OK" : "FAIL");
+  DEBUG_SERIAL.println("--------------------------\n");
+}
+
 void setup() {
-  // Start serial communication
-  delay(3000);  // Allow time for the Serial Monitor to initialize
+  Serial.begin(115200);
+  unsigned long startTime = millis();
+  while (!Serial && (millis() - startTime < 5000)) { delay(10); }  // Wait for Serial with timeout
+  
+  // Setup LED for heartbeat
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  if (DEBUG_MODE) {
+    DEBUG_SERIAL.println("\n=================================");
+    DEBUG_SERIAL.println("Sensor System Starting");
+    DEBUG_SERIAL.println("=================================");
+    DEBUG_SERIAL.print("Debug mode: ");
+    DEBUG_SERIAL.println(DEBUG_MODE ? "ENABLED" : "DISABLED");
+    DEBUG_SERIAL.println("Initializing sensors...");
+  }
 
   Wire.begin();
   Wire.setClock(400000UL);
 
-  // Initialize DPS310
-  dps_310.begin_I2C();
-
-  // Initialize BNO085
-  while (!bno.begin_I2C()) {
-      delay(1000); // Wait for 1 second before retrying
+  // --- Initialize DPS310 Pressure/Temperature Sensor ---
+  if (!dps.begin_I2C(0x77) && !dps.begin_I2C(0x76)) {  
+    if (DEBUG_MODE) DEBUG_SERIAL.println("** DPS310 not found! **");
+  } else {
+    if (DEBUG_MODE) DEBUG_SERIAL.println("DPS310 initialized.");
+    dps.configurePressure(DPS310_64HZ, DPS310_64SAMPLES);
+    dps.configureTemperature(DPS310_64HZ, DPS310_64SAMPLES);
+    dps.setMode(DPS310_CONT_PRESTEMP);
   }
 
-  // If initialization succeeds, enable reports
-  bno.enableReport(BNO_REPORT_ACCELEROMETER, 40);
-  bno.enableReport(BNO_REPORT_GYROSCOPE, 40);
-  bno.enableReport(BNO_REPORT_MAGNETOMETER, 20);
-  bno.enableReport(BNO_REPORT_ROTATION_VECTOR, 40);
+  // Update LED to show progress
+  updateHeartbeatLED();
+
+  // --- Initialize BNO085 IMU ---
+  if (bno08x.begin_I2C()) {
+    if (DEBUG_MODE) DEBUG_SERIAL.println("BNO08x IMU initialized.");
+    bno08x.enableReport(SH2_ROTATION_VECTOR, 10000);
+    bno08x.enableReport(SH2_LINEAR_ACCELERATION, 10000);
+    bno08x.enableReport(SH2_GYROSCOPE_CALIBRATED, 5000);
+  } else {
+    if (DEBUG_MODE) DEBUG_SERIAL.println("** BNO08x IMU not detected! **");
+  }
+
+  // Update LED to show progress
+  updateHeartbeatLED();
 
   // Initialize GPS
-  while (my_GNSS.begin() == false) {
-    delay(1000);
+  if (myGNSS.begin()) {
+    if (DEBUG_MODE) DEBUG_SERIAL.println("GPS initialized.");
+    myGNSS.setI2COutput(COM_TYPE_UBX);  // Set the I2C port to output UBX only
+    myGNSS.setNavigationFrequency(60);
+  } else {
+    if (DEBUG_MODE) DEBUG_SERIAL.println("** GPS not detected! **");
   }
-  my_GNSS.setI2COutput(COM_TYPE_UBX);  // Set the I2C port to output UBX only
-  my_GNSS.setNavigationFrequency(60);
-  Serial.begin(115200);
+
+  pinMode(VOLTAGE_PIN, INPUT);
+  analogReadResolution(12);            
+  analogSetAttenuation(ADC_11db);      
+  filtBatteryVoltage = 0.0;            
+  lastBattReadTime = millis();
+
+  if (DEBUG_MODE) {
+    DEBUG_SERIAL.println("Setup complete.");
+    DEBUG_SERIAL.println("=================================");
+  }
 }
 
-struct DataPacket collect(struct DataPacket packet) {
-  // Add timestamp
-  packet.timestamp = float(millis());
-
-  // reading voltage sensor
-  int raw_voltage = analogRead(VOLTAGE_PIN);
-  packet.voltage = float((raw_voltage * 3.3) / 1023.0);
-
-  uint8_t executed_cases = 0b000; // Bitmask for 5 cases (5 bits, all initially 0)
-  const uint8_t all_cases_executed = 0b111  ; // All cases executed when all bits are 1
-
-  // We wait to send a packet until the com accel, gyro, and quaternion fields are added
-  while (executed_cases != all_cases_executed) {
-    sh2_SensorValue_t sensor_value;
-    if (bno.getSensorEvent(&sensor_value)) {
-      switch (sensor_value.sensorId) {
-        case SH2_ACCELEROMETER:
-          packet.comp_accel_x = float(-sensor_value.un.accelerometer.x);
-          packet.comp_accel_y = float(-sensor_value.un.accelerometer.y);
-          packet.comp_accel_z = float(-sensor_value.un.accelerometer.z);
-          executed_cases |= (1 << 0); // Mark case 0 as executed
+DataPacket collectIMUData(DataPacket packet) {
+  // Initialize with a clear status
+  uint8_t executed_cases = 0;
+  const uint8_t all_cases_executed = (STATUS_BNO08X_ACCEL | STATUS_BNO08X_GYRO | STATUS_BNO08X_ROT);
+  
+  // Set a timeout for IMU data collection
+  unsigned long startTime = millis();
+  int attempts = 0;
+  
+  // Try to get IMU data with timeout
+  while ((executed_cases != all_cases_executed) && 
+         (millis() - startTime < SENSOR_TIMEOUT) && 
+         (attempts < MAX_IMU_ATTEMPTS)) {
+    
+    // Update heartbeat LED even during sensor reads
+    updateHeartbeatLED();
+    
+    attempts++;
+    sh2_SensorValue_t sensorValue;
+    
+    if (bno08x.getSensorEvent(&sensorValue)) {
+      switch (sensorValue.sensorId) {
+        case SH2_LINEAR_ACCELERATION:
+          packet.comp_accel_x = sensorValue.un.linearAcceleration.x;
+          packet.comp_accel_y = sensorValue.un.linearAcceleration.y;
+          packet.comp_accel_z = sensorValue.un.linearAcceleration.z;
+          executed_cases |= STATUS_BNO08X_ACCEL;
           break;
-
+          
         case SH2_GYROSCOPE_CALIBRATED:
-          packet.gyro_x = float(sensor_value.un.gyroscope.x);
-          packet.gyro_y = float(sensor_value.un.gyroscope.y);
-          packet.gyro_z = float(sensor_value.un.gyroscope.z);
-          executed_cases |= (1 << 1); // Mark case 1 as executed
+          packet.gyro_x = sensorValue.un.gyroscope.x;
+          packet.gyro_y = sensorValue.un.gyroscope.y;
+          packet.gyro_z = sensorValue.un.gyroscope.z;
+          executed_cases |= STATUS_BNO08X_GYRO;
           break;
-
+          
         case SH2_ROTATION_VECTOR:
-          packet.quat_x = float(sensor_value.un.rotationVector.i);
-          packet.quat_y = float(sensor_value.un.rotationVector.j);
-          packet.quat_z = float(sensor_value.un.rotationVector.k);
-          packet.quat_w = float(sensor_value.un.rotationVector.real);
-          executed_cases |= (1 << 2); // Mark case 2 as executed
+          packet.quat_x = sensorValue.un.rotationVector.i;
+          packet.quat_y = sensorValue.un.rotationVector.j;
+          packet.quat_z = sensorValue.un.rotationVector.k;
+          packet.quat_w = sensorValue.un.rotationVector.real;
+          executed_cases |= STATUS_BNO08X_ROT;
           break;
-
-        case SH2_MAGNETIC_FIELD_CALIBRATED:
-          packet.magnetic_x = float(sensor_value.un.magneticField.x);
-          packet.magnetic_y = float(sensor_value.un.magneticField.y);
-          packet.magnetic_z = float(sensor_value.un.magneticField.z);
-          // the magnetic field is only at 25hz max, so we don't want to throttle the other sensor measurements
-          break;
-
-        default:
-          break; // Ignore other reports
       }
     }
+    
+    // Small delay between checks to avoid hogging the processor
+    delay(1);
   }
+  
+  // Update status flags with what we got
+  packet.status_flags |= executed_cases;
+  
   return packet;
 }
 
-void printPacket(struct DataPacket data) {
-  Serial.println("=== DataPacket ===");
-  Serial.print("Timestamp: "); Serial.println(data.timestamp);
-  Serial.print("Voltage: "); Serial.println(data.voltage);
-  Serial.print("Temperature: "); Serial.println(data.temperature);
-  Serial.print("Pressure: "); Serial.println(data.pressure);
-  Serial.print("Comp Accel X: "); Serial.println(data.comp_accel_x);
-  Serial.print("Comp Accel Y: "); Serial.println(data.comp_accel_y);
-  Serial.print("Comp Accel Z: "); Serial.println(data.comp_accel_z);
-  Serial.print("Gyro X: "); Serial.println(data.gyro_x);
-  Serial.print("Gyro Y: "); Serial.println(data.gyro_y);
-  Serial.print("Gyro Z: "); Serial.println(data.gyro_z);
-  Serial.print("Magnetic X: "); Serial.println(data.magnetic_x);
-  Serial.print("Magnetic Y: "); Serial.println(data.magnetic_y);
-  Serial.print("Magnetic Z: "); Serial.println(data.magnetic_z);
-  Serial.print("Quat W: "); Serial.println(data.quat_w);
-  Serial.print("Quat X: "); Serial.println(data.quat_x);
-  Serial.print("Quat Y: "); Serial.println(data.quat_y);
-  Serial.print("Quat Z: "); Serial.println(data.quat_z);
-  Serial.print("GPS Lat: "); Serial.println(data.gps_lat);
-  Serial.print("GPS Long: "); Serial.println(data.gps_long);
-  Serial.print("GPS Alt: "); Serial.println(data.gps_alt);
-  Serial.println("==================");
-  Serial.println(Serial.availableForWrite());
-}
-
 void loop() {
-  // create data packet
-  DataPacket data;
+  // Update the LED first to ensure it keeps blinking even if other operations take time
+  updateHeartbeatLED();
 
-  // DPS310 (pressure and temperature)
+  DataPacket data = {0};  // Initialize all values to 0
+  data.timestamp = millis();
+  data.status_flags = 0;  // Clear status flags
+  
+  // --- Read Battery Voltage ---
+  int raw_voltage = analogRead(VOLTAGE_PIN);
+  data.voltage = (raw_voltage * 3.3) / 4095.0;
+  
+  // Update heartbeat LED
+  updateHeartbeatLED();
+  
+  // --- Read DPS310 Sensor with timeout ---
   sensors_event_t temp_event, pressure_event;
-  if (dps_310.getEvents(&temp_event, &pressure_event)) {
-    data.temperature = float(temp_event.temperature);
-    data.pressure = float(pressure_event.pressure);
-    data.altitude = dps_310.readAltitude();
-  } else {
-    data.temperature = 0.0;
-    data.pressure = 0.0;
+  unsigned long dpsStartTime = millis();
+  bool dpsSuccess = false;
+  
+  while (!dpsSuccess && (millis() - dpsStartTime < SENSOR_TIMEOUT)) {
+    // Keep LED updated during potentially blocking operations
+    updateHeartbeatLED();
+    
+    if (dps.getEvents(&temp_event, &pressure_event)) {
+      data.temperature = temp_event.temperature;
+      data.pressure = pressure_event.pressure;
+      data.altitude = 44330.0 * (1.0 - pow(data.pressure / SEALEVEL_PRESSURE_HPA, 0.1903));
+      data.status_flags |= STATUS_DPS310_OK;
+      dpsSuccess = true;
+    }
+    delay(1);
   }
-
-  // GNSS (latitude, longitude, altitude)
-  // The 20 represents the delay for the most part.
-  if (my_GNSS.getPVT(20) == true) {
-    data.gps_lat = float(my_GNSS.getLatitude() / 10000000.0);
-    data.gps_long = float(my_GNSS.getLongitude() / 10000000.0);
-    data.gps_alt = float(my_GNSS.getAltitudeMSL() / 1000.0);
-  } else {
-    data.gps_lat = 0.0;
-    data.gps_long = 0.0;
-    data.gps_alt = 0.0;
+  
+  // Update heartbeat LED
+  updateHeartbeatLED();
+  
+  // Get GPS data with timeout
+  if (myGNSS.getPVT(SENSOR_TIMEOUT)) {
+    data.gps_lat = float(myGNSS.getLatitude() / 10000000.0);
+    data.gps_long = float(myGNSS.getLongitude() / 10000000.0);
+    data.gps_alt = float(myGNSS.getAltitudeMSL() / 1000.0);
+    data.status_flags |= STATUS_GPS_OK;
   }
-
-  data = collect(data);
-
-  // Only uncomment this for debugging, it should not be printing during a launch
-  // printPacket(data);
-
-  // First we check if it actually has a serial connection, then we check if the serial has enough
-  // space to write the packet because for whatever reason, the serial only has a buffer size of 106
-  // bytes.
-  if (Serial && Serial.availableForWrite() >= sizeof(data) + 1) {
-    // This sends the start marker for the packet
-    Serial.write(byte(START_MARKER));
-    // This sends our data packet
+  
+  // Update heartbeat LED
+  updateHeartbeatLED();
+  
+  // Collect IMU data with built-in timeout
+  data = collectIMUData(data);
+  
+  // Update heartbeat LED
+  updateHeartbeatLED();
+  
+  // --- Transmit Binary Data Over Serial ---
+  if (Serial.availableForWrite() >= sizeof(data) + 1) {
+    Serial.write(byte(0xAA));  // Packet header
     Serial.write((byte*)&data, sizeof(data));
   }
+  
+  // Print human-readable data to debug serial
+  if (DEBUG_MODE) {
+    printHumanReadableData(data);
+  }
+  
+  delay(10);
 }
