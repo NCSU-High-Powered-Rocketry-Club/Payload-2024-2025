@@ -34,4 +34,4 @@ class IMUDataPacket(msgspec.Struct):
     gpsLatitude: float | None = None
     gpsLongitude: float | None = None
     gpsAltitude: float | None = None
-    statusFlag: float | None = None
+    # statusFlag: float | None = None

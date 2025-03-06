@@ -38,7 +38,7 @@ def main():
                     # Check that we received a full packet
                     if len(binary_packet) == PACKET_BYTE_SIZE:
                         imu_packet = process_packet_data(binary_packet)
-                        print(imu_packet)
+                        print(imu_packet.pressureAlt)
             else:
                 time.sleep(0.01)
     except KeyboardInterrupt:
