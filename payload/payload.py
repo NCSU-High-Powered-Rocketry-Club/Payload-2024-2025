@@ -13,6 +13,7 @@ from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
 from payload.state import StandbyState, State
+from payload.mock.mock_imu import MockIMU
 
 if TYPE_CHECKING:
     from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
@@ -205,6 +206,8 @@ class PayloadContext:
         if message == TRANSMIT_MESSAGE and not self._transmitting_latch:
             self._transmitting_latch = True
             self._stop_latch = False
+            for i in range(5):
+                self.state.next_state()
             self.transmit_data()
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True

@@ -8,15 +8,11 @@ from typing import Any, Literal
 
 from msgspec import to_builtins
 
-from payload.constants import (
-    MAX_GET_TIMEOUT_SECONDS,
-    STOP_SIGNAL,
-)
+from payload.constants import STOP_SIGNAL
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.logger_data_packet import LoggerDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
-from payload.utils import modify_multiprocessing_queue_windows
 
 
 class Logger:
@@ -73,7 +69,6 @@ class Logger:
         self._log_queue: multiprocessing.Queue[LoggerDataPacket | Literal["STOP"]] = (
             multiprocessing.Queue()
         )
-        modify_multiprocessing_queue_windows(self._log_queue)
 
         # Start the logging process
         self._log_process = multiprocessing.Process(
@@ -194,21 +189,13 @@ class Logger:
         # Ignore the SIGINT (Ctrl+C) signal, because we only want the main process to handle it
         signal.signal(signal.SIGINT, signal.SIG_IGN)  # Ignores the interrupt signal
 
-        # Unfortunately, we need to modify the queue here again because the modifications made in
-        # the __init__ are not copied to the new process.
-        modify_multiprocessing_queue_windows(self._log_queue)
-
         # Set up the csv logging in the new process
         with self.log_path.open(mode="a", newline="") as file_writer:
             writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
             while True:
                 # Get a message from the queue (this will block until a message is available)
-                # Because there's no timeout, it will wait indefinitely until it gets a message.
-                message_fields: list[LoggerDataPacket | Literal["STOP"]] = self._log_queue.get_many(
-                    timeout=MAX_GET_TIMEOUT_SECONDS
-                )
-                if STOP_SIGNAL in message_fields:
-                    return
+                message_field: LoggerDataPacket | Literal["STOP"] = self._log_queue.get()
                 # If the message is the stop signal, break out of the loop
-                for message_field in message_fields:
-                    writer.writerow(Logger._truncate_floats(message_field))
+                if message_field == STOP_SIGNAL:
+                    return
+                writer.writerow(Logger._truncate_floats(message_field))

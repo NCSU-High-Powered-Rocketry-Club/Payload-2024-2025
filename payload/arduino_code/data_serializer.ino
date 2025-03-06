@@ -4,20 +4,24 @@
 #include <SparkFun_u-blox_GNSS_v3.h>  // GNSS Library for SAM-M10Q
 
 #define SEALEVEL_PRESSURE_HPA 1013.25f  
-#define VOLTAGE_PIN 39         // ADC pin for battery voltage
+#define VOLTAGE_PIN 35         // ADC pin for battery voltage
 #define SENSOR_TIMEOUT 200     // Timeout in milliseconds for sensor readings
-#define MAX_IMU_ATTEMPTS 50    // Maximum attempts to read IMU data before moving on
+#define MAX_IMU_ATTEMPTS 40    // Maximum attempts to read IMU data before moving on
 #define LED_PIN 2              // ESP32's onboard LED pin (usually GPIO2)
 #define LED_INTERVAL 500       // LED blink interval in milliseconds
 
 // Debug settings
 #define DEBUG_MODE 0           // Set to 1 for human-readable output, 0 for binary only
 #define DEBUG_SERIAL Serial    // Which serial port to use for debug output
+#define PACKET_START_MARKER1 0xAA
+#define PACKET_START_MARKER2 0x55
 
 // Sensor objects
 Adafruit_DPS310 dps;
 Adafruit_BNO08x bno08x(-1);
 SFE_UBLOX_GNSS myGNSS;
+
+uint8_t status_flags = 0;
 
 // Data packet structure
 struct DataPacket {
@@ -31,7 +35,7 @@ struct DataPacket {
   float magnetic_x, magnetic_y, magnetic_z;
   float quat_w, quat_x, quat_y, quat_z;
   float gps_lat, gps_long, gps_alt;
-  uint8_t status_flags;  // Bit flags to indicate which sensors provided valid data
+  // uint8_t status_flags;  // Bit flags to indicate which sensors provided valid data
 };
 
 // Status flag bits
@@ -40,6 +44,7 @@ struct DataPacket {
 #define STATUS_BNO08X_GYRO  0x04
 #define STATUS_BNO08X_ROT   0x08
 #define STATUS_GPS_OK       0x10
+#define STATUS_BNO08X_MAG   0x20
 
 // Battery voltage filtering
 static float filtBatteryVoltage = 0.0;
@@ -71,7 +76,7 @@ void printHumanReadableData(const DataPacket &data) {
   DEBUG_SERIAL.println(" V");
   
   DEBUG_SERIAL.println("\n- Environmental -");
-  if (data.status_flags & STATUS_DPS310_OK) {
+  if (status_flags & STATUS_DPS310_OK) {
     DEBUG_SERIAL.print("Temperature: "); 
     DEBUG_SERIAL.print(data.temperature, 1); 
     DEBUG_SERIAL.println(" °C");
@@ -88,7 +93,7 @@ void printHumanReadableData(const DataPacket &data) {
   }
   
   DEBUG_SERIAL.println("\n- Motion -");
-  if (data.status_flags & STATUS_BNO08X_ACCEL) {
+  if (status_flags & STATUS_BNO08X_ACCEL) {
     DEBUG_SERIAL.print("Acceleration (m/s²): X="); 
     DEBUG_SERIAL.print(data.comp_accel_x, 2);
     DEBUG_SERIAL.print(" Y="); 
@@ -99,7 +104,7 @@ void printHumanReadableData(const DataPacket &data) {
     DEBUG_SERIAL.println("Acceleration data unavailable");
   }
   
-  if (data.status_flags & STATUS_BNO08X_GYRO) {
+  if (status_flags & STATUS_BNO08X_GYRO) {
     DEBUG_SERIAL.print("Gyroscope (rad/s): X="); 
     DEBUG_SERIAL.print(data.gyro_x, 2);
     DEBUG_SERIAL.print(" Y="); 
@@ -110,7 +115,7 @@ void printHumanReadableData(const DataPacket &data) {
     DEBUG_SERIAL.println("Gyroscope data unavailable");
   }
   
-  if (data.status_flags & STATUS_BNO08X_ROT) {
+  if (status_flags & STATUS_BNO08X_ROT) {
     DEBUG_SERIAL.print("Quaternion: W="); 
     DEBUG_SERIAL.print(data.quat_w, 3);
     DEBUG_SERIAL.print(" X="); 
@@ -122,9 +127,20 @@ void printHumanReadableData(const DataPacket &data) {
   } else {
     DEBUG_SERIAL.println("Orientation data unavailable");
   }
+
+  if (status_flags & STATUS_BNO08X_MAG) {
+    DEBUG_SERIAL.print("Magnetometer: X="); 
+    DEBUG_SERIAL.print(data.magnetic_x, 3);
+    DEBUG_SERIAL.print(" Y="); 
+    DEBUG_SERIAL.print(data.magnetic_y, 3);
+    DEBUG_SERIAL.print(" Z ="); 
+    DEBUG_SERIAL.println(data.magnetic_z, 3);
+  } else {
+    DEBUG_SERIAL.println("Magnetometer data unavailable");
+  }
   
   DEBUG_SERIAL.println("\n- Location -");
-  if (data.status_flags & STATUS_GPS_OK) {
+  if (status_flags & STATUS_GPS_OK) {
     DEBUG_SERIAL.print("GPS: Lat="); 
     DEBUG_SERIAL.print(data.gps_lat, 6);
     DEBUG_SERIAL.print(" Lon="); 
@@ -138,17 +154,21 @@ void printHumanReadableData(const DataPacket &data) {
   
   DEBUG_SERIAL.println("\n- Status Summary -");
   DEBUG_SERIAL.print("Status flags: 0x"); 
-  DEBUG_SERIAL.println(data.status_flags, HEX);
+  DEBUG_SERIAL.println(status_flags, HEX);
   DEBUG_SERIAL.print("DPS310: ");
-  DEBUG_SERIAL.print((data.status_flags & STATUS_DPS310_OK) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print((status_flags & STATUS_DPS310_OK) ? "OK" : "FAIL");
   DEBUG_SERIAL.print(" | Accel: ");
-  DEBUG_SERIAL.print((data.status_flags & STATUS_BNO08X_ACCEL) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print((status_flags & STATUS_BNO08X_ACCEL) ? "OK" : "FAIL");
   DEBUG_SERIAL.print(" | Gyro: ");
-  DEBUG_SERIAL.print((data.status_flags & STATUS_BNO08X_GYRO) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print((status_flags & STATUS_BNO08X_GYRO) ? "OK" : "FAIL");
   DEBUG_SERIAL.print(" | Quat: ");
-  DEBUG_SERIAL.print((data.status_flags & STATUS_BNO08X_ROT) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print((status_flags & STATUS_BNO08X_ROT) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print(" | MAG: ");
+  DEBUG_SERIAL.print((status_flags & STATUS_BNO08X_MAG) ? "OK" : "FAIL");
   DEBUG_SERIAL.print(" | GPS: ");
-  DEBUG_SERIAL.println((data.status_flags & STATUS_GPS_OK) ? "OK" : "FAIL");
+  DEBUG_SERIAL.println((status_flags & STATUS_GPS_OK) ? "OK" : "FAIL");
+  DEBUG_SERIAL.print("SIZE OF DATA: ");
+  DEBUG_SERIAL.println(sizeof(data));
   DEBUG_SERIAL.println("--------------------------\n");
 }
 
@@ -192,6 +212,7 @@ void setup() {
     bno08x.enableReport(SH2_ROTATION_VECTOR, 10000);
     bno08x.enableReport(SH2_LINEAR_ACCELERATION, 10000);
     bno08x.enableReport(SH2_GYROSCOPE_CALIBRATED, 5000);
+    bno08x.enableReport(SH2_MAGNETIC_FIELD_CALIBRATED, 5000);
   } else {
     if (DEBUG_MODE) DEBUG_SERIAL.println("** BNO08x IMU not detected! **");
   }
@@ -223,7 +244,7 @@ void setup() {
 DataPacket collectIMUData(DataPacket packet) {
   // Initialize with a clear status
   uint8_t executed_cases = 0;
-  const uint8_t all_cases_executed = (STATUS_BNO08X_ACCEL | STATUS_BNO08X_GYRO | STATUS_BNO08X_ROT);
+  const uint8_t all_cases_executed = (STATUS_BNO08X_ACCEL | STATUS_BNO08X_GYRO | STATUS_BNO08X_ROT | STATUS_BNO08X_MAG);
   
   // Set a timeout for IMU data collection
   unsigned long startTime = millis();
@@ -243,25 +264,35 @@ DataPacket collectIMUData(DataPacket packet) {
     if (bno08x.getSensorEvent(&sensorValue)) {
       switch (sensorValue.sensorId) {
         case SH2_LINEAR_ACCELERATION:
-          packet.comp_accel_x = sensorValue.un.linearAcceleration.x;
-          packet.comp_accel_y = sensorValue.un.linearAcceleration.y;
-          packet.comp_accel_z = sensorValue.un.linearAcceleration.z;
+          packet.comp_accel_x = float(sensorValue.un.linearAcceleration.x);
+          packet.comp_accel_y = float(sensorValue.un.linearAcceleration.y);
+          packet.comp_accel_z = float(sensorValue.un.linearAcceleration.z);
           executed_cases |= STATUS_BNO08X_ACCEL;
           break;
           
         case SH2_GYROSCOPE_CALIBRATED:
-          packet.gyro_x = sensorValue.un.gyroscope.x;
-          packet.gyro_y = sensorValue.un.gyroscope.y;
-          packet.gyro_z = sensorValue.un.gyroscope.z;
+          packet.gyro_x = float(sensorValue.un.gyroscope.x);
+          packet.gyro_y = float(sensorValue.un.gyroscope.y);
+          packet.gyro_z = float(sensorValue.un.gyroscope.z);
           executed_cases |= STATUS_BNO08X_GYRO;
           break;
           
         case SH2_ROTATION_VECTOR:
-          packet.quat_x = sensorValue.un.rotationVector.i;
-          packet.quat_y = sensorValue.un.rotationVector.j;
-          packet.quat_z = sensorValue.un.rotationVector.k;
-          packet.quat_w = sensorValue.un.rotationVector.real;
+          packet.quat_x = float(sensorValue.un.rotationVector.i);
+          packet.quat_y = float(sensorValue.un.rotationVector.j);
+          packet.quat_z = float(sensorValue.un.rotationVector.k);
+          packet.quat_w = float(sensorValue.un.rotationVector.real);
           executed_cases |= STATUS_BNO08X_ROT;
+          break;
+
+        case SH2_MAGNETIC_FIELD_CALIBRATED:
+          packet.magnetic_x = float(sensorValue.un.magneticField.x);
+          packet.magnetic_y = float(sensorValue.un.magneticField.y);
+          packet.magnetic_z = float(sensorValue.un.magneticField.z);
+          executed_cases |= STATUS_BNO08X_MAG;
+          break;
+
+        default:
           break;
       }
     }
@@ -271,7 +302,7 @@ DataPacket collectIMUData(DataPacket packet) {
   }
   
   // Update status flags with what we got
-  packet.status_flags |= executed_cases;
+  status_flags |= executed_cases;
   
   return packet;
 }
@@ -282,11 +313,11 @@ void loop() {
 
   DataPacket data = {0};  // Initialize all values to 0
   data.timestamp = millis();
-  data.status_flags = 0;  // Clear status flags
+  status_flags = 0;  // Clear status flags
   
   // --- Read Battery Voltage ---
   int raw_voltage = analogRead(VOLTAGE_PIN);
-  data.voltage = (raw_voltage * 3.3) / 4095.0;
+  data.voltage = (raw_voltage * 3.3) / 64.0;
   
   // Update heartbeat LED
   updateHeartbeatLED();
@@ -304,7 +335,10 @@ void loop() {
       data.temperature = temp_event.temperature;
       data.pressure = pressure_event.pressure;
       data.altitude = 44330.0 * (1.0 - pow(data.pressure / SEALEVEL_PRESSURE_HPA, 0.1903));
-      data.status_flags |= STATUS_DPS310_OK;
+      // if(data.altitude > 500000 || data.altitude < -500000) {
+      //   data.altitude = 0;
+      // }
+      status_flags |= STATUS_DPS310_OK;
       dpsSuccess = true;
     }
     delay(1);
@@ -318,7 +352,7 @@ void loop() {
     data.gps_lat = float(myGNSS.getLatitude() / 10000000.0);
     data.gps_long = float(myGNSS.getLongitude() / 10000000.0);
     data.gps_alt = float(myGNSS.getAltitudeMSL() / 1000.0);
-    data.status_flags |= STATUS_GPS_OK;
+    status_flags |= STATUS_GPS_OK;
   }
   
   // Update heartbeat LED
@@ -330,12 +364,19 @@ void loop() {
   // Update heartbeat LED
   updateHeartbeatLED();
   
+  // // --- Transmit Binary Data Over Serial ---
+  // if (Serial.availableForWrite() >= sizeof(data) + 4) {
+  //   Serial.write(0xAAAAAAAA);  // Packet header
+  //   Serial.write((byte*)&data, sizeof(data));
+  // }
+  
   // --- Transmit Binary Data Over Serial ---
-  if (Serial.availableForWrite() >= sizeof(data) + 1) {
-    Serial.write(byte(0xAA));  // Packet header
+  if (Serial.availableForWrite() >= sizeof(data) + 2) { // +2 for the two header bytes
+    Serial.write(byte(PACKET_START_MARKER1));  // First header byte
+    Serial.write(byte(PACKET_START_MARKER2));  // Second header byte
     Serial.write((byte*)&data, sizeof(data));
   }
-  
+
   // Print human-readable data to debug serial
   if (DEBUG_MODE) {
     printHumanReadableData(data);

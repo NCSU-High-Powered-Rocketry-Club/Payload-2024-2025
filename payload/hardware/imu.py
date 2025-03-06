@@ -37,6 +37,7 @@ class IMU(BaseIMU):
         fields in the IMUDataPacket struct.
         """
         # Iterate through each data point in the packet.
+        # TODO: figure out how to do statusFlags right
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
         return IMUDataPacket(*unpacked_data)
 
@@ -58,12 +59,14 @@ class IMU(BaseIMU):
         # that we can properly sync with the start of a packet. This is why we read one byte at a
         # time until we find the start marker. Additionally, we alot exactly 84 bytes for each
         # packet, even if some of the fields are empty.
-        while self._serial.in_waiting >= PACKET_BYTE_SIZE + 1:  # The + 1 is for the start marker
+        while self._serial.in_waiting >= PACKET_BYTE_SIZE + 2:  # The + 1 is for the start marker
             # Reads a single byte and checks if it is the start marker. We do this to properly sync
             # our code with the start of a packet. This will read through any junk data until it
             # finds the start marker.
-            byte = self._serial.read(1)
-            if byte == PACKET_START_MARKER:
-                serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
-                return IMU._process_packet_data(serialized_data_packet)
+            first_byte = self._serial.read(1)
+            if first_byte == bytes([0xAA]):
+                second_byte = self._serial.read(1)
+                if second_byte == bytes([0x55]):
+                    serialized_data_packet = self._serial.read(PACKET_BYTE_SIZE)
+                    return IMU._process_packet_data(serialized_data_packet)
         return None

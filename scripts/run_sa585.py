@@ -74,7 +74,7 @@ def main():
     )  # Take user input for the new comment
 
     if update_beacon_comment(config_path, new_comment):
-        print("Configuration updated successfully.")
+        # print("Configuration updated successfully.")
 
         pull_pin_low()  # Activate PTT via GPIO pin pull-down
 
