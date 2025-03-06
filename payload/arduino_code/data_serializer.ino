@@ -5,7 +5,7 @@
 
 #define SEALEVEL_PRESSURE_HPA 1013.25f  
 #define VOLTAGE_PIN 35         // ADC pin for battery voltage
-#define SENSOR_TIMEOUT 200     // Timeout in milliseconds for sensor readings
+#define SENSOR_TIMEOUT 300     // Timeout in milliseconds for sensor readings
 #define MAX_IMU_ATTEMPTS 40    // Maximum attempts to read IMU data before moving on
 #define LED_PIN 2              // ESP32's onboard LED pin (usually GPIO2)
 #define LED_INTERVAL 500       // LED blink interval in milliseconds
@@ -13,8 +13,7 @@
 // Debug settings
 #define DEBUG_MODE 0           // Set to 1 for human-readable output, 0 for binary only
 #define DEBUG_SERIAL Serial    // Which serial port to use for debug output
-#define PACKET_START_MARKER1 0xAA
-#define PACKET_START_MARKER2 0x55
+static const uint8_t PACKET_START_MARKER[] = {0xFF, 0xFE, 0xFD, 0xFC};  // New 4-byte packet marker
 
 // Sensor objects
 Adafruit_DPS310 dps;
@@ -35,7 +34,6 @@ struct DataPacket {
   float magnetic_x, magnetic_y, magnetic_z;
   float quat_w, quat_x, quat_y, quat_z;
   float gps_lat, gps_long, gps_alt;
-  // uint8_t status_flags;  // Bit flags to indicate which sensors provided valid data
 };
 
 // Status flag bits
@@ -193,7 +191,7 @@ void setup() {
   Wire.begin();
   Wire.setClock(400000UL);
 
-  // --- Initialize DPS310 Pressure/Temperature Sensor ---
+  // Initialize DPS310 Pressure/Temperature Sensor
   if (!dps.begin_I2C(0x77) && !dps.begin_I2C(0x76)) {  
     if (DEBUG_MODE) DEBUG_SERIAL.println("** DPS310 not found! **");
   } else {
@@ -203,21 +201,19 @@ void setup() {
     dps.setMode(DPS310_CONT_PRESTEMP);
   }
 
-  // Update LED to show progress
   updateHeartbeatLED();
 
-  // --- Initialize BNO085 IMU ---
+  // Initialize BNO085 IMU
   if (bno08x.begin_I2C()) {
     if (DEBUG_MODE) DEBUG_SERIAL.println("BNO08x IMU initialized.");
-    bno08x.enableReport(SH2_ROTATION_VECTOR, 10000);
-    bno08x.enableReport(SH2_LINEAR_ACCELERATION, 10000);
-    bno08x.enableReport(SH2_GYROSCOPE_CALIBRATED, 5000);
-    bno08x.enableReport(SH2_MAGNETIC_FIELD_CALIBRATED, 5000);
+    bno08x.enableReport(SH2_ROTATION_VECTOR);
+    bno08x.enableReport(SH2_LINEAR_ACCELERATION);
+    bno08x.enableReport(SH2_GYROSCOPE_CALIBRATED, 20000);
+    bno08x.enableReport(SH2_MAGNETIC_FIELD_CALIBRATED, 20000);
   } else {
     if (DEBUG_MODE) DEBUG_SERIAL.println("** BNO08x IMU not detected! **");
   }
 
-  // Update LED to show progress
   updateHeartbeatLED();
 
   // Initialize GPS
@@ -242,20 +238,16 @@ void setup() {
 }
 
 DataPacket collectIMUData(DataPacket packet) {
-  // Initialize with a clear status
   uint8_t executed_cases = 0;
   const uint8_t all_cases_executed = (STATUS_BNO08X_ACCEL | STATUS_BNO08X_GYRO | STATUS_BNO08X_ROT | STATUS_BNO08X_MAG);
   
-  // Set a timeout for IMU data collection
   unsigned long startTime = millis();
   int attempts = 0;
   
-  // Try to get IMU data with timeout
   while ((executed_cases != all_cases_executed) && 
          (millis() - startTime < SENSOR_TIMEOUT) && 
          (attempts < MAX_IMU_ATTEMPTS)) {
     
-    // Update heartbeat LED even during sensor reads
     updateHeartbeatLED();
     
     attempts++;
@@ -297,87 +289,79 @@ DataPacket collectIMUData(DataPacket packet) {
       }
     }
     
-    // Small delay between checks to avoid hogging the processor
     delay(1);
   }
   
-  // Update status flags with what we got
   status_flags |= executed_cases;
   
   return packet;
 }
 
 void loop() {
-  // Update the LED first to ensure it keeps blinking even if other operations take time
   updateHeartbeatLED();
 
   DataPacket data = {0};  // Initialize all values to 0
   data.timestamp = millis();
   status_flags = 0;  // Clear status flags
   
-  // --- Read Battery Voltage ---
+  // Read Battery Voltage
   int raw_voltage = analogRead(VOLTAGE_PIN);
   data.voltage = (raw_voltage * 3.3) / 64.0;
   
-  // Update heartbeat LED
   updateHeartbeatLED();
   
-  // --- Read DPS310 Sensor with timeout ---
+  // Read DPS310 Sensor with timeout
   sensors_event_t temp_event, pressure_event;
   unsigned long dpsStartTime = millis();
   bool dpsSuccess = false;
   
   while (!dpsSuccess && (millis() - dpsStartTime < SENSOR_TIMEOUT)) {
-    // Keep LED updated during potentially blocking operations
     updateHeartbeatLED();
     
     if (dps.getEvents(&temp_event, &pressure_event)) {
       data.temperature = temp_event.temperature;
       data.pressure = pressure_event.pressure;
       data.altitude = 44330.0 * (1.0 - pow(data.pressure / SEALEVEL_PRESSURE_HPA, 0.1903));
-      // if(data.altitude > 500000 || data.altitude < -500000) {
-      //   data.altitude = 0;
-      // }
+      // Sanity check for barometric altitude
+      if (data.altitude > 10000 || data.altitude < -1000) {
+        data.altitude = 0;  // Invalid value indicator
+      }
       status_flags |= STATUS_DPS310_OK;
       dpsSuccess = true;
     }
     delay(1);
   }
   
-  // Update heartbeat LED
   updateHeartbeatLED();
   
-  // Get GPS data with timeout
+  // Get GPS data with timeout and fix validation
   if (myGNSS.getPVT(SENSOR_TIMEOUT)) {
-    data.gps_lat = float(myGNSS.getLatitude() / 10000000.0);
-    data.gps_long = float(myGNSS.getLongitude() / 10000000.0);
-    data.gps_alt = float(myGNSS.getAltitudeMSL() / 1000.0);
-    status_flags |= STATUS_GPS_OK;
+    if (myGNSS.getGnssFixOk()) {  // Only use data if fix is valid
+      data.gps_lat = float(myGNSS.getLatitude() / 10000000.0);
+      data.gps_long = float(myGNSS.getLongitude() / 10000000.0);
+      data.gps_alt = float(myGNSS.getAltitudeMSL() / 1000.0);
+      // Sanity check for GPS altitude
+      if (data.gps_alt > 10000 || data.gps_alt < -1000) {
+        data.gps_alt = 0;  // Invalid value indicator
+      }
+      status_flags |= STATUS_GPS_OK;
+    }
   }
   
-  // Update heartbeat LED
   updateHeartbeatLED();
   
-  // Collect IMU data with built-in timeout
+  // Collect IMU data
   data = collectIMUData(data);
   
-  // Update heartbeat LED
   updateHeartbeatLED();
   
-  // // --- Transmit Binary Data Over Serial ---
-  // if (Serial.availableForWrite() >= sizeof(data) + 4) {
-  //   Serial.write(0xAAAAAAAA);  // Packet header
-  //   Serial.write((byte*)&data, sizeof(data));
-  // }
-  
-  // --- Transmit Binary Data Over Serial ---
-  if (Serial.availableForWrite() >= sizeof(data) + 2) { // +2 for the two header bytes
-    Serial.write(byte(PACKET_START_MARKER1));  // First header byte
-    Serial.write(byte(PACKET_START_MARKER2));  // Second header byte
+  // Transmit Binary Data Over Serial with new 4-byte marker
+  if (Serial.availableForWrite() >= sizeof(data) + sizeof(PACKET_START_MARKER)) {
+    Serial.write(PACKET_START_MARKER, sizeof(PACKET_START_MARKER));  // Write 4-byte header
     Serial.write((byte*)&data, sizeof(data));
   }
 
-  // Print human-readable data to debug serial
+  // Print human-readable data if debug is enabled
   if (DEBUG_MODE) {
     printHumanReadableData(data);
   }
