@@ -38,6 +38,7 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
     gpsLatitude: float | None
     gpsLongitude: float | None
     gpsAltitude: float | None
+    statusFlag: float | None
 
     # Processed Data Packet Fields
     current_altitude: float | None

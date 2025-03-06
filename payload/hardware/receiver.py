@@ -1,7 +1,7 @@
 """Module for the Receiver class."""
 
 import threading
-import time
+
 import serial
 
 from payload.constants import NO_MESSAGE, RECEIVER_SERIAL_TIMEOUT, RECEIVER_THREAD_TIMEOUT
@@ -20,7 +20,7 @@ class Receiver(BaseReceiver):
         self._port = port
         self._baud_rate = baud_rate
         self._latest_message: str = NO_MESSAGE
-        self._serial_connection = None
+
         self._lock = threading.Lock()
         self._stop_event = threading.Event()
         self._thread = threading.Thread(target=self._listen, daemon=True)
@@ -33,36 +33,13 @@ class Receiver(BaseReceiver):
 
     def start(self) -> None:
         """Starts the listening thread."""
-        if self._thread.is_alive():
-            self._thread.close()
-
-        time.sleep(0.5)
-
-        if self._serial_connection:
-            if self._serial_connection.is_open:
-                try:
-                    self._serial_connection.flush()
-                    self._serial_connection.close()
-
-                except Exception as e:
-                    print("Exception when trying to close prev. receiver serial: ", e)
-
-                finally:
-                    self._serial_connection = None
-
-        if not  self._thread.is_alive():
-            self._stop_event.clear()
-            self._thread = threading.Thread(target=self._listen, daemon=True)
-            self._thread.start()
+        self._stop_event.clear()
+        self._thread.start()
 
     def stop(self) -> None:
         """Stops the listening thread safely."""
         self._stop_event.set()  # Signal thread to exit
-
-        time.sleep(0.5)
-
-        if self._thread.is_alive():
-            self._thread.join(timeout=RECEIVER_THREAD_TIMEOUT)  # Wait for thread to stop
+        self._thread.join(timeout=RECEIVER_THREAD_TIMEOUT)  # Wait for thread to stop
 
     def _listen(self) -> None:
         """
@@ -70,31 +47,15 @@ class Receiver(BaseReceiver):
         thread and reads the serial port for incoming messages. When a message is received, it is
         stored in the latest_message attribute.
         """
-        try:
-            self._serial_connection = serial.Serial(self._port, self._baud_rate, timeout = RECEIVER_SERIAL_TIMEOUT)
-
+        with serial.Serial(
+            self._port, self._baud_rate, timeout=RECEIVER_SERIAL_TIMEOUT
+        ) as serial_connection:
             while not self._stop_event.is_set():
-                if self._serial_connection.in_waiting > 0:
+                if serial_connection.in_waiting > 0:
                     # This reads the incoming message from the serial port and decodes it. If it has
                     # an error decoding, it will ignore the error it and just keep going. This could
                     # be a potential issue if we start getting junk data.
-                    line = self._serial_connection.readline().decode("utf-8", "ignore").strip()
+                    line = serial_connection.readline().decode("utf-8", "ignore").strip()
                     if line:
                         with self._lock:
                             self._latest_message = line.strip()
-
-        except Exception as e:
-            print("Error opening receiver serial port: ", e)
-
-        finally:
-            if self._serial_connection:
-                try:
-                    if self._serial_connection.is_open:
-                        self._serial_connection.flush()
-                        self._serial_connection.close()
-
-                except OSError as e:
-                    print("Exception when closing receiver serial port: ", e)
-
-                finally:
-                    self._serial_connection = None

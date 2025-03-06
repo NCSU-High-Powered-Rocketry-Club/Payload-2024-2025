@@ -28,10 +28,10 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB2"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB1"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
-ARDUINO_SERIAL_PORT = "COM5"
+# ARDUINO_SERIAL_PORT = "COM5"
 
 ARDUINO_BAUD_RATE = 115200
 """The baud rate of the channel"""
@@ -40,7 +40,7 @@ ARDUINO_SERIAL_TIMEOUT = 1
 PACKET_START_MARKER = b"\xaa"
 """The start marker of the data packet. This helps use to know where a packet starts in the stream
 of bytes."""
-PACKET_BYTE_SIZE = 84
+PACKET_BYTE_SIZE = 88
 """Size of the data packet being sent from the Arduino in bytes"""
 
 # Timeouts for get() queue operations:
@@ -84,9 +84,9 @@ ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""
 
-TAKEOFF_HEIGHT_METERS = 0.5
+TAKEOFF_HEIGHT_METERS = 10
 """The height in meters that the rocket must reach before we consider it to have taken off."""
-TAKEOFF_VELOCITY_METERS_PER_SECOND = 0.5
+TAKEOFF_VELOCITY_METERS_PER_SECOND = 5
 """The velocity in meters per second that the rocket must reach before we consider it to have taken
 off."""
 
@@ -149,7 +149,7 @@ NO_MESSAGE_TRANSMITTED = "NMT"
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
-RECEIVER_SERIAL_PORT = "/dev/ttyUSB1"
+RECEIVER_SERIAL_PORT = "/dev/ttyUSB0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""
