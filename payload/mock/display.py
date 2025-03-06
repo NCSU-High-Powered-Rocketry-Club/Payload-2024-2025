@@ -169,6 +169,7 @@ class FlightDisplay:
                     f"GPS Latitude:              {G}{imu_data.gpsLatitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
                     f"GPS Longitude:             {G}{imu_data.gpsLongitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
                     f"GPS Altitude:              {G}{imu_data.gpsAltitude:6.2f}{RESET} {R}m{RESET}",  # noqa: E501
+                    f"Status Flag:               {G}{imu_data.statusFlag:6.2f}{RESET} {R}m{RESET}",  # noqa: E501
                 ]
             )
 
