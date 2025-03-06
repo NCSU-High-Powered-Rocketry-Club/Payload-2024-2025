@@ -207,7 +207,8 @@ class LandedState(State):
         """This method does nothing"""
 
     def next_state(self):
-        self.context.state = RecoveryState(self.context)
+        # Explicitly do nothing, there is no next state
+        pass
 
 class RecoveryState(State):
     """ 

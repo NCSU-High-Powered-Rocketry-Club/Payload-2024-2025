@@ -45,9 +45,7 @@ class Transmitter(BaseTransmitter):
         self._stop_event = threading.Event()
         self.message_worker_thread = None
         
-        self.setup_gpio();
-        # GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-        # GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.LOW)  # Set pin as output, initially high
+        self.setup_gpio()
 
     def setup_gpio(self):
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
@@ -125,7 +123,7 @@ class Transmitter(BaseTransmitter):
     def restart_direwolf(self):
         subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
         time.sleep(2)  # Wait for a moment to ensure the process has terminated
-        subprocess.Popen(["direwolf"])  # Start Direwolf again
+        subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # Start Direwolf again
 
     def _send_message_worker(self, message: TransmitterDataPacket) -> None:
         """
@@ -136,7 +134,7 @@ class Transmitter(BaseTransmitter):
         :param message: The message to send.
         """
 
-        self.setup_gpio()
+        # self.setup_gpio()
         config_path = DIREWOLF_CONFIG_PATH
 
         # if not self._update_beacon_comment(message):
@@ -186,7 +184,7 @@ class Transmitter(BaseTransmitter):
         if self.message_worker_thread:
             self.message_worker_thread.join(5)
 
-        GPIO.cleanup()
+        # GPIO.cleanup()
         
         print("Stopped Transmitter")
 

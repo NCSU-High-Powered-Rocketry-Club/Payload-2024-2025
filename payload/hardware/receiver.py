@@ -64,20 +64,6 @@ class Receiver(BaseReceiver):
         if self._thread.is_alive():
             self._thread.join(timeout=RECEIVER_THREAD_TIMEOUT)  # Wait for thread to stop
 
-        # if self._serial_connection:
-        #     try:
-        #         if self._serial_connection.is_open:
-        #             self._serial_connection.flush()
-        #             self._serial_connection.close()
-
-        #     except Exception as e:
-        #         print("Exception when closing receiver serial port: ", e)
-
-        #     finally:
-        #         self._serial_connection = None
-        
-
-
     def _listen(self) -> None:
         """
         Continuously listens for incoming messages from the ground station. It runs on a separate
