@@ -2,50 +2,42 @@ import serial
 import struct
 import time
 
-from payload.constants import ARDUINO_SERIAL_TIMEOUT, PACKET_BYTE_SIZE, PACKET_START_MARKER
+from payload.constants import PACKET_BYTE_SIZE, ARDUINO_SERIAL_TIMEOUT
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 
+# Define the expected marker value (must match what is used on the Arduino)
+PACKET_START_MARKER = -1e30  # Use the same value
 
-def process_packet_data(binary_packet: bytes) -> IMUDataPacket:
-    """
-    Unpacks the binary packet into an IMUDataPacket instance.
-    The format string assumes little-endian floats.
-    """
-    # Calculate number of floats (each float is 4 bytes)
+# Open the serial port (adjust as needed)
+ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=ARDUINO_SERIAL_TIMEOUT)
+
+def fetch_data(ser):
+    # Wait until there's enough data: marker + packet data
+    if ser.in_waiting >= 4 + PACKET_BYTE_SIZE:
+        # Read marker bytes and convert to float
+        marker_bytes = ser.read(4)
+        (marker,) = struct.unpack("<f", marker_bytes)
+        if marker == PACKET_START_MARKER:
+            binary_packet = ser.read(PACKET_BYTE_SIZE)
+            if len(binary_packet) == PACKET_BYTE_SIZE:
+                return process_packet_data(binary_packet)
+    return None
+
+def process_packet_data(binary_packet):
     num_floats = PACKET_BYTE_SIZE // 4
-    # Unpack the binary data
     unpacked_data = struct.unpack("<" + "f" * num_floats, binary_packet)
+    # Assuming IMUDataPacket is defined appropriately to accept these values.
     return IMUDataPacket(*unpacked_data)
 
-
-def main():
-    # Adjust the port (e.g., '/dev/ttyUSB0' for Linux or 'COM3' for Windows)
-    port = '/dev/ttyUSB0'
-    baud_rate = 115200
-
-    # Open the serial port
-    ser = serial.Serial(port, baud_rate, timeout=ARDUINO_SERIAL_TIMEOUT)
-    print(f"Connected to Arduino on port {port}")
-
-    try:
-        while True:
-            # Wait until there is enough data for a full packet (start marker + packet)
-            if ser.in_waiting >= PACKET_BYTE_SIZE + 1:
-                # Read one byte at a time until we find the start marker.
-                marker = ser.read(1)
-                if marker == PACKET_START_MARKER:
-                    binary_packet = ser.read(PACKET_BYTE_SIZE)
-                    # Check that we received a full packet
-                    if len(binary_packet) == PACKET_BYTE_SIZE:
-                        imu_packet = process_packet_data(binary_packet)
-                        print(imu_packet.pressureAlt)
-            else:
-                time.sleep(0.01)
-    except KeyboardInterrupt:
-        print("Exiting...")
-    finally:
-        ser.close()
-
-
-if __name__ == '__main__':
-    main()
+# Example main loop:
+try:
+    while True:
+        packet = fetch_data(ser)
+        if packet is not None:
+            print(packet)
+        else:
+            time.sleep(0.01)
+except KeyboardInterrupt:
+    print("Exiting...")
+finally:
+    ser.close()
