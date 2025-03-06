@@ -1,10 +1,11 @@
 import serial
 import time
+from payload.constants import ARDUINO_BAUD_RATE, PACKET_START_MARKER
 from collections import deque
 
-def detect_start_flags(port='/dev/ttyUSB0', baud_rate=9600):
+def detect_start_flags(port='/dev/ttyUSB1', baud_rate=ARDUINO_BAUD_RATE):
     # Start flag configuration
-    START_FLAG = bytes.fromhex('FFFEFDFC')
+    START_FLAG = PACKET_START_MARKER
     START_FLAG_LEN = len(START_FLAG)
     
     # Initialize serial port
@@ -47,4 +48,4 @@ def detect_start_flags(port='/dev/ttyUSB0', baud_rate=9600):
 
 if __name__ == "__main__":
     # You can modify these parameters based on your setup
-    detect_start_flags(port='/dev/ttyUSB0', baud_rate=9600)
+    detect_start_flags(port='/dev/ttyUSB1')
