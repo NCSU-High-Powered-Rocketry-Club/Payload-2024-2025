@@ -31,7 +31,7 @@ class DisplayEndingType(StrEnum):
 ARDUINO_SERIAL_PORT = "/dev/ttyUSB2"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
-# ARDUINO_SERIAL_PORT = "COM5"
+ARDUINO_SERIAL_PORT = "COM5"
 
 ARDUINO_BAUD_RATE = 115200
 """The baud rate of the channel"""
