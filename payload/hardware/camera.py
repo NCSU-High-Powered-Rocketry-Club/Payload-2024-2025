@@ -53,7 +53,6 @@ class Camera:
 
         try:
             camera = Picamera2()
-            print("running camera!")
             # Make the camera look good in daylight:
             camera.set_controls({"AwbEnable": True, "AwbMode": "Daylight"})
             # We use the H264 encoder and a circular output to save the video to a file.
@@ -70,9 +69,7 @@ class Camera:
             # Check if motor burn has started, if it has, we can stop buffering and start saving
             # the video. This way we get a few seconds of video before liftoff too. Otherwise, just
             # sleep and wait.
-            print("waiting for motor burn")
             self.motor_burn_started.wait()
-            print("motor burned")
 
             output.fileoutput = CAMERA_SAVE_PATH
             output.start()
