@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB1"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -42,10 +42,6 @@ PACKET_START_MARKER = 0xAAAAAAAA
 of bytes."""
 PACKET_BYTE_SIZE = 84
 """Size of the data packet being sent from the Arduino in bytes"""
-
-# Timeouts for get() queue operations:
-MAX_GET_TIMEOUT_SECONDS = 100  # seconds
-"""The maximum amount of time in seconds to wait for a get operation on the queue."""
 
 IMU_APPROXIMATE_FREQUENCY = 35
 """The frequency at which the IMU sends data packets, this is 50Hz"""
@@ -149,7 +145,7 @@ NO_MESSAGE_TRANSMITTED = "NMT"
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
-RECEIVER_SERIAL_PORT = "/dev/ttyUSB1"
+RECEIVER_SERIAL_PORT = "/dev/ttyUSB0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""
@@ -161,7 +157,7 @@ TRANSMIT_MESSAGE = "TRANSMIT"
 STOP_MESSAGE = "STOP"
 """The message that the transmitter sends to the receiver to stop transmitting data"""
 
-RECEIVER_THREAD_TIMEOUT = 30
+RECEIVER_THREAD_TIMEOUT = 3
 """The amount of time in seconds that the receiver thread waits to force close"""
 RECEIVER_SERIAL_TIMEOUT = 10
 """The amount of time in seconds that the receiver serial port waits for a message"""
