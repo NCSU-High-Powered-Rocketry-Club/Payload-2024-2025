@@ -105,12 +105,7 @@ def create_components(
         logger = Logger(LOGS_PATH)
         transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
         receiver = Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)
-        camera = MockCamera()
-        # try:
-        #     camera = Camera()
-        # except Exception as e:
-        #     print("PiCamera not detected: ", e)
-        # camera = MockCamera()
+        camera = Camera()
 
     # Initialize data processing
     data_processor = DataProcessor()
@@ -145,9 +140,8 @@ def run_flight_loop(
     except KeyboardInterrupt:
         if args.mode == "mock":
             flight_display.end_mock_interrupted.set()
-    except (
-        Exception
-    ) as e:  # This is run if we have landed and the program is not interrupted (see state.py)
+    except Exception as e:
+        # This is run if we have landed and the program is not interrupted (see state.py)
         print(e)
         if args.mode == "mock":
             # Stop the mock replay naturally if not interrupted

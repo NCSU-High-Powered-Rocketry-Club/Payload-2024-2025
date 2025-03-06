@@ -8,6 +8,8 @@ from typing import Any, Literal
 
 from msgspec import to_builtins
 
+from faster_fifo import Empty
+
 from payload.constants import (
     MAX_GET_TIMEOUT_SECONDS,
     STOP_SIGNAL,
@@ -203,10 +205,12 @@ class Logger:
             writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
             while True:
                 # Get a message from the queue (this will block until a message is available)
-                # Because there's no timeout, it will wait indefinitely until it gets a message.
-                message_fields: list[LoggerDataPacket | Literal["STOP"]] = self._log_queue.get_many(
-                    timeout=MAX_GET_TIMEOUT_SECONDS
-                )
+                try:
+                    message_fields: list[LoggerDataPacket | Literal["STOP"]] = self._log_queue.get_many(
+                        timeout=MAX_GET_TIMEOUT_SECONDS
+                    )
+                except Empty as e:
+                    continue
                 if STOP_SIGNAL in message_fields:
                     return
                 # If the message is the stop signal, break out of the loop

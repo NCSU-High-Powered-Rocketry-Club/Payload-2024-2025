@@ -22,12 +22,6 @@ class Camera:
     __slots__ = ("camera_control_thread", "motor_burn_started", "stop_context_event")
 
     def __init__(self):
-        # try:
-        #     camera = Picamera2()
-        #     camera.stop()
-        # except Exception as e:
-        #     raise Exception("ahhh")
-
         self.stop_context_event = Event()
         self.motor_burn_started = Event()
         self.camera_control_thread = Thread(target=self._camera_control_loop, name="Camera thread")
@@ -57,29 +51,35 @@ class Camera:
         # set logging level-
         os.environ["LIBCAMERA_LOG_LEVELS"] = "ERROR"
 
-        camera = Picamera2()
-        # Make the camera look good in daylight:
-        camera.set_controls({"AwbEnable": True, "AwbMode": "Daylight"})
-        # We use the H264 encoder and a circular output to save the video to a file.
-        encoder = H264Encoder()
-        # The circular output is a buffer with a default size of 150 bytes? which according to
-        # the docs is enough for 5 seconds of video at 30 fps.
-        output = CircularOutput()
-        # Create a basic video configuration
-        camera.configure(camera.create_video_configuration())
+        try:
+            camera = Picamera2()
+            print("running camera!")
+            # Make the camera look good in daylight:
+            camera.set_controls({"AwbEnable": True, "AwbMode": "Daylight"})
+            # We use the H264 encoder and a circular output to save the video to a file.
+            encoder = H264Encoder()
+            # The circular output is a buffer with a default size of 150 bytes? which according to
+            # the docs is enough for 5 seconds of video at 30 fps.
+            output = CircularOutput()
+            # Create a basic video configuration
+            camera.configure(camera.create_video_configuration())
 
-        # Start recording with the buffer. This operation is non-blocking.
-        camera.start_recording(encoder, output)
+            # Start recording with the buffer. This operation is non-blocking.
+            camera.start_recording(encoder, output)
 
-        # Check if motor burn has started, if it has, we can stop buffering and start saving
-        # the video. This way we get a few seconds of video before liftoff too. Otherwise, just
-        # sleep and wait.
-        self.motor_burn_started.wait()
+            # Check if motor burn has started, if it has, we can stop buffering and start saving
+            # the video. This way we get a few seconds of video before liftoff too. Otherwise, just
+            # sleep and wait.
+            print("waiting for motor burn")
+            self.motor_burn_started.wait()
+            print("motor burned")
 
-        output.fileoutput = CAMERA_SAVE_PATH
-        output.start()
+            output.fileoutput = CAMERA_SAVE_PATH
+            output.start()
 
-        # Keep recording until we have landed:
-        self.stop_context_event.wait()
+            # Keep recording until we have landed:
+            self.stop_context_event.wait()
 
-        output.stop()
+            output.stop()
+        except Exception as e:
+            print(f"Got error {e} while starting the camera.")
