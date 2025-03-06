@@ -110,7 +110,7 @@ def create_components(
         #     camera = Camera()
         # except Exception as e:
         #     print("PiCamera not detected: ", e)
-            # camera = MockCamera()
+        # camera = MockCamera()
 
     # Initialize data processing
     data_processor = DataProcessor()
@@ -145,7 +145,9 @@ def run_flight_loop(
     except KeyboardInterrupt:
         if args.mode == "mock":
             flight_display.end_mock_interrupted.set()
-    except Exception as e:  # This is run if we have landed and the program is not interrupted (see state.py)
+    except (
+        Exception
+    ) as e:  # This is run if we have landed and the program is not interrupted (see state.py)
         print(e)
         if args.mode == "mock":
             # Stop the mock replay naturally if not interrupted

@@ -84,11 +84,10 @@ class StandbyState(State):
         # Ideally we would directly communicate with the motor, but we don't have that capability.
         data = self.context.data_processor
 
-        if data.velocity_moving_average > TAKEOFF_VELOCITY_METERS_PER_SECOND:
-            self.next_state()
-            return
-
-        if data.current_altitude > TAKEOFF_HEIGHT_METERS:
+        if (
+            data.velocity_moving_average > TAKEOFF_VELOCITY_METERS_PER_SECOND
+            and data.current_altitude > TAKEOFF_HEIGHT_METERS
+        ):
             self.next_state()
             return
 
@@ -169,8 +168,7 @@ class FreeFallState(State):
         # If our altitude is around 0, and we have an acceleration spike, we have landed
         if (
             data.current_altitude <= GROUND_ALTITUDE_METERS
-            and abs(data.velocity_moving_average)
-            <= LANDED_VELOCITY_METERS_PER_SECOND
+            and abs(data.velocity_moving_average) <= LANDED_VELOCITY_METERS_PER_SECOND
         ):
             self.next_state()
 
@@ -210,10 +208,12 @@ class LandedState(State):
         # Explicitly do nothing, there is no next state
         pass
 
+
 class RecoveryState(State):
-    """ 
+    """
     After the rockets transmission period has elapsed
     """
+
     def update(self):
         print("s")
 
@@ -225,11 +225,12 @@ class ShutdownState(State):
     """
     If the rocket has receieved a command to shutdown
     """
-    def __init__(self, context:"PayloadContext"):
+
+    def __init__(self, context: "PayloadContext"):
         print("s")
 
     def update():
-        """ Nothing will be happening in this state """
+        """Nothing will be happening in this state"""
         print("s")
 
     def next_state(self):

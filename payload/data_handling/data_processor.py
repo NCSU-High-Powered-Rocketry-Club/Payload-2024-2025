@@ -114,7 +114,7 @@ class DataProcessor:
         if self._velocity_rolling_average:
             return float(np.mean(self._velocity_rolling_average))
         return self.vertical_velocity
-    
+
     def update(self, data_packet: IMUDataPacket) -> None:
         """
         Updates the data points to process. This will recompute all calculations for altitude,

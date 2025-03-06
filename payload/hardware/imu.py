@@ -37,6 +37,7 @@ class IMU(BaseIMU):
         fields in the IMUDataPacket struct.
         """
         # Iterate through each data point in the packet.
+        # TODO: figure out how to do statusFlags right
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
         return IMUDataPacket(*unpacked_data)
 
