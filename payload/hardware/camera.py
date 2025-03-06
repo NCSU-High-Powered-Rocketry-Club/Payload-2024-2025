@@ -22,6 +22,12 @@ class Camera:
     __slots__ = ("camera_control_thread", "motor_burn_started", "stop_context_event")
 
     def __init__(self):
+        # try:
+        #     camera = Picamera2()
+        #     camera.stop()
+        # except Exception as e:
+        #     raise Exception("ahhh")
+
         self.stop_context_event = Event()
         self.motor_burn_started = Event()
         self.camera_control_thread = Thread(target=self._camera_control_loop, name="Camera thread")

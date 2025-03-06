@@ -44,31 +44,26 @@ class Transmitter(BaseTransmitter):
         self.config_path = config_path
         self._stop_event = threading.Event()
         self.message_worker_thread = None
-
-        GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-        GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.LOW)  # Set pin as output, initially high
-
-    # def _turn_ptt_on(self) -> None:
-    #     """
-    #     Pulls the GPIO pin high. This pulls the PTT low. This activates the PTT (Push-To-Talk) of the transceiver.
-    #     """
-    #     GPIO.output(self.gpio_pin, GPIO.HIGH)
-
-    # def _turn_ptt_off(self) -> None:
-    #     """
-    #     Pulls the GPIO pin low. This pulls the PTT high. This deactivates the PTT (Push-To-Talk) of the transceiver.
-    #     """
-    #     GPIO.output(self.gpio_pin, GPIO.LOW)
+        
+        self.setup_gpio();
+        # GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
+        # GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.LOW)  # Set pin as output, initially high
 
     def setup_gpio(self):
         GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
         GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.LOW)
 
     def pull_pin_low(self):
+        #     """
+        #     Pulls the GPIO pin low. This pulls the PTT high. This deactivates the PTT (Push-To-Talk) of the transceiver.
+        #     """
         GPIO.setmode(GPIO.BCM)
         GPIO.output(self.gpio_pin, GPIO.LOW)
 
     def pull_pin_high(self):
+        #     """
+        #     Pulls the GPIO pin high. This pulls the PTT low. This activates the PTT (Push-To-Talk) of the transceiver.
+        #     """
         GPIO.setmode(GPIO.BCM)
         GPIO.output(self.gpio_pin, GPIO.HIGH)
 
@@ -150,42 +145,20 @@ class Transmitter(BaseTransmitter):
         
         if self._update_beacon_comment(message):
             for i in range(NUMBER_OF_TRANSMISSIONS):
-                print("Configuration updated successfully.")
+                # print("Configuration updated successfully.")
                 self.pull_pin_high()  # Activate PTT via GPIO pin pull-down
                 self.restart_direwolf()
 
                 time.sleep(TRANSMISSION_WINDOW_SECONDS)  # Duration for which the pin should remain low
 
                 self.pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
-                print("Transmission complete. Pin reset.")
+                # print("Transmission complete. Pin reset.")
                 subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
 
                 time.sleep(TRANSMISSION_DELAY)
 
         else:
             print("Failed to update the configuration. Please check the file and try again.")
-
-        self.cleanup_gpio()
-        # self.setup_gpio()
-
-        # subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf
-        # time.sleep(2)
-        # for i in range(20):
-        #     if self._stop_event.is_set():
-        #         self._turn_ptt_off()
-        #         break
-        #     self._turn_ptt_on()
-
-        #     time.sleep(10)  # Keep the pin low for the transmission duration
-
-        #     if self._stop_event.is_set():
-        #         break
-
-        #     self._turn_ptt_off()
-
-        #     time.sleep(10)  # Keep the pin low for the transmission duration
-
-        # self._turn_ptt_off()
 
     def start(self) -> None:
         """
@@ -197,9 +170,9 @@ class Transmitter(BaseTransmitter):
         """
         Cleans up the GPIO pins when the transmitter is stopped.
         """
-        self.setup_gpio()
+
         self.pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
-        # self._turn_ptt_off()
+
         try:
             subprocess.run(["pkill", "-f", "direwolf"], check=True)  # Stop Direwolf if running
         except subprocess.CalledProcessError as e:
@@ -207,10 +180,14 @@ class Transmitter(BaseTransmitter):
                 print("Direwolf is not running. Nothing to kill.")
             else:
                 print(f"Error while stopping Direwolf: {e}")
+        
         self._stop_event.set()
+
         if self.message_worker_thread:
             self.message_worker_thread.join(5)
+
         GPIO.cleanup()
+        
         print("Stopped Transmitter")
 
     def send_message(self, message: TransmitterDataPacket) -> None:

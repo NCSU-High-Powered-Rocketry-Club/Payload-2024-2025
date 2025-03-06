@@ -47,9 +47,24 @@ def update_beacon_comment(config_path, new_comment):
 
 
 def restart_direwolf():
-    subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
+    subprocess.run(["pkill", "-f", "direwolf"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # Try to stop Direwolf
     time.sleep(2)  # Wait for a moment to ensure the process has terminated
-    subprocess.Popen(["direwolf"])  # Start Direwolf again
+
+    subprocess.Popen(["direwolf"], stdout=subprocess.DEVNULL)  # Start Direwolf again
+
+    # process = subprocess.Popen(
+    #     ["direwolf"], 
+    #     stdout=subprocess.PIPE, 
+    #     stderr=subprocess.DEVNULL,  # Suppress error messages
+    #     bufsize=1,  # Use line buffering
+    #     universal_newlines=True  # Ensures text mode (alternative to text=True)
+    # )
+
+    # # Read output line by line and filter for APRS-related messages
+    # for line in iter(process.stdout.readline, ""):
+    #     if "KQ4VOH" in line:  # Adjust this filter based on what APRS messages look like
+    #         print(line, end="")  # Print only APRS messages
+
     print("Direwolf has been restarted.")
 
 
@@ -67,7 +82,7 @@ def main():
         time.sleep(10)  # Duration for which the pin should remain low
         pull_pin_low()  # Deactivate PTT via GPIO pin pull-up
         print("Transmission complete. Pin reset.")
-        subprocess.run(["pkill", "-f", "direwolf"], check=False)  # Try to stop Direwolf
+        subprocess.run(["pkill", "-f", "direwolf"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # Try to stop Direwolf
 
     else:
         print("Failed to update the configuration. Please check the file and try again.")

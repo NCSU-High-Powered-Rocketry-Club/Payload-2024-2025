@@ -84,9 +84,9 @@ ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""
 
-TAKEOFF_HEIGHT_METERS = 10
+TAKEOFF_HEIGHT_METERS = 0.5
 """The height in meters that the rocket must reach before we consider it to have taken off."""
-TAKEOFF_VELOCITY_METERS_PER_SECOND = 10
+TAKEOFF_VELOCITY_METERS_PER_SECOND = 0.5
 """The velocity in meters per second that the rocket must reach before we consider it to have taken
 off."""
 
@@ -161,9 +161,9 @@ TRANSMIT_MESSAGE = "TRANSMIT"
 STOP_MESSAGE = "STOP"
 """The message that the transmitter sends to the receiver to stop transmitting data"""
 
-RECEIVER_THREAD_TIMEOUT = 3
+RECEIVER_THREAD_TIMEOUT = 30
 """The amount of time in seconds that the receiver thread waits to force close"""
-RECEIVER_SERIAL_TIMEOUT = 1
+RECEIVER_SERIAL_TIMEOUT = 10
 """The amount of time in seconds that the receiver serial port waits for a message"""
 
 # These are in seconds
