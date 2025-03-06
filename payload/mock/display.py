@@ -145,6 +145,8 @@ class FlightDisplay:
             f"Crew survivability:        {G}{100 * data_processor._crew_survivability:<10.2f}{RESET} {R}%{RESET}",  # noqa: E501
         ]
 
+        imu_data = self._payload.imu_data_packet
+
         # Adds additional info to the display if -v was specified
         if self._args.verbose:
             output.extend(
@@ -154,6 +156,19 @@ class FlightDisplay:
                     f"Landing velocity:          {G}{data_processor._landing_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
                     f"Transmitter message:       {G}{str(self._payload.transmission_packet)[:14]}{RESET}",  # noqa: E501
                     f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]}{RESET}",  # noqa: E501
+                    f"{Y}{'=' * 19} IMU INFO {'=' * 18}{RESET}",
+                    f"Timestamp:                 {G}{imu_data.timestamp:<10.2f}{RESET} {R}ms{RESET}",  # noqa: E501
+                    f"Voltage:                   {G}{imu_data.voltage:<10.2f}{RESET} {R}V{RESET}",  # noqa: E501
+                    f"Temperature:               {G}{imu_data.ambientTemperature:<10.2f}{RESET} {R}°C{RESET}",  # noqa: E501
+                    f"Pressure:                  {G}{imu_data.ambientPressure:<10.2f}{RESET} {R}mbar{RESET}",  # noqa: E501
+                    f"Pressure Altitude:         {G}{imu_data.pressureAlt:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
+                    f"Compensated Accel:         {G}<{imu_data.estCompensatedAccelX:<10.2f}, {imu_data.estCompensatedAccelY:<10.2f}, {imu_data.estCompensatedAccelZ:<10.2f}>{RESET} {R}m/s²{RESET}",  # noqa: E501
+                    f"Angular Rate:              {G}<{imu_data.estAngularRateX:<10.2f}, {imu_data.estAngularRateY:<10.2f}, {imu_data.estAngularRateZ:<10.2f}>{RESET} {R}rad/s{RESET}", # noqa: E501
+                    f"Magnetic Field:            {G}<{imu_data.magneticFieldX:<10.2f}, {imu_data.magneticFieldY:<10.2f}, {imu_data.magneticFieldZ:<10.2f}>{RESET} {R}μT{RESET}",  # noqa: E501
+                    f"Orient Quaternions:        {G}<{imu_data.estOrientQuaternionW:<10.2f}, {imu_data.estOrientQuaternionX:<10.2f}, {imu_data.estOrientQuaternionY:<10.2f}, {imu_data.estOrientQuaternionZ:<10.2f}>{RESET}",  # noqa: E501
+                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:<10.2f}{RESET} {R}°{RESET}",  # noqa: E501
+                    f"GPS Longitude:             {G}{imu_data.gpsLongitude:<10.2f}{RESET} {R}°{RESET}",  # noqa: E501
+                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
                 ]
             )
 
