@@ -68,7 +68,7 @@ class MockIMU(BaseIMU):
         # We simulate the delay the real imu has in sending data by checking the time that has
         # passed since the last fetch.
         if self.real_time_replay:
-            time.sleep(1 / IMU_APPROXIMATE_FREQUENCY)  # 50Hz = 20ms
+            time.sleep(1 / IMU_APPROXIMATE_FREQUENCY)  # 17Hz = 0.0588s
 
         # If we have reached the end of the data, stop the IMU
         if self._current_index >= len(self._df):

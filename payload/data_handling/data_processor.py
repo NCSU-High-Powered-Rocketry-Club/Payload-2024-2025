@@ -7,6 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from payload.constants import (
     ALTITUDE_DEADBAND_METERS,
     ANGULAR_RATE_WEIGHT,
+    IMU_APPROXIMATE_FREQUENCY,
     INTENSITY_PERCENT_THRESHOLD,
     LANDING_VELOCITY_DEDUCTION,
     LANDING_VELOCITY_THRESHOLD,
@@ -206,12 +207,12 @@ class DataProcessor:
             )
             != 0
         ):
-            # Calculate the velocity using the altitude difference and the time difference
+            # Calculate the velocity using the altitude difference and approximate IMU frequency.
+            # We use approximate frequency because the IMU restarts the arduino somehow mid flight,
+            # and that resets the timestamp sent by the IMU.
             velocity = np.float64(
                 (self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt)
-                / convert_milliseconds_to_seconds(
-                    self._data_packet.timestamp - self._last_velocity_calculation_packet.timestamp
-                )
+                / (1 / IMU_APPROXIMATE_FREQUENCY)
             )
             # Update the last velocity packet for the next update
             self._last_velocity_calculation_packet = self._data_packet

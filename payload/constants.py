@@ -43,8 +43,8 @@ of bytes."""
 PACKET_BYTE_SIZE = 84
 """Size of the data packet being sent from the Arduino in bytes"""
 
-IMU_APPROXIMATE_FREQUENCY = 35
-"""The frequency at which the IMU sends data packets, this is 50Hz"""
+IMU_APPROXIMATE_FREQUENCY = 17
+"""The frequency at which the IMU sends data packets"""
 
 PROJECT_DIRECTORY_NAME = "Payload-2024-2025"
 """The name of the directory for the project"""
