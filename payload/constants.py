@@ -148,7 +148,7 @@ NO_MESSAGE_TRANSMITTED = "NMT"
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
-RECEIVER_SERIAL_PORT = "/dev/ttyUSB1"
+RECEIVER_SERIAL_PORT = "/dev/ttyAMA5"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""

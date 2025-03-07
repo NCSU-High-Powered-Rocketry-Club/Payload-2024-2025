@@ -4,7 +4,10 @@ import math
 import re
 import subprocess
 import threading
+import psutil
+import os
 import time
+# import payload.scripts.EncodingTransmittingTest
 
 from payload.interfaces.base_transmitter import BaseTransmitter
 
@@ -84,6 +87,7 @@ class Transmitter(BaseTransmitter):
         lon_minutes = lon_frac * 60.0
         lon_str = f"{lon_degrees:03}^{lon_minutes:05.2f}{lon_hemi}"
 
+        # return f'PBEACON delay=0:1 every=0:5 overlay=S symbol=\\O lat={lat_str} long={lon_str} comment="t=22.0,a=0.1,b=13.2,"'
         return f'PBEACON delay=0:1 every=0:5 overlay=S symbol=\\O lat={lat_str} long={lon_str} comment="{message.compress_packet()}"'
 
     def _update_beacon_comment(self, message: TransmitterDataPacket) -> bool:
@@ -109,6 +113,8 @@ class Transmitter(BaseTransmitter):
 
             with open(self.config_path, "w") as file:
                 file.writelines(lines)
+
+            time.sleep(1)
 
             return True
         except FileNotFoundError:
@@ -194,7 +200,16 @@ class Transmitter(BaseTransmitter):
         """
         Sends a message to the ground station.
         """
-        self.message_worker_thread = threading.Thread(
-            target=self._send_message_worker, args=(message,)
-        )
-        self.message_worker_thread.start()
+
+        self._send_message_worker(message)
+
+        # self.message_worker_thread = threading.Thread(
+        #     target=self._send_message_worker, args=(message,)
+        # )
+
+        # pid = os.getpid()
+        # p = psutil.Process(pid)
+        # p.nice(-20)
+
+
+        # self.message_worker_thread.start()

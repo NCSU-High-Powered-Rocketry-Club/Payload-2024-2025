@@ -13,14 +13,19 @@
 // Debug settings - Set to 0 for max speed
 #define DEBUG_MODE 0           // Set to 1 for human-readable output, 0 for binary only
 #define DEBUG_SERIAL Serial    // Which serial port to use for debug output
+// Define threshold constants for filtering
+#define MAX_ACCEL_VALUE 300.0f      // Maximum acceptable acceleration (m/s²)
+#define MAX_GYRO_VALUE 1000.0f       // Maximum acceptable gyroscope value (rad/s)
+#define MAX_MAG_VALUE 5000.0f       // Maximum acceptable magnetometer value (uT)
+#define MAX_QUAT_VALUE 100.0f        // Maximum acceptable quaternion value (should be <= 1.0)
 
 // Sensor objects
 Adafruit_DPS310 dps;
 Adafruit_BNO08x bno08x(-1);
 SFE_UBLOX_GNSS myGNSS;
 static const uint8_t PACKET_START_MARKER[] = {0xFF, 0xFE, 0xFD, 0xFC};
-
-// Add a global boolean flag for bad data detection
+unsigned long lastIMUResetTime = 0;
+const unsigned long IMU_RESET_INTERVAL = 5000; // Only attempt reset every 5 seconds
 bool badIMUDataDetected = false;
 uint8_t status_flags = 0;
 
@@ -177,7 +182,7 @@ void setup() {
 
   // Faster I2C clock
   Wire.begin();
-  Wire.setClock(100000UL);  // Increase to 800kHz for ESP32
+  Wire.setClock(800000UL);  // Increase to 800kHz for ESP32
 
   // Initialize DPS310 with minimal checks
   if (dps.begin_I2C(0x77) || dps.begin_I2C(0x76)) {
@@ -207,7 +212,7 @@ void setup() {
     DEBUG_SERIAL.println("GPS initialized.");
     #endif
     myGNSS.setI2COutput(COM_TYPE_UBX);
-    myGNSS.setNavigationFrequency(10);  // Set higher rate (10Hz)
+    myGNSS.setNavigationFrequency(60);  // Set higher rate (10Hz)
   }
 
   // ADC setup
@@ -215,15 +220,6 @@ void setup() {
   analogReadResolution(12);
   analogSetAttenuation(ADC_11db);
 }
-
-// Define threshold constants for filtering
-#define MAX_ACCEL_VALUE 3.0f      // Maximum acceptable acceleration (m/s²)
-#define MAX_GYRO_VALUE 10.0f       // Maximum acceptable gyroscope value (rad/s)
-#define MAX_MAG_VALUE 500.0f       // Maximum acceptable magnetometer value (uT)
-#define MAX_QUAT_VALUE 1.0f        // Maximum acceptable quaternion value (should be <= 1.0)
-
-unsigned long lastIMUResetTime = 0;
-const unsigned long IMU_RESET_INTERVAL = 5000; // Only attempt reset every 5 seconds
 
 // Optimized IMU data collection with filtering
 inline void collectIMUData(DataPacket &packet) {
@@ -413,7 +409,7 @@ void loop() {
   status_flags = 0;
 
   // Read battery voltage - direct calculation without filtering
-  data.voltage = (analogRead(VOLTAGE_PIN) * 3.3) / 64.0;
+  data.voltage = (analogRead(VOLTAGE_PIN) * 3.3) / 1024.0;
 
   // Read DPS310 with shorter timeout
   sensors_event_t temp_event, pressure_event;
