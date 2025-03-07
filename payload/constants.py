@@ -91,6 +91,9 @@ MAX_VELOCITY_THRESHOLD = 0.96
 """Because motors can behave unpredictably near the end of their burn, we will only say that the
 motor has stopped burning if the current velocity is less than a percentage of the max velocity."""
 
+MOTOR_BURN_TIME_SECONDS = 2.4
+"""The maximum amount of time in seconds that the motor will burn."""
+
 # ----------------- Coasting to Freefall -----------------
 
 # ----------------- Freefall to Landing -----------------

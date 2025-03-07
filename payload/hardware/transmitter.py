@@ -11,7 +11,7 @@ from payload.interfaces.base_transmitter import BaseTransmitter
 try:
     # TODO: convert this to gpiozero, also go through and organize methods
     from RPi import GPIO
-except ImportError:
+except (ImportError, RuntimeError):
     pass
 
 from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket

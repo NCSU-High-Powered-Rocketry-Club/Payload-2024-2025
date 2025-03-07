@@ -8,6 +8,7 @@ from payload.constants import (
     LANDED_VELOCITY_METERS_PER_SECOND,
     MAX_FREE_FALL_SECONDS,
     MAX_VELOCITY_THRESHOLD,
+    MOTOR_BURN_TIME_SECONDS,
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
 )
@@ -33,7 +34,7 @@ class State(ABC):
 
     __slots__ = (
         "context",
-        "start_time_ns",
+        "start_time_ms",
     )
 
     def __init__(self, context: "PayloadContext"):
@@ -41,7 +42,7 @@ class State(ABC):
         :param context: The state context object that will be used to interact with the electronics
         """
         self.context = context
-        self.start_time_ns = context.data_processor.current_timestamp
+        self.start_time_ms = context.data_processor.current_timestamp
 
     @property
     def name(self):
@@ -120,6 +121,11 @@ class MotorBurnState(State):
             self.next_state()
             return
 
+        # Fallback: If it has been more than 2.4 seconds since motor burn, switch states.
+        if convert_milliseconds_to_seconds(data.current_timestamp - self.start_time_ms) >= MOTOR_BURN_TIME_SECONDS:
+            self.next_state()
+            return
+
     def next_state(self):
         self.context.state = CoastState(self.context)
 
@@ -174,7 +180,7 @@ class FreeFallState(State):
 
         # If we have been in free fall for too long, we move to the landed state
         if (
-            convert_milliseconds_to_seconds(data.current_timestamp - self.start_time_ns)
+            convert_milliseconds_to_seconds(data.current_timestamp - self.start_time_ms)
             >= MAX_FREE_FALL_SECONDS
         ):
             self.next_state()

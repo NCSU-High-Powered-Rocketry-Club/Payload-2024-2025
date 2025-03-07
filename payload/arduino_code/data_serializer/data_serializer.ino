@@ -13,8 +13,6 @@
 // Debug settings - Set to 0 for max speed
 #define DEBUG_MODE 0           // Set to 1 for human-readable output, 0 for binary only
 #define DEBUG_SERIAL Serial    // Which serial port to use for debug output
-#define PACKET_START_MARKER1 0xAA
-#define PACKET_START_MARKER2 0x55
 
 // Sensor objects
 Adafruit_DPS310 dps;
@@ -179,7 +177,7 @@ void setup() {
 
   // Faster I2C clock
   Wire.begin();
-  Wire.setClock(800000UL);  // Increase to 800kHz for ESP32
+  Wire.setClock(100000UL);  // Increase to 800kHz for ESP32
 
   // Initialize DPS310 with minimal checks
   if (dps.begin_I2C(0x77) || dps.begin_I2C(0x76)) {
