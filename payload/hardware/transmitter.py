@@ -1,13 +1,10 @@
 """Module for the Transmitter class that controls the SA85 transceiver."""
 
 import math
-import re
+from pathlib import Path
 import subprocess
 import threading
-import psutil
-import os
 import time
-# import payload.scripts.EncodingTransmittingTest
 
 from payload.interfaces.base_transmitter import BaseTransmitter
 
@@ -20,8 +17,6 @@ except (ImportError, RuntimeError):
 from payload.data_handling.packets.transmitter_data_packet import TransmitterDataPacket
 from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.constants import (
-    DIREWOLF_CONFIG_PATH,
-    TRANSMITTER_PIN,
     NUMBER_OF_TRANSMISSIONS,
     TRANSMISSION_WINDOW_SECONDS,
     TRANSMISSION_DELAY,
@@ -36,14 +31,14 @@ class Transmitter(BaseTransmitter):
 
     __slots__ = ("_stop_event", "config_path", "gpio_pin", "message_worker_thread")
 
-    def __init__(self, gpio_pin, config_path) -> None:
+    def __init__(self, gpio_pin: int, config_path: Path) -> None:
         """
         Initializes the transmitter with the specified GPIO pin and Direwolf configuration file
         path.
         :param gpio_pin: The GPIO pin number that is connected to the PTT pin of the transceiver.
         :param config_path: The path to the Direwolf configuration file.
         """
-        self.gpio_pin = TRANSMITTER_PIN
+        self.gpio_pin = gpio_pin
         self.config_path = config_path
         self._stop_event = threading.Event()
         self.message_worker_thread = None
@@ -139,13 +134,6 @@ class Transmitter(BaseTransmitter):
         blocking, we run this in a separate thread.
         :param message: The message to send.
         """
-
-        # self.setup_gpio()
-        config_path = DIREWOLF_CONFIG_PATH
-
-        # if not self._update_beacon_comment(message):
-        #     print("Failed to update the configuration. Message not sent.")
-        #     return
 
         if self._update_beacon_comment(message):
             for i in range(NUMBER_OF_TRANSMISSIONS):
