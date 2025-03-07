@@ -2,6 +2,7 @@ import serial
 import time
 import struct
 from payload.constants import ARDUINO_BAUD_RATE, PACKET_START_MARKER
+from payload.utils import convert_milliseconds_to_seconds
 from collections import deque
 
 def detect_and_read_packets(port='/dev/ttyUSB1', baud_rate=ARDUINO_BAUD_RATE):
@@ -52,7 +53,7 @@ def detect_and_read_packets(port='/dev/ttyUSB1', baud_rate=ARDUINO_BAUD_RATE):
                             
                             # Extract individual fields
                             packet = {
-                                'timestamp': data[0],
+                                'timestamp': convert_milliseconds_to_seconds(data[0]),
                                 'voltage': data[1],
                                 'temperature': data[2],
                                 'pressure': data[3],

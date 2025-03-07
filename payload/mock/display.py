@@ -188,6 +188,3 @@ class FlightDisplay:
                 print(f"{R}{'=' * 14} INTERRUPTED REPLAY {'=' * 13}{RESET}")
             case DisplayEndingType.TAKEOFF:
                 print(f"{R}{'=' * 13} ROCKET LAUNCHED {'=' * 14}{RESET}")
-
-        # Sleep for a bit to avoid spamming the terminal
-        time.sleep(1 / DISPLAY_FREQUENCY)

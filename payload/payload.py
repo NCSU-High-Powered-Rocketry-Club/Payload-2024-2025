@@ -128,6 +128,11 @@ class PayloadContext:
         last_imu_data_packet = self.imu_data_packet
         self.imu_data_packet = self.imu.fetch_data()
 
+        # If we don't have a data packet, return early
+        if not self.imu_data_packet:
+            return
+
+        # print(self.imu_data_packet)
         # If the GPS returns (0,0,0), use the last data
         # This happens if there was no gps update that cycle
         # We have to do it here and not in IMU so that
@@ -141,10 +146,6 @@ class PayloadContext:
             self.imu_data_packet.gpsLatitude = last_imu_data_packet.gpsLatitude
             self.imu_data_packet.gpsLongitude = last_imu_data_packet.gpsLongitude
             self.imu_data_packet.gpsAltitude = last_imu_data_packet.gpsAltitude
-
-        # If we don't have a data packet, return early
-        if not self.imu_data_packet:
-            return
 
         # Update the processed data with the new data packet.
         self.data_processor.update(self.imu_data_packet)

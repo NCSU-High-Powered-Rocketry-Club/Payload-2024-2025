@@ -66,7 +66,6 @@ class IMU(BaseIMU):
         if marker_idx != -1:  # Start marker found
             packet_start = marker_idx + len(PACKET_START_MARKER)
             # Check if there are enough bytes for a complete packet
-            print("found start marker")
             if len(self._buffer) >= packet_start + PACKET_BYTE_SIZE:
                 # Extract the packet (84 bytes)
                 packet = self._buffer[packet_start:packet_start + PACKET_BYTE_SIZE]
@@ -74,7 +73,5 @@ class IMU(BaseIMU):
                 self._buffer = self._buffer[packet_start + PACKET_BYTE_SIZE:]
                 # Process and return the packet
                 return self._process_packet_data(packet)
-        else:
-            print("could not find start marker")
 
         return None  # No complete packet available
