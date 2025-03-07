@@ -11,7 +11,7 @@
 #define LED_INTERVAL 500       // LED blink interval in milliseconds
 
 // Debug settings - Set to 0 for max speed
-#define DEBUG_MODE 1           // Set to 1 for human-readable output, 0 for binary only
+#define DEBUG_MODE 0           // Set to 1 for human-readable output, 0 for binary only
 #define DEBUG_SERIAL Serial    // Which serial port to use for debug output
 #define PACKET_START_MARKER1 0xAA
 #define PACKET_START_MARKER2 0x55
@@ -22,6 +22,8 @@ Adafruit_BNO08x bno08x(-1);
 SFE_UBLOX_GNSS myGNSS;
 static const uint8_t PACKET_START_MARKER[] = {0xFF, 0xFE, 0xFD, 0xFC};
 
+// Add a global boolean flag for bad data detection
+bool badIMUDataDetected = false;
 uint8_t status_flags = 0;
 
 // Data packet structure - UNTOUCHED as requested
@@ -65,6 +67,8 @@ inline void updateHeartbeatLED() {
 #if DEBUG_MODE
 void printHumanReadableData(const DataPacket &data) {
   DEBUG_SERIAL.println("\n------ SENSOR DATA ------");
+  DEBUG_SERIAL.print("BAD IMU DATA DETECTED: ");
+  DEBUG_SERIAL.println(badIMUDataDetected ? "YES" : "NO");
   DEBUG_SERIAL.print("Time: ");
   DEBUG_SERIAL.print(data.timestamp / 1000.0, 2);
   DEBUG_SERIAL.println(" sec");
@@ -214,7 +218,16 @@ void setup() {
   analogSetAttenuation(ADC_11db);
 }
 
-// Optimized IMU data collection
+// Define threshold constants for filtering
+#define MAX_ACCEL_VALUE 3.0f      // Maximum acceptable acceleration (m/s²)
+#define MAX_GYRO_VALUE 10.0f       // Maximum acceptable gyroscope value (rad/s)
+#define MAX_MAG_VALUE 500.0f       // Maximum acceptable magnetometer value (uT)
+#define MAX_QUAT_VALUE 1.0f        // Maximum acceptable quaternion value (should be <= 1.0)
+
+unsigned long lastIMUResetTime = 0;
+const unsigned long IMU_RESET_INTERVAL = 5000; // Only attempt reset every 5 seconds
+
+// Optimized IMU data collection with filtering
 inline void collectIMUData(DataPacket &packet) {
   // Track which sensor values we've received
   uint8_t executed_cases = 0;
@@ -223,6 +236,7 @@ inline void collectIMUData(DataPacket &packet) {
   // Set timeout to ensure we don't get stuck
   unsigned long startTime = millis();
   int attempts = 0;
+  bool attemptReset = false;
 
   // Try to get IMU data with timeout
   while ((executed_cases != all_cases_executed) &&
@@ -235,34 +249,155 @@ inline void collectIMUData(DataPacket &packet) {
     if (bno08x.getSensorEvent(&sensorValue)) {
       switch (sensorValue.sensorId) {
         case SH2_LINEAR_ACCELERATION:
-          packet.comp_accel_x = sensorValue.un.linearAcceleration.x;
-          packet.comp_accel_y = sensorValue.un.linearAcceleration.y;
-          packet.comp_accel_z = sensorValue.un.linearAcceleration.z;
+          // Check for out-of-range values but don't zero them immediately
+          if (abs(sensorValue.un.linearAcceleration.x) > MAX_ACCEL_VALUE ||
+              abs(sensorValue.un.linearAcceleration.y) > MAX_ACCEL_VALUE ||
+              abs(sensorValue.un.linearAcceleration.z) > MAX_ACCEL_VALUE) {
+            badIMUDataDetected = true;
+            #if DEBUG_MODE
+            DEBUG_SERIAL.print("Bad accel data: ");
+            DEBUG_SERIAL.print(sensorValue.un.linearAcceleration.x);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.print(sensorValue.un.linearAcceleration.y);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.println(sensorValue.un.linearAcceleration.z);
+            #endif
+            // Use last cycle's values or acceptable range
+            packet.comp_accel_x = constrain(sensorValue.un.linearAcceleration.x, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
+            packet.comp_accel_y = constrain(sensorValue.un.linearAcceleration.y, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
+            packet.comp_accel_z = constrain(sensorValue.un.linearAcceleration.z, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
+          } else {
+            packet.comp_accel_x = sensorValue.un.linearAcceleration.x;
+            packet.comp_accel_y = sensorValue.un.linearAcceleration.y;
+            packet.comp_accel_z = sensorValue.un.linearAcceleration.z;
+          }
           executed_cases |= STATUS_BNO08X_ACCEL;
           break;
 
         case SH2_GYROSCOPE_CALIBRATED:
-          packet.gyro_x = sensorValue.un.gyroscope.x;
-          packet.gyro_y = sensorValue.un.gyroscope.y;
-          packet.gyro_z = sensorValue.un.gyroscope.z;
+          if (abs(sensorValue.un.gyroscope.x) > MAX_GYRO_VALUE ||
+              abs(sensorValue.un.gyroscope.y) > MAX_GYRO_VALUE ||
+              abs(sensorValue.un.gyroscope.z) > MAX_GYRO_VALUE) {
+            badIMUDataDetected = true;
+            #if DEBUG_MODE
+            DEBUG_SERIAL.print("Bad gyro data: ");
+            DEBUG_SERIAL.print(sensorValue.un.gyroscope.x);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.print(sensorValue.un.gyroscope.y);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.println(sensorValue.un.gyroscope.z);
+            #endif
+            // Use constrained values instead of zeros
+            packet.gyro_x = constrain(sensorValue.un.gyroscope.x, -MAX_GYRO_VALUE, MAX_GYRO_VALUE);
+            packet.gyro_y = constrain(sensorValue.un.gyroscope.y, -MAX_GYRO_VALUE, MAX_GYRO_VALUE);
+            packet.gyro_z = constrain(sensorValue.un.gyroscope.z, -MAX_GYRO_VALUE, MAX_GYRO_VALUE);
+          } else {
+            packet.gyro_x = sensorValue.un.gyroscope.x;
+            packet.gyro_y = sensorValue.un.gyroscope.y;
+            packet.gyro_z = sensorValue.un.gyroscope.z;
+          }
           executed_cases |= STATUS_BNO08X_GYRO;
           break;
 
         case SH2_ROTATION_VECTOR:
-          packet.quat_x = sensorValue.un.rotationVector.i;
-          packet.quat_y = sensorValue.un.rotationVector.j;
-          packet.quat_z = sensorValue.un.rotationVector.k;
-          packet.quat_w = sensorValue.un.rotationVector.real;
+          if (abs(sensorValue.un.rotationVector.i) > MAX_QUAT_VALUE ||
+              abs(sensorValue.un.rotationVector.j) > MAX_QUAT_VALUE ||
+              abs(sensorValue.un.rotationVector.k) > MAX_QUAT_VALUE ||
+              abs(sensorValue.un.rotationVector.real) > MAX_QUAT_VALUE) {
+            badIMUDataDetected = true;
+            #if DEBUG_MODE
+            DEBUG_SERIAL.print("Bad quat data: ");
+            DEBUG_SERIAL.print(sensorValue.un.rotationVector.i);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.print(sensorValue.un.rotationVector.j);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.print(sensorValue.un.rotationVector.k);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.println(sensorValue.un.rotationVector.real);
+            #endif
+            // Normalize quaternion instead of resetting to identity
+            float norm = sqrt(
+              sensorValue.un.rotationVector.i * sensorValue.un.rotationVector.i +
+              sensorValue.un.rotationVector.j * sensorValue.un.rotationVector.j +
+              sensorValue.un.rotationVector.k * sensorValue.un.rotationVector.k +
+              sensorValue.un.rotationVector.real * sensorValue.un.rotationVector.real
+            );
+            
+            if (norm > 0) {
+              packet.quat_x = sensorValue.un.rotationVector.i / norm;
+              packet.quat_y = sensorValue.un.rotationVector.j / norm;
+              packet.quat_z = sensorValue.un.rotationVector.k / norm;
+              packet.quat_w = sensorValue.un.rotationVector.real / norm;
+            } else {
+              // If normalization fails, use identity quaternion
+              packet.quat_x = 0.0f;
+              packet.quat_y = 0.0f;
+              packet.quat_z = 0.0f;
+              packet.quat_w = 1.0f;
+            }
+          } else {
+            packet.quat_x = sensorValue.un.rotationVector.i;
+            packet.quat_y = sensorValue.un.rotationVector.j;
+            packet.quat_z = sensorValue.un.rotationVector.k;
+            packet.quat_w = sensorValue.un.rotationVector.real;
+          }
           executed_cases |= STATUS_BNO08X_ROT;
           break;
 
         case SH2_MAGNETIC_FIELD_CALIBRATED:
-          packet.magnetic_x = sensorValue.un.magneticField.x;
-          packet.magnetic_y = sensorValue.un.magneticField.y;
-          packet.magnetic_z = sensorValue.un.magneticField.z;
+          if (abs(sensorValue.un.magneticField.x) > MAX_MAG_VALUE ||
+              abs(sensorValue.un.magneticField.y) > MAX_MAG_VALUE ||
+              abs(sensorValue.un.magneticField.z) > MAX_MAG_VALUE) {
+            badIMUDataDetected = true;
+            #if DEBUG_MODE
+            DEBUG_SERIAL.print("Bad mag data: ");
+            DEBUG_SERIAL.print(sensorValue.un.magneticField.x);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.print(sensorValue.un.magneticField.y);
+            DEBUG_SERIAL.print(", ");
+            DEBUG_SERIAL.println(sensorValue.un.magneticField.z);
+            #endif
+            // Use constrained values instead of zeros
+            packet.magnetic_x = constrain(sensorValue.un.magneticField.x, -MAX_MAG_VALUE, MAX_MAG_VALUE);
+            packet.magnetic_y = constrain(sensorValue.un.magneticField.y, -MAX_MAG_VALUE, MAX_MAG_VALUE);
+            packet.magnetic_z = constrain(sensorValue.un.magneticField.z, -MAX_MAG_VALUE, MAX_MAG_VALUE);
+          } else {
+            packet.magnetic_x = sensorValue.un.magneticField.x;
+            packet.magnetic_y = sensorValue.un.magneticField.y;
+            packet.magnetic_z = sensorValue.un.magneticField.z;
+          }
           executed_cases |= STATUS_BNO08X_MAG;
           break;
       }
+    } else {
+      // If we can't get any sensor events, consider attempting a reset
+      attemptReset = true;
+    }
+  }
+
+  // Only attempt to reset if we couldn't get any sensor values
+  // and enough time has passed since the last reset
+  if (attemptReset && (executed_cases == 0) && 
+      (millis() - lastIMUResetTime >= IMU_RESET_INTERVAL)) {
+    #if DEBUG_MODE
+    DEBUG_SERIAL.println("IMU not responding - attempting reset");
+    #endif
+    
+    // Re-initialize BNO085
+    if (bno08x.begin_I2C()) {
+      #if DEBUG_MODE
+      DEBUG_SERIAL.println("BNO08x IMU reinitialized successfully.");
+      #endif
+      // More frequent reports (microseconds)
+      bno08x.enableReport(SH2_ROTATION_VECTOR, 10000);
+      bno08x.enableReport(SH2_LINEAR_ACCELERATION, 10000);
+      bno08x.enableReport(SH2_GYROSCOPE_CALIBRATED, 10000);
+      bno08x.enableReport(SH2_MAGNETIC_FIELD_CALIBRATED, 20000);
+      lastIMUResetTime = millis();
+    } else {
+      #if DEBUG_MODE
+      DEBUG_SERIAL.println("BNO08x IMU reset failed.");
+      #endif
     }
   }
 
