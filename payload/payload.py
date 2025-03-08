@@ -12,7 +12,7 @@ from payload.hardware.camera import Camera
 from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
-from payload.state import StandbyState, State
+from payload.state import StandbyState, State, LandedState
 from payload.mock.mock_imu import MockIMU
 
 if TYPE_CHECKING:
@@ -207,9 +207,7 @@ class PayloadContext:
         if message == TRANSMIT_MESSAGE and not self._transmitting_latch:
             self._transmitting_latch = True
             self._stop_latch = False
-            for i in range(5):
-                self.state.next_state()
-            self.transmit_data()
+            self.state = LandedState(self)
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True
             self._transmitting_latch = False

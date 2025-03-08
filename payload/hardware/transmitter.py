@@ -150,6 +150,8 @@ class Transmitter(BaseTransmitter):
         if self._update_beacon_comment(message):
             for i in range(NUMBER_OF_TRANSMISSIONS):
                 # print("Configuration updated successfully.")
+                if self._stop_event.is_set():
+                    break
                 self.pull_pin_high()  # Activate PTT via GPIO pin pull-down
                 self.restart_direwolf()
 
@@ -201,15 +203,15 @@ class Transmitter(BaseTransmitter):
         Sends a message to the ground station.
         """
 
-        self._send_message_worker(message)
+        # self._send_message_worker(message)
 
-        # self.message_worker_thread = threading.Thread(
-        #     target=self._send_message_worker, args=(message,)
-        # )
+        self.message_worker_thread = threading.Thread(
+            target=self._send_message_worker, args=(message,)
+        )
 
         # pid = os.getpid()
         # p = psutil.Process(pid)
         # p.nice(-20)
 
 
-        # self.message_worker_thread.start()
+        self.message_worker_thread.start()
