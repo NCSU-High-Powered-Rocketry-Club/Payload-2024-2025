@@ -117,15 +117,13 @@ class FlightDisplay:
         data_processor = self._payload.data_processor
         # Set the launch time if it hasn't been set yet:
         if not self._launch_time and self._payload.state.name == "MotorBurnState":
-            self._launch_time = self._payload.state.start_time_ms
+            self._launch_time = self._payload.state.start_time_seconds
 
         elif not self._coast_time and self._payload.state.name == "CoastState":
-            self._coast_time = self._payload.state.start_time_ms
+            self._coast_time = self._payload.state.start_time_seconds
 
         if self._launch_time:
-            time_since_launch = (
-                self._payload.data_processor.current_timestamp - self._launch_time
-            ) * 1e-3
+            time_since_launch = self._payload.data_processor.current_timestamp - self._launch_time
         else:
             time_since_launch = 0
 

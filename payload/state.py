@@ -1,18 +1,17 @@
 """Module for the finite state machine that represents which state of flight we are in."""
 
 from abc import ABC, abstractmethod
+import threading
+import time
 from typing import TYPE_CHECKING
 
 from payload.constants import (
     GROUND_ALTITUDE_METERS,
-    LANDED_VELOCITY_METERS_PER_SECOND,
     MAX_FREE_FALL_SECONDS,
-    MAX_VELOCITY_THRESHOLD,
+    MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS,
     MOTOR_BURN_TIME_SECONDS,
     TAKEOFF_HEIGHT_METERS,
-    TAKEOFF_VELOCITY_METERS_PER_SECOND,
 )
-from payload.utils import convert_milliseconds_to_seconds
 
 if TYPE_CHECKING:
     from payload.payload import PayloadContext
@@ -34,7 +33,7 @@ class State(ABC):
 
     __slots__ = (
         "context",
-        "start_time_ms",
+        "start_time_seconds",
     )
 
     def __init__(self, context: "PayloadContext"):
@@ -42,7 +41,7 @@ class State(ABC):
         :param context: The state context object that will be used to interact with the electronics
         """
         self.context = context
-        self.start_time_ms = context.data_processor.current_timestamp
+        self.start_time_seconds = context.data_processor.current_timestamp
 
     @property
     def name(self):
@@ -79,16 +78,11 @@ class StandbyState(State):
         """
         # We need to check if the rocket has launched, if it has, we move to the next state.
         # For that we can check:
-        # 1) Velocity - If the velocity of the rocket is above a threshold, the rocket has
-        # launched.
-        # 2) Altitude - If the altitude is above a threshold, the rocket has launched.
+        # 1) Altitude - If the altitude is above a threshold, the rocket has launched.
         # Ideally we would directly communicate with the motor, but we don't have that capability.
         data = self.context.data_processor
 
-        if (
-            data.velocity_moving_average > TAKEOFF_VELOCITY_METERS_PER_SECOND
-            and data.current_altitude > TAKEOFF_HEIGHT_METERS
-        ):
+        if data.current_altitude > TAKEOFF_HEIGHT_METERS:
             self.next_state()
             return
 
@@ -111,18 +105,9 @@ class MotorBurnState(State):
     def update(self):
         """Checks to see if the acceleration has dropped to zero, indicating the motor has
         burned out."""
-        data = self.context.data_processor
 
-        # If our current velocity is less than our max velocity, that means we have stopped
-        # accelerating. This is the same thing as checking if our accel sign has flipped
-        # We make sure that it is not just a temporary fluctuation by checking if the velocity is a
-        # bit less than the max velocity
-        if data.velocity_moving_average < data.max_vertical_velocity * MAX_VELOCITY_THRESHOLD:
-            self.next_state()
-            return
-
-        # Fallback: If it has been more than 2.4 seconds since motor burn, switch states.
-        if convert_milliseconds_to_seconds(data.current_timestamp - self.start_time_ms) >= MOTOR_BURN_TIME_SECONDS:
+        # If it has been more than 2.4 seconds since motor burn, switch states.
+        if time.time() - self.start_time_seconds >= MOTOR_BURN_TIME_SECONDS:
             self.next_state()
             return
 
@@ -145,14 +130,8 @@ class CoastState(State):
         """Checks to see if the rocket has reached apogee, indicating the start of free fall."""
         data = self.context.data_processor
 
-        # if our velocity is close to zero or negative, we are in free fall.
-        if data.velocity_moving_average <= 0:
-            self.next_state()
-            return
-
-        # As backup in case of error, if our current altitude is less than 90% of max altitude, we
-        # are in free fall.
-        if data.current_altitude <= data.max_altitude * 0.9:
+        # If our current altitude is less than 90% of max altitude, we are in free fall.
+        if data.current_altitude <= data.max_altitude * 0.90:
             self.next_state()
             return
 
@@ -165,24 +144,26 @@ class FreeFallState(State):
     When the rocket is falling back to the ground after apogee.
     """
 
-    __slots__ = ()
+    __slots__ = ("countdown_to_landed_timer",)
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.countdown_to_landed_timer = threading.Timer(
+            interval=MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS,
+            function=self.next_state
+        )
 
     def update(self):
         """Check if the rocket has landed, based on our altitude."""
         data = self.context.data_processor
 
-        # If our altitude is around 0, and we have an acceleration spike, we have landed
-        if (
-            data.current_altitude <= GROUND_ALTITUDE_METERS
-            and abs(data.velocity_moving_average) <= LANDED_VELOCITY_METERS_PER_SECOND
-        ):
-            self.next_state()
+        # If our altitude is around 0, we start a timer and then switch states, to make sure
+        # we have landed.
+        if data.current_altitude <= GROUND_ALTITUDE_METERS and not self.countdown_to_landed_timer.is_alive():
+            self.countdown_to_landed_timer.start()
 
         # If we have been in free fall for too long, we move to the landed state
-        if (
-            convert_milliseconds_to_seconds(data.current_timestamp - self.start_time_ms)
-            >= MAX_FREE_FALL_SECONDS
-        ):
+        if (time.time() - self.start_time_seconds) >= MAX_FREE_FALL_SECONDS:
             self.next_state()
 
     def next_state(self):
@@ -220,8 +201,10 @@ class RecoveryState(State):
     After the rockets transmission period has elapsed
     """
 
+    __slots__ = ()
+
     def update(self):
-        print("s")
+        pass
 
     def next_state(self):
         self.context.state = ShutdownState(self.context)
@@ -232,12 +215,13 @@ class ShutdownState(State):
     If the rocket has receieved a command to shutdown
     """
 
+    __slots__ = ()
+
     def __init__(self, context: "PayloadContext"):
-        print("s")
+        super().__init__(context)
 
     def update():
         """Nothing will be happening in this state"""
-        print("s")
 
     def next_state(self):
         # Explicitly do nothing, there is no next state

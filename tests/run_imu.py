@@ -38,7 +38,7 @@ try:
     while True:
         packet = fetch_data(ser)
         if packet is not None:
-            print(packet.timestamp, packet.ambientPressure, packet.estCompensatedAccelX)
+            print(packet.arduino_timestamp, packet.ambientPressure, packet.estCompensatedAccelX)
             print(MOVE_CURSOR_UP, end="", flush=True)
         else:
             time.sleep(0.01)

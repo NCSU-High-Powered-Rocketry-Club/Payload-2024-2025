@@ -7,7 +7,6 @@ from scipy.spatial.transform import Rotation as R
 from payload.constants import (
     ALTITUDE_DEADBAND_METERS,
     ANGULAR_RATE_WEIGHT,
-    IMU_APPROXIMATE_FREQUENCY,
     INTENSITY_PERCENT_THRESHOLD,
     LANDING_VELOCITY_DEDUCTION,
     LANDING_VELOCITY_THRESHOLD,
@@ -16,7 +15,7 @@ from payload.constants import (
 )
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
-from payload.utils import convert_milliseconds_to_seconds, deadband
+from payload.utils import deadband
 
 
 class DataProcessor:
@@ -134,9 +133,7 @@ class DataProcessor:
             self._first_update()
 
         self._time_difference = np.float64(
-            convert_milliseconds_to_seconds(
                 self._data_packet.timestamp - self._last_data_packet.timestamp
-            )
         )
 
         self._vertical_velocity = self._calculate_velocity_from_altitude()
@@ -212,7 +209,7 @@ class DataProcessor:
             # and that resets the timestamp sent by the IMU.
             velocity = np.float64(
                 (self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt)
-                / (1 / IMU_APPROXIMATE_FREQUENCY)
+               / self._time_difference
             )
             # Update the last velocity packet for the next update
             self._last_velocity_calculation_packet = self._data_packet

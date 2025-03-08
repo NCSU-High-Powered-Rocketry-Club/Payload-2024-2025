@@ -105,6 +105,11 @@ deploying at apogee."""
 
 GROUND_ALTITUDE_METERS = 5.0
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
+
+MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 4
+"""The maximum amount of time in seconds that the rocket will take to fall to the ground from
+GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
+
 LANDED_VELOCITY_METERS_PER_SECOND = 7
 # ----------------- Landing to Program Stop -----------------
 

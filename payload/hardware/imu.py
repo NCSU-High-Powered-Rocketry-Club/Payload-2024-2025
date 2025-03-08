@@ -2,6 +2,7 @@
 
 import struct
 import serial
+import time
 from payload.constants import ARDUINO_SERIAL_TIMEOUT, PACKET_BYTE_SIZE, PACKET_START_MARKER
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.interfaces.base_imu import BaseIMU
@@ -24,7 +25,7 @@ class IMU(BaseIMU):
         self._port = port
         self._baud_rate = baud_rate
         self._serial = None
-        self._buffer = b''  # Initialize an empty buffer to store serial data
+        self._buffer = b""  # Initialize an empty buffer to store serial data
 
     @staticmethod
     def _process_packet_data(binary_packet) -> IMUDataPacket:
@@ -37,7 +38,8 @@ class IMU(BaseIMU):
         # Unpack 84 bytes into 21 floats (84 / 4 = 21), assuming little-endian format
         # TODO: Handle statusFlags appropriately if part of the packet structure
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
-        return IMUDataPacket(*unpacked_data)
+        data_packet = IMUDataPacket(*unpacked_data)
+        data_packet.timestamp = time.time()  # Add python timestamp to the data packet
 
     def start(self):
         """Opens the serial connection to the Arduino."""

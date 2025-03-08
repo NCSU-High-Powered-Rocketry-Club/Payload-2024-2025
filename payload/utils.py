@@ -1,12 +1,7 @@
 """File which contains a few basic utility functions which can be reused in the project."""
 
 import argparse
-from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    import multiprocessing
 
 
 def convert_milliseconds_to_seconds(timestamp: float) -> float | None:

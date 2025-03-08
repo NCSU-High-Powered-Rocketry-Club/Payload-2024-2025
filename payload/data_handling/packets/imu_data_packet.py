@@ -8,7 +8,7 @@ class IMUDataPacket(msgspec.Struct):
     This class represents all the data we receive from the IMU.
     """
 
-    timestamp: int  # In milliseconds
+    arduino_timestamp: int  # In milliseconds
     voltage: float | None = None
     # temperature in celsius
     ambientTemperature: float | None = None
@@ -35,3 +35,4 @@ class IMUDataPacket(msgspec.Struct):
     gpsLongitude: float | None = None
     gpsAltitude: float | None = None
     # statusFlag: float | None = None
+    timestamp: float | None = None  # in seconds (from python)

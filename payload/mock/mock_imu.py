@@ -79,6 +79,8 @@ class MockIMU(BaseIMU):
 
         row = self._df.iloc[self._current_index]
         row_dict = {k: v for k, v in row.items() if pd.notna(v)}
+        row_dict["arduino_timestamp"] = row_dict.pop("timestamp")
+        row_dict["timestamp"] = time.time()
         self._current_index += 1
         # Converts a row in the CSV to an IMUDataPacket
         return IMUDataPacket(**row_dict)
