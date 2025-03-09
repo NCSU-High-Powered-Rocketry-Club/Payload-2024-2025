@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB1"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -43,7 +43,7 @@ of bytes."""
 PACKET_BYTE_SIZE = 84
 """Size of the data packet being sent from the Arduino in bytes"""
 
-IMU_APPROXIMATE_FREQUENCY = 17
+IMU_APPROXIMATE_FREQUENCY = 40
 """The frequency at which the IMU sends data packets"""
 
 PROJECT_DIRECTORY_NAME = "Payload-2024-2025"
@@ -54,6 +54,14 @@ PROJECT_DIRECTORY_NAME = "Payload-2024-2025"
 # -------------------------------------------------------
 
 CAMERA_SAVE_PATH = Path("logs/video.h264")
+
+CAMERA_START_RECORDING_TIMEOUT = 3 * 60
+"""The amount of time in seconds that the camera waits for the motor burn to start before it starts
+recording anyway. This is here because the IMU may not work."""
+
+CAMERA_STOP_RECORDING_TIMEOUT = 30 * 60
+"""The maximum amount of time in seconds that the camera waits for the rocket to land before it
+stops recording. This is here because the IMU or some other part of the code may not work."""
 
 # -------------------------------------------------------
 # Logging Configuration
@@ -80,7 +88,7 @@ ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""
 
-TAKEOFF_HEIGHT_METERS = 10
+TAKEOFF_HEIGHT_METERS = 20
 """The height in meters that the rocket must reach before we consider it to have taken off."""
 TAKEOFF_VELOCITY_METERS_PER_SECOND = 35
 """The velocity in meters per second that the rocket must reach before we consider it to have taken
@@ -103,10 +111,10 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 5.0
+GROUND_ALTITUDE_METERS = 5
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
 
-MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 4
+MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 8
 """The maximum amount of time in seconds that the rocket will take to fall to the ground from
 GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
 

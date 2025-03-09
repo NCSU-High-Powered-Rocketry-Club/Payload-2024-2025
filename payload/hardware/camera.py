@@ -4,7 +4,7 @@ import os
 from contextlib import suppress
 from threading import Event, Thread
 
-from payload.constants import CAMERA_SAVE_PATH
+from payload.constants import CAMERA_SAVE_PATH, CAMERA_START_RECORDING_TIMEOUT, CAMERA_STOP_RECORDING_TIMEOUT
 
 # These libraries are only available on the Raspberry Pi so we ignore them if they are not available
 with suppress(ImportError):
@@ -69,13 +69,13 @@ class Camera:
             # Check if motor burn has started, if it has, we can stop buffering and start saving
             # the video. This way we get a few seconds of video before liftoff too. Otherwise, just
             # sleep and wait.
-            self.motor_burn_started.wait()
+            self.motor_burn_started.wait(timeout=CAMERA_START_RECORDING_TIMEOUT)
 
             output.fileoutput = CAMERA_SAVE_PATH
             output.start()
 
             # Keep recording until we have landed:
-            self.stop_context_event.wait()
+            self.stop_context_event.wait(timeout=CAMERA_STOP_RECORDING_TIMEOUT)
 
             output.stop()
         except Exception as e:

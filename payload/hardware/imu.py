@@ -40,6 +40,7 @@ class IMU(BaseIMU):
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
         data_packet = IMUDataPacket(*unpacked_data)
         data_packet.timestamp = time.time()  # Add python timestamp to the data packet
+        return data_packet
 
     def start(self):
         """Opens the serial connection to the Arduino."""

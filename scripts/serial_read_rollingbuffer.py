@@ -1,11 +1,11 @@
 import serial
 import time
 import struct
-from payload.constants import ARDUINO_BAUD_RATE, PACKET_START_MARKER
+from payload.constants import ARDUINO_BAUD_RATE, PACKET_START_MARKER, ARDUINO_SERIAL_PORT
 from payload.utils import convert_milliseconds_to_seconds
 from collections import deque
 
-def detect_and_read_packets(port='/dev/ttyUSB1', baud_rate=ARDUINO_BAUD_RATE):
+def detect_and_read_packets(port=ARDUINO_SERIAL_PORT, baud_rate=ARDUINO_BAUD_RATE):
     # Start flag configuration
     START_FLAG = PACKET_START_MARKER
     START_FLAG_LEN = len(START_FLAG)
@@ -96,4 +96,4 @@ def detect_and_read_packets(port='/dev/ttyUSB1', baud_rate=ARDUINO_BAUD_RATE):
 
 if __name__ == "__main__":
     # You can modify these parameters based on your setup
-    detect_and_read_packets(port='/dev/ttyUSB1')
+    detect_and_read_packets(port=ARDUINO_SERIAL_PORT)
