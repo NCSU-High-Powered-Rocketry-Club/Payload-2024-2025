@@ -1,6 +1,7 @@
 """Module for logging data to a CSV file in real time."""
 
 import csv
+import os
 import multiprocessing
 import signal
 from pathlib import Path
@@ -8,7 +9,7 @@ from typing import Any, Literal
 
 from msgspec import to_builtins
 
-from payload.constants import STOP_SIGNAL
+from payload.constants import STOP_SIGNAL, NUMBER_OF_LINES_TO_LOG_BEFORE_FLUSHING
 from payload.data_handling.packets.context_data_packet import ContextDataPacket
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.logger_data_packet import LoggerDataPacket
@@ -191,6 +192,9 @@ class Logger:
 
         # Set up the csv logging in the new process
         with self.log_path.open(mode="a", newline="") as file_writer:
+
+            number_of_lines_logged: int = 0
+
             writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
             while True:
                 # Get a message from the queue (this will block until a message is available)
@@ -199,3 +203,17 @@ class Logger:
                 if message_field == STOP_SIGNAL:
                     return
                 writer.writerow(Logger._truncate_floats(message_field))
+                number_of_lines_logged += 1
+
+                if number_of_lines_logged % NUMBER_OF_LINES_TO_LOG_BEFORE_FLUSHING == 0:
+                    # Tell Python to flush the data. This gives the data to the OS, and it is
+                    # stored as a dirty page cache (in memory) until the OS decides to write it
+                    # to disk. Technically python automatically flushes the data when the python
+                    # buffer is full (8192 bytes, which would be about 25 lines of data).
+                    file_writer.flush()
+                    # Tell the OS to write the file to disk from the dirty page cache. This
+                    # ensures that the data is written to disk and not just stored in memory.
+                    # This operation is the one which is actually "blocking" when talking about
+                    # file I/O.
+                    os.fsync(file_writer.fileno())
+

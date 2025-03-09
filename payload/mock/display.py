@@ -137,7 +137,7 @@ class FlightDisplay:
             f"Launch time:               {G}T+{time.strftime('%M:%S', time.gmtime(time_since_launch))}{RESET}",  # noqa: E501
             f"State:                     {G}{self._payload.state.name:<15}{RESET}",
             f"Current Altitude:          {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
-            f"Maximum Altitude:          {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Maximum Altitude:          {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Current Velocity:          {G}{data_processor.velocity_moving_average:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Maximum Velocity:          {G}{data_processor.max_vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Crew survivability:        {G}{100 * data_processor._crew_survivability:<10.2f}{RESET} {R}%{RESET}",  # noqa: E501

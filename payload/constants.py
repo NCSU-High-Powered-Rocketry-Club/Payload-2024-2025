@@ -76,6 +76,10 @@ STOP_SIGNAL = "STOP"
 """The signal to stop the logging and the apogee prediction process, this will be put in the queue
 to stop the process"""
 
+NUMBER_OF_LINES_TO_LOG_BEFORE_FLUSHING = 10
+"""The number of lines to log before flushing the data to the file, this is to prevent data loss in
+case of a crash or a reboot."""
+
 # -------------------------------------------------------
 # State Machine Configuration
 # -------------------------------------------------------
