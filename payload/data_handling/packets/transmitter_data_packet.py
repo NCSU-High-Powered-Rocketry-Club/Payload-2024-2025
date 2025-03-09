@@ -35,5 +35,5 @@ class TransmitterDataPacket(msgspec.Struct):
             f"tl={self.time_of_landing},"
             f"mv={self.max_velocity:.1f},"
             f"lv={self.landing_velocity:.1f},"
-            f"cs={self.crew_survivability:.1f}"
+            f"cs={self.crew_survivability * 100:3.0f}"
         )

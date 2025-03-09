@@ -4,7 +4,7 @@ import time
 import random
 
 # Configure your serial port and baud rate
-SERIAL_PORT = "COM50"
+SERIAL_PORT = "COM0"
 BAUD_RATE = 115200
 
 # Structure of the data packet

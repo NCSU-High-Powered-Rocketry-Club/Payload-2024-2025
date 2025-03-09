@@ -99,9 +99,9 @@ class FlightDisplay:
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
-            if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
-                self._update_display(DisplayEndingType.TAKEOFF)
-                break
+            # if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
+            #     self._update_display(DisplayEndingType.TAKEOFF)
+            #     break
 
         # The program has ended, so we print the final display, depending on how it ended:
         if self.end_mock_natural.is_set():
@@ -117,15 +117,13 @@ class FlightDisplay:
         data_processor = self._payload.data_processor
         # Set the launch time if it hasn't been set yet:
         if not self._launch_time and self._payload.state.name == "MotorBurnState":
-            self._launch_time = self._payload.state.start_time_ns
+            self._launch_time = self._payload.state.start_time_seconds
 
         elif not self._coast_time and self._payload.state.name == "CoastState":
-            self._coast_time = self._payload.state.start_time_ns
+            self._coast_time = self._payload.state.start_time_seconds
 
         if self._launch_time:
-            time_since_launch = (
-                self._payload.data_processor.current_timestamp - self._launch_time
-            ) * 1e-3
+            time_since_launch = self._payload.data_processor.current_timestamp - self._launch_time
         else:
             time_since_launch = 0
 
@@ -138,14 +136,17 @@ class FlightDisplay:
             # Format time as MM:SS:
             f"Launch time:               {G}T+{time.strftime('%M:%S', time.gmtime(time_since_launch))}{RESET}",  # noqa: E501
             f"State:                     {G}{self._payload.state.name:<15}{RESET}",
-            f"Current altitude velocity  {G}{data_processor.velocity_moving_average:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
-            f"Current height:            {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
-            f"Max height so far:         {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
+            f"Current Altitude:          {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
+            f"Maximum Altitude:          {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Current Velocity:          {G}{data_processor.velocity_moving_average:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Maximum Velocity:          {G}{data_processor.max_vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Crew survivability:        {G}{100 * data_processor._crew_survivability:<10.2f}{RESET} {R}%{RESET}",  # noqa: E501
         ]
 
+        imu_data = self._payload.imu_data_packet
+
         # Adds additional info to the display if -v was specified
-        if self._args.verbose:
+        if self._args.verbose and imu_data:
             output.extend(
                 [
                     f"{Y}{'=' * 18} DEBUG INFO {'=' * 17}{RESET}",
@@ -153,6 +154,20 @@ class FlightDisplay:
                     f"Landing velocity:          {G}{data_processor._landing_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
                     f"Transmitter message:       {G}{str(self._payload.transmission_packet)[:14]}{RESET}",  # noqa: E501
                     f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]}{RESET}",  # noqa: E501
+                    f"{Y}{'=' * 19} IMU INFO {'=' * 18}{RESET}",
+                    f"Timestamp:                 {G}{imu_data.timestamp:9.2f}{RESET} {R}ms{RESET}",  # noqa: E501
+                    f"Voltage:                   {G}{imu_data.voltage:6.2f}{RESET} {R}V{RESET}",  # noqa: E501
+                    f"Temperature:               {G}{imu_data.ambientTemperature:6.2f}{RESET} {R}°C{RESET}",  # noqa: E501
+                    f"Pressure:                  {G}{imu_data.ambientPressure:6.2f}{RESET} {R}mbar{RESET}",  # noqa: E501
+                    f"Pressure Altitude:         {G}{imu_data.pressureAlt:6.2f}{RESET} {R}m{RESET}",  # noqa: E501
+                    f"Compensated Accel:         {G}<{imu_data.estCompensatedAccelX:6.2f}, {imu_data.estCompensatedAccelY:6.2f}, {imu_data.estCompensatedAccelZ:6.2f}>{RESET} {R}m/s²{RESET}",  # noqa: E501
+                    f"Angular Rate:              {G}<{imu_data.estAngularRateX:6.2f}, {imu_data.estAngularRateY:6.2f}, {imu_data.estAngularRateZ:6.2f}>{RESET} {R}rad/s{RESET}",  # noqa: E501
+                    f"Magnetic Field:            {G}<{imu_data.magneticFieldX:6.2f}, {imu_data.magneticFieldY:6.2f}, {imu_data.magneticFieldZ:6.2f}>{RESET} {R}μT{RESET}",  # noqa: E501
+                    f"Orient Quaternions:        {G}<{imu_data.estOrientQuaternionW:6.2f}, {imu_data.estOrientQuaternionX:6.2f}, {imu_data.estOrientQuaternionY:6.2f}, {imu_data.estOrientQuaternionZ:6.2f}>{RESET}",  # noqa: E501
+                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
+                    f"GPS Longitude:             {G}{imu_data.gpsLongitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
+                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:6.2f}{RESET} {R}m{RESET}",  # noqa: E501
+                    # f"Status Flag:               {G}{imu_data.statusFlag:6.2f}{RESET} {R}{RESET}",  # noqa: E501
                 ]
             )
 
@@ -171,6 +186,3 @@ class FlightDisplay:
                 print(f"{R}{'=' * 14} INTERRUPTED REPLAY {'=' * 13}{RESET}")
             case DisplayEndingType.TAKEOFF:
                 print(f"{R}{'=' * 13} ROCKET LAUNCHED {'=' * 14}{RESET}")
-
-        # Sleep for a bit to avoid spamming the terminal
-        time.sleep(1 / DISPLAY_FREQUENCY)

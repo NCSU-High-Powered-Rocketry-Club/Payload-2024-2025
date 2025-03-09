@@ -12,7 +12,8 @@ from payload.hardware.camera import Camera
 from payload.interfaces.base_transmitter import BaseTransmitter
 from payload.interfaces.base_imu import BaseIMU
 from payload.interfaces.base_receiver import BaseReceiver
-from payload.state import StandbyState, State
+from payload.state import StandbyState, State, LandedState
+from payload.mock.mock_imu import MockIMU
 
 if TYPE_CHECKING:
     from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
@@ -127,6 +128,11 @@ class PayloadContext:
         last_imu_data_packet = self.imu_data_packet
         self.imu_data_packet = self.imu.fetch_data()
 
+        # If we don't have a data packet, return early
+        if not self.imu_data_packet:
+            return
+
+        # print(self.imu_data_packet)
         # If the GPS returns (0,0,0), use the last data
         # This happens if there was no gps update that cycle
         # We have to do it here and not in IMU so that
@@ -140,10 +146,6 @@ class PayloadContext:
             self.imu_data_packet.gpsLatitude = last_imu_data_packet.gpsLatitude
             self.imu_data_packet.gpsLongitude = last_imu_data_packet.gpsLongitude
             self.imu_data_packet.gpsAltitude = last_imu_data_packet.gpsAltitude
-
-        # If we don't have a data packet, return early
-        if not self.imu_data_packet:
-            return
 
         # Update the processed data with the new data packet.
         self.data_processor.update(self.imu_data_packet)
@@ -205,7 +207,7 @@ class PayloadContext:
         if message == TRANSMIT_MESSAGE and not self._transmitting_latch:
             self._transmitting_latch = True
             self._stop_latch = False
-            self.transmit_data()
+            self.state = LandedState(self)
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True
             self._transmitting_latch = False

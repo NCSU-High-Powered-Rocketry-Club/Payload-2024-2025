@@ -38,7 +38,9 @@ class MockIMU(BaseIMU):
             # `uvx --from git+... mock` on any machine from any state. Otherwise a Path().cwd()
             # would be enough.
             path = Path(__file__)
-            payload_index = path.parts.index(PROJECT_DIRECTORY_NAME)  # Find the Payload-2024-2025 directory
+            payload_index = path.parts.index(
+                PROJECT_DIRECTORY_NAME
+            )  # Find the Payload-2024-2025 directory
             root_dir = Path(*path.parts[: payload_index + 1])  # Make a new path to that dir
             self._log_file_path = next(iter(Path(root_dir / "launch_data").glob("*.csv")))
 
@@ -66,15 +68,19 @@ class MockIMU(BaseIMU):
         # We simulate the delay the real imu has in sending data by checking the time that has
         # passed since the last fetch.
         if self.real_time_replay:
-            time.sleep(1 / IMU_APPROXIMATE_FREQUENCY)  # 50Hz = 20ms
+            time.sleep(1 / IMU_APPROXIMATE_FREQUENCY)  # 17Hz = 0.0588s
 
         # If we have reached the end of the data, stop the IMU
         if self._current_index >= len(self._df):
-            self.stop()
+            # -- Commented out to allow the transmission period to occur in mock sims
+            # self.stop()
+
             return None
 
         row = self._df.iloc[self._current_index]
         row_dict = {k: v for k, v in row.items() if pd.notna(v)}
+        row_dict["arduino_timestamp"] = row_dict.pop("timestamp")
+        row_dict["timestamp"] = time.time()
         self._current_index += 1
         # Converts a row in the CSV to an IMUDataPacket
         return IMUDataPacket(**row_dict)

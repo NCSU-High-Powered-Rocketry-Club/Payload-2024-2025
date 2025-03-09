@@ -17,7 +17,8 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
     update_timestamp_ns: int
 
     # IMU Data Packet Fields
-    timestamp: int
+    arduino_timestamp: int
+    timestamp: float | None
     voltage: float | None
     ambientTemperature: float | None
     ambientPressure: float | None
@@ -38,6 +39,7 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
     gpsLatitude: float | None
     gpsLongitude: float | None
     gpsAltitude: float | None
+    # statusFlag: float | None
 
     # Processed Data Packet Fields
     current_altitude: float | None

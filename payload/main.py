@@ -140,7 +140,9 @@ def run_flight_loop(
     except KeyboardInterrupt:
         if args.mode == "mock":
             flight_display.end_mock_interrupted.set()
-    else:  # This is run if we have landed and the program is not interrupted (see state.py)
+    except Exception as e:
+        # This is run if we have landed and the program is not interrupted (see state.py)
+        print(e)
         if args.mode == "mock":
             # Stop the mock replay naturally if not interrupted
             flight_display.end_mock_natural.set()

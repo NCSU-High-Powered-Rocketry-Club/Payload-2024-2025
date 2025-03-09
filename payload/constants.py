@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB1"
+ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -37,18 +37,14 @@ ARDUINO_BAUD_RATE = 115200
 """The baud rate of the channel"""
 ARDUINO_SERIAL_TIMEOUT = 1
 """The amount of time in seconds that the serial port waits for a message"""
-PACKET_START_MARKER = b"\xaa"
+PACKET_START_MARKER = b'\xFF\xFE\xFD\xFC'
 """The start marker of the data packet. This helps use to know where a packet starts in the stream
 of bytes."""
 PACKET_BYTE_SIZE = 84
 """Size of the data packet being sent from the Arduino in bytes"""
 
-# Timeouts for get() queue operations:
-MAX_GET_TIMEOUT_SECONDS = 100  # seconds
-"""The maximum amount of time in seconds to wait for a get operation on the queue."""
-
-IMU_APPROXIMATE_FREQUENCY = 35
-"""The frequency at which the IMU sends data packets, this is 50Hz"""
+IMU_APPROXIMATE_FREQUENCY = 40
+"""The frequency at which the IMU sends data packets"""
 
 PROJECT_DIRECTORY_NAME = "Payload-2024-2025"
 """The name of the directory for the project"""
@@ -58,6 +54,14 @@ PROJECT_DIRECTORY_NAME = "Payload-2024-2025"
 # -------------------------------------------------------
 
 CAMERA_SAVE_PATH = Path("logs/video.h264")
+
+CAMERA_START_RECORDING_TIMEOUT = 3 * 60
+"""The amount of time in seconds that the camera waits for the motor burn to start before it starts
+recording anyway. This is here because the IMU may not work."""
+
+CAMERA_STOP_RECORDING_TIMEOUT = 30 * 60
+"""The maximum amount of time in seconds that the camera waits for the rocket to land before it
+stops recording. This is here because the IMU or some other part of the code may not work."""
 
 # -------------------------------------------------------
 # Logging Configuration
@@ -84,9 +88,9 @@ ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""
 
-TAKEOFF_HEIGHT_METERS = 10
+TAKEOFF_HEIGHT_METERS = 20
 """The height in meters that the rocket must reach before we consider it to have taken off."""
-TAKEOFF_VELOCITY_METERS_PER_SECOND = 10
+TAKEOFF_VELOCITY_METERS_PER_SECOND = 35
 """The velocity in meters per second that the rocket must reach before we consider it to have taken
 off."""
 
@@ -94,6 +98,9 @@ off."""
 MAX_VELOCITY_THRESHOLD = 0.96
 """Because motors can behave unpredictably near the end of their burn, we will only say that the
 motor has stopped burning if the current velocity is less than a percentage of the max velocity."""
+
+MOTOR_BURN_TIME_SECONDS = 2.4
+"""The maximum amount of time in seconds that the motor will burn."""
 
 # ----------------- Coasting to Freefall -----------------
 
@@ -104,12 +111,17 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 5.0
+GROUND_ALTITUDE_METERS = 5
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
-LANDED_VELOCITY_METERS_PER_SECOND = 2.0
+
+MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 8
+"""The maximum amount of time in seconds that the rocket will take to fall to the ground from
+GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
+
+LANDED_VELOCITY_METERS_PER_SECOND = 7
 # ----------------- Landing to Program Stop -----------------
 
-STOP_AFTER_SECONDS = 5
+STOP_AFTER_SECONDS = 30
 """The time in seconds after which the program will stop itself."""
 
 # -------------------------------------------------------
@@ -127,7 +139,7 @@ VELOCITY_FROM_ALTITUDE_WINDOW_SIZE = 20
 # -------------------------------------------------------
 # Transmitter Configuration
 # -------------------------------------------------------
-TRANSMITTER_PIN = 18
+TRANSMITTER_PIN = 1
 """This is the GPIO pin that the transmitter is connected to."""
 
 DIREWOLF_CONFIG_PATH = Path("/home/pi/Payload-2024-2025/direwolf.conf")
@@ -140,7 +152,7 @@ This should be gitignored."""
 TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
-NUMBER_OF_TRANSMISSIONS = 2
+NUMBER_OF_TRANSMISSIONS = 10
 
 TRANSMISSION_WINDOW_SECONDS = 5
 
@@ -149,7 +161,7 @@ NO_MESSAGE_TRANSMITTED = "NMT"
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
-RECEIVER_SERIAL_PORT = "/dev/ttyUSB0"
+RECEIVER_SERIAL_PORT = "/dev/ttyAMA0"
 """The serial port that the XBee is connected to"""
 RECEIVER_BAUD_RATE = 9600
 """The baud rate the receiver is using"""
@@ -163,11 +175,11 @@ STOP_MESSAGE = "STOP"
 
 RECEIVER_THREAD_TIMEOUT = 3
 """The amount of time in seconds that the receiver thread waits to force close"""
-RECEIVER_SERIAL_TIMEOUT = 1
+RECEIVER_SERIAL_TIMEOUT = 10
 """The amount of time in seconds that the receiver serial port waits for a message"""
 
 # These are in seconds
-MOCK_RECEIVER_INITIAL_DELAY = 50.0
+MOCK_RECEIVER_INITIAL_DELAY = 10
 MOCK_RECEIVER_RECEIVE_DELAY = 2.0
 
 # -------------------------------------------------------
