@@ -45,6 +45,7 @@ void initSensors() {
 }
 
 void collectSensorData(DataPacket &data) {
+  status_flags = 0;
   data.voltage = (analogRead(VOLTAGE_PIN) * 3.3) / 1024.0;
 
   sensors_event_t temp_event, pressure_event;
