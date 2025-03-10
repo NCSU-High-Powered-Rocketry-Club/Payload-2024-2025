@@ -14,7 +14,7 @@ uint8_t status_flags = 0;
 
 void initSensors() {
   Wire.begin();
-  Wire.setClock(400000UL);  // 400kHz I2C
+  Wire.setClock(WIRE_CLOCK_FREQUENCY);  // 400kHz I2C
 
   if (dps.begin_I2C(0x77) || dps.begin_I2C(0x76)) {
     #if DEBUG_MODE

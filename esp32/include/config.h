@@ -9,6 +9,7 @@
 
 // Constants
 #define SERIAL_BAUD_RATE 115200
+#define WIRE_CLOCK_FREQUENCY 400000
 #define SEALEVEL_PRESSURE_HPA 1013.25f
 #define SENSOR_TIMEOUT 50      // Timeout for sensor reads
 #define MAX_IMU_ATTEMPTS 40    // Max attempts for IMU
