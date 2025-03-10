@@ -176,13 +176,14 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
+  Serial.println("Restarting Arduino");
   #if DEBUG_MODE
   DEBUG_SERIAL.println("Sensor System Starting");
   #endif
 
   // Faster I2C clock
   Wire.begin();
-  Wire.setClock(800000UL);  // Increase to 800kHz for ESP32
+  Wire.setClock(400000UL);  // Increase to 800kHz for ESP32
 
   // Initialize DPS310 with minimal checks
   if (dps.begin_I2C(0x77) || dps.begin_I2C(0x76)) {
@@ -433,8 +434,8 @@ void loop() {
 
   // Transmit binary data - check only once for available space
   if (Serial.availableForWrite() >= sizeof(data) + sizeof(PACKET_START_MARKER)) {
-    Serial.write(PACKET_START_MARKER, sizeof(PACKET_START_MARKER));
-    Serial.write((byte*)&data, sizeof(data));
+    //Serial.write(PACKET_START_MARKER, sizeof(PACKET_START_MARKER));
+    // Serial.write((byte*)&data, sizeof(data));
   }
 
   // Only print debug if enabled
