@@ -4,7 +4,7 @@
 #include "config.h"
 
 #if DEBUG_MODE
-void printHumanReadableData(const DataPacket &data);
+void printHumanReadableData(const JsonDocument &obj);
 #endif
 
 #endif
