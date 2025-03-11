@@ -7,7 +7,6 @@
 #include <Adafruit_BNO08x.h>
 #include <SparkFun_u-blox_GNSS_v3.h>
 #include "config.h"
-#include <ArduinoJson.h>
 
 // Sensor objects
 extern Adafruit_DPS310 dps;
@@ -23,7 +22,7 @@ extern uint8_t status_flags;
 
 // Function declarations
 void initSensors();
-JsonDocument collectSensorData();
-void collectIMUData(JsonDocument& obj);
+void collectSensorData(DataPacket &data);
+void collectIMUData(DataPacket &data);
 
 #endif

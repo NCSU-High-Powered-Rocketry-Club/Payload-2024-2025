@@ -29,20 +29,16 @@ void setup() {
 void loop() {
   updateHeartbeatLED();
 
-  // Get the document from collectSensorData
-  JsonDocument doc = collectSensorData();
+  DataPacket data = {0};
+  data.timestamp = millis();
 
-  // Serialize to MsgPack
-  size_t msgpack_size = measureMsgPack(doc);
-  uint8_t buffer[msgpack_size];
-  serializeMsgPack(doc, buffer, msgpack_size);
+  // Collect all sensor data
+  collectSensorData(data);
 
-  uint16_t size = msgpack_size;
   // Transmit binary data
-  if (Serial.availableForWrite() >= sizeof(PACKET_START_MARKER) + sizeof(size) + msgpack_size) {
+  if (Serial.availableForWrite() >= sizeof(data) + sizeof(PACKET_START_MARKER)) {
     Serial.write(PACKET_START_MARKER, sizeof(PACKET_START_MARKER));
-    Serial.write((uint8_t*)&size, sizeof(size));
-    Serial.write(buffer, msgpack_size);
+    Serial.write((byte*)&data, sizeof(data));
   }
 
   #if DEBUG_MODE
