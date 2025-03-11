@@ -179,6 +179,7 @@ class PayloadContext:
         Transmits the processed data packet to the ground station using the transmitter.
         """
         (roll, pitch, yaw) = self.data_processor.calculate_orientation()
+        print(self.imu_data_packet)
         self.transmission_packet = TransmitterDataPacket(
             temperature=self.imu_data_packet.ambientTemperature,
             apogee=self.processed_data_packet.maximum_altitude,
