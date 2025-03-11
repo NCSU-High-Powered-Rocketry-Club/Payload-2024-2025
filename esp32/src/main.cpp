@@ -44,4 +44,6 @@ void loop() {
   #if DEBUG_MODE
   printHumanReadableData(data);
   #endif
+
+  delay(10);
 }

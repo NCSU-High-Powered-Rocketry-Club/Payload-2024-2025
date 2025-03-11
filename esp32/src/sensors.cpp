@@ -80,7 +80,7 @@ void collectIMUData(DataPacket &packet) {
     attempts++;
     sh2_SensorValue_t sensorValue;
 
-    if (bno08x.getSensorEvent(&sensorValue)) {
+    if (!bno08x.wasReset() && bno08x.getSensorEvent(&sensorValue)) {
       switch (sensorValue.sensorId) {
         case SH2_LINEAR_ACCELERATION:
           if (abs(sensorValue.un.linearAcceleration.x) > MAX_ACCEL_VALUE ||
