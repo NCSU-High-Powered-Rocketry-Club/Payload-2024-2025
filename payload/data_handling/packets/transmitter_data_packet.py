@@ -28,12 +28,12 @@ class TransmitterDataPacket(msgspec.Struct):
         """
         # The `:.1f` means that we are rounding the float to one decimal place.
         return (
-            f"t={self.temperature:.1f},"
-            f"a={self.apogee:.1f},"
-            f"b={self.battery_level:.1f},"
-            f"o=(r={self.orientation[0]:.1f},p={self.orientation[1]:.1f},y={self.orientation[2]:.1f}),"
-            f"tl={self.time_of_landing},"
-            f"mv={self.max_velocity:.1f},"
-            f"lv={self.landing_velocity:.1f},"
-            f"cs={self.crew_survivability * 100:3.0f}"
+            f"temp={self.temperature:.2f},"
+            f"apogee={self.apogee:.2f},"
+            f"battery_chk={self.battery_level:.2f},"
+            f"orientation=(roll={self.orientation[0]:.2f},pitch={self.orientation[1]:.2f},yaw={self.orientation[2]:.2f}),"
+            f"time_landing={self.time_of_landing},"
+            f"max_vel={self.max_velocity:.2f},"
+            f"landing_vel={self.landing_velocity:.2f},"
+            f"crew_survival={self.crew_survivability * 100:3.1f}"
         )
