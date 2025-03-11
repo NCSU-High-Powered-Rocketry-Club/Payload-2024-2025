@@ -11,10 +11,8 @@
 #define SERIAL_BAUD_RATE 115200
 #define WIRE_CLOCK_FREQUENCY 800000
 #define SEALEVEL_PRESSURE_HPA 1013.25f
-#define SENSOR_TIMEOUT 50      // Timeout for sensor reads
-#define MAX_IMU_ATTEMPTS 40    // Max attempts for IMU
+#define GPS_SENSOR_TIMEOUT 50      // Timeout for sensor reads
 #define LED_INTERVAL 500       // LED blink interval in milliseconds
-#define IMU_RESET_INTERVAL 5000 // IMU reset interval in milliseconds
 
 // Debug settings
 #define DEBUG_MODE 0           // 0 = binary only, 1 = human-readable output

@@ -13,13 +13,6 @@ Adafruit_BNO08x bno08x(BNO08X_RESET);
 Adafruit_DPS310 dps;
 sh2_SensorValue_t sensorValue;
 
-// Euler struct for BNO08x quaternion conversion
-struct euler_t {
-  float yaw;
-  float pitch;
-  float roll;
-} ypr;
-
 // BNO08x report types and intervals (matching your original)
 sh2_SensorId_t reportTypes[] = {
   SH2_ROTATION_VECTOR,
@@ -53,7 +46,7 @@ void setup(void) {
 
   // Initialize I2C
   Wire.begin();
-  Wire.setClock(800000UL);  // 100kHz for stability
+  Wire.setClock(800000UL);
 
   // Initialize BNO08x
   if (!bno08x.begin_I2C()) {
@@ -86,25 +79,6 @@ void setup(void) {
   delay(100);
 }
 
-void quaternionToEuler(float qr, float qi, float qj, float qk, euler_t* ypr, bool degrees = false) {
-  float sqr = sq(qr);
-  float sqi = sq(qi);
-  float sqj = sq(qj);
-  float sqk = sq(qk);
-  ypr->yaw = atan2(2.0 * (qi * qj + qk * qr), (sqi - sqj - sqk + sqr));
-  ypr->pitch = asin(-2.0 * (qi * qk - qj * qr) / (sqi + sqj + sqk + sqr));
-  ypr->roll = atan2(2.0 * (qj * qk + qi * qr), (-sqi - sqj + sqk + sqr));
-  if (degrees) {
-    ypr->yaw *= RAD_TO_DEG;
-    ypr->pitch *= RAD_TO_DEG;
-    ypr->roll *= RAD_TO_DEG;
-  }
-}
-
-void quaternionToEulerRV(sh2_RotationVectorWAcc_t* rotational_vector, euler_t* ypr, bool degrees = false) {
-  quaternionToEuler(rotational_vector->real, rotational_vector->i, rotational_vector->j, rotational_vector->k, ypr, degrees);
-}
-
 void loop() {
   // BNO08x handling
   if (bno08x.wasReset()) {
@@ -117,48 +91,49 @@ void loop() {
   if (bno08x.getSensorEvent(&sensorValue)) {
     switch (sensorValue.sensorId) {
       case SH2_ROTATION_VECTOR:
-        quaternionToEulerRV(&sensorValue.un.rotationVector, &ypr, true);
-        // Serial.print("Rotation Vector - Yaw: ");
-        // Serial.print(ypr.yaw);
-        // Serial.print(" Pitch: ");
-        // Serial.print(ypr.pitch);
-        // Serial.print(" Roll: ");
-        // Serial.println(ypr.roll);
-        // Serial.print("Status: ");
-        // Serial.println(sensorValue.status);
+        Serial.print("Rotation Vector - quat x: ");
+        Serial.print(sensorValue.un.rotationVector.i);
+        Serial.print(" y: ");
+        Serial.print(sensorValue.un.rotationVector.j);
+        Serial.print(" z: ");
+        Serial.print(sensorValue.un.rotationVector.k);
+        Serial.print(" w: ");
+        Serial.println(sensorValue.un.rotationVector.real);
+        Serial.print("Status: ");
+        Serial.println(sensorValue.status);
         break;
 
       case SH2_LINEAR_ACCELERATION:
-        // Serial.print("Linear Accel - X: ");
-        // Serial.print(sensorValue.un.linearAcceleration.x);
-        // Serial.print(" Y: ");
-        // Serial.print(sensorValue.un.linearAcceleration.y);
-        // Serial.print(" Z: ");
-        // Serial.println(sensorValue.un.linearAcceleration.z);
-        // Serial.print("Status: ");
-        // Serial.println(sensorValue.status);
+        Serial.print("Linear Accel - X: ");
+        Serial.print(sensorValue.un.linearAcceleration.x);
+        Serial.print(" Y: ");
+        Serial.print(sensorValue.un.linearAcceleration.y);
+        Serial.print(" Z: ");
+        Serial.println(sensorValue.un.linearAcceleration.z);
+        Serial.print("Status: ");
+        Serial.println(sensorValue.status);
         break;
 
       case SH2_GYROSCOPE_CALIBRATED:
-        // Serial.print("Gyro - X: ");
-        // Serial.print(sensorValue.un.gyroscope.x);
-        // Serial.print(" Y: ");
-        // Serial.print(sensorValue.un.gyroscope.y);
-        // Serial.print(" Z: ");
-        // Serial.println(sensorValue.un.gyroscope.z);
-        // Serial.print("Status: ");
-        // Serial.println(sensorValue.status);
+        Serial.print("Gyro - X: ");
+        Serial.print(sensorValue.un.gyroscope.x);
+        Serial.print(" Y: ");
+        Serial.print(sensorValue.un.gyroscope.y);
+        Serial.print(" Z: ");
+        Serial.println(sensorValue.un.gyroscope.z);
+        Serial.print("Status: ");
+        Serial.println(sensorValue.status);
         break;
 
       case SH2_MAGNETIC_FIELD_CALIBRATED:
-        // Serial.print("Mag - X: ");
-        // Serial.print(sensorValue.un.magneticField.x);
-        // Serial.print(" Y: ");
-        // Serial.print(sensorValue.un.magneticField.y);
-        // Serial.print(" Z: ");
-        // Serial.println(sensorValue.un.magneticField.z);
-        // Serial.print("Status: ");
-        // Serial.println(sensorValue.status);
+        Serial.print("Mag - X: ");
+        Serial.print(sensorValue.un.magneticField.x);
+        Serial.print(" Y: ");
+        Serial.print(sensorValue.un.magneticField.y);
+        Serial.print(" Z: ");
+        Serial.println(sensorValue.un.magneticField.z);
+        Serial.print("Status: ");
+        Serial.println(sensorValue.status);
         break;
     }
   } else {
