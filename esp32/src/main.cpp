@@ -29,7 +29,7 @@ void setup() {
 void loop() {
   updateHeartbeatLED();
 
-  DataPacket data = {0};
+  DataPacket data;
   data.timestamp = millis();
 
   // Collect all sensor data

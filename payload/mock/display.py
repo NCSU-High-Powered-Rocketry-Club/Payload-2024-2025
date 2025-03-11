@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 
 from colorama import Fore, Style, init
 
-from payload.constants import DISPLAY_FREQUENCY, DisplayEndingType
+from payload.constants import DisplayEndingType
+from payload.utils import convert_milliseconds_to_seconds
 
 if TYPE_CHECKING:
     from payload.payload import PayloadContext
@@ -117,13 +118,12 @@ class FlightDisplay:
         data_processor = self._payload.data_processor
         # Set the launch time if it hasn't been set yet:
         if not self._launch_time and self._payload.state.name == "MotorBurnState":
-            self._launch_time = self._payload.state.start_time_seconds
-
-        elif not self._coast_time and self._payload.state.name == "CoastState":
-            self._coast_time = self._payload.state.start_time_seconds
+            self._launch_time = self._payload.state.start_time_ms
 
         if self._launch_time:
-            time_since_launch = self._payload.data_processor.current_timestamp - self._launch_time
+            time_since_launch = convert_milliseconds_to_seconds(
+                self._payload.data_processor.current_timestamp - self._launch_time
+            )
         else:
             time_since_launch = 0
 
@@ -137,7 +137,7 @@ class FlightDisplay:
             f"Launch time:               {G}T+{time.strftime('%M:%S', time.gmtime(time_since_launch))}{RESET}",  # noqa: E501
             f"State:                     {G}{self._payload.state.name:<15}{RESET}",
             f"Current Altitude:          {G}{data_processor.current_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
-            f"Maximum Altitude:          {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
+            f"Maximum Altitude:          {G}{data_processor.max_altitude:<10.2f}{RESET} {R}m{RESET}",  # noqa: E501
             f"Current Velocity:          {G}{data_processor.velocity_moving_average:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Maximum Velocity:          {G}{data_processor.max_vertical_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
             f"Crew survivability:        {G}{100 * data_processor._crew_survivability:<10.2f}{RESET} {R}%{RESET}",  # noqa: E501
@@ -150,23 +150,22 @@ class FlightDisplay:
             output.extend(
                 [
                     f"{Y}{'=' * 18} DEBUG INFO {'=' * 17}{RESET}",
-                    f"Max accel velocity:        {G}{data_processor._max_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
                     f"Landing velocity:          {G}{data_processor._landing_velocity:<10.2f}{RESET} {R}m/s{RESET}",  # noqa: E501
                     f"Transmitter message:       {G}{str(self._payload.transmission_packet)[:14]}{RESET}",  # noqa: E501
                     f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]}{RESET}",  # noqa: E501
                     f"{Y}{'=' * 19} IMU INFO {'=' * 18}{RESET}",
-                    f"Timestamp:                 {G}{imu_data.timestamp:9.2f}{RESET} {R}ms{RESET}",  # noqa: E501
-                    f"Voltage:                   {G}{imu_data.voltage:6.2f}{RESET} {R}V{RESET}",  # noqa: E501
+                    f"Timestamp:                 {G}{imu_data.timestamp:9.2f}{RESET} {R}ms{RESET}",
+                    f"Voltage:                   {G}{imu_data.voltage:6.2f}{RESET} {R}V{RESET}",
                     f"Temperature:               {G}{imu_data.ambientTemperature:6.2f}{RESET} {R}°C{RESET}",  # noqa: E501
                     f"Pressure:                  {G}{imu_data.ambientPressure:6.2f}{RESET} {R}mbar{RESET}",  # noqa: E501
-                    f"Pressure Altitude:         {G}{imu_data.pressureAlt:6.2f}{RESET} {R}m{RESET}",  # noqa: E501
+                    f"Pressure Altitude:         {G}{imu_data.pressureAlt:6.2f}{RESET} {R}m{RESET}",
                     f"Compensated Accel:         {G}<{imu_data.estCompensatedAccelX:6.2f}, {imu_data.estCompensatedAccelY:6.2f}, {imu_data.estCompensatedAccelZ:6.2f}>{RESET} {R}m/s²{RESET}",  # noqa: E501
                     f"Angular Rate:              {G}<{imu_data.estAngularRateX:6.2f}, {imu_data.estAngularRateY:6.2f}, {imu_data.estAngularRateZ:6.2f}>{RESET} {R}rad/s{RESET}",  # noqa: E501
                     f"Magnetic Field:            {G}<{imu_data.magneticFieldX:6.2f}, {imu_data.magneticFieldY:6.2f}, {imu_data.magneticFieldZ:6.2f}>{RESET} {R}microT{RESET}",  # noqa: E501
                     f"Orient Quaternions:        {G}<{imu_data.estOrientQuaternionW:6.2f}, {imu_data.estOrientQuaternionX:6.2f}, {imu_data.estOrientQuaternionY:6.2f}, {imu_data.estOrientQuaternionZ:6.2f}>{RESET}",  # noqa: E501
-                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
+                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:6.2f}{RESET} {R}°{RESET}",
                     f"GPS Longitude:             {G}{imu_data.gpsLongitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
-                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:6.2f}{RESET} {R}m{RESET}",  # noqa: E501
+                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:6.2f}{RESET} {R}m{RESET}",
                     # f"Status Flag:               {G}{imu_data.statusFlag:6.2f}{RESET} {R}{RESET}",  # noqa: E501
                 ]
             )

@@ -44,6 +44,31 @@ struct DataPacket {
   float magnetic_x, magnetic_y, magnetic_z;
   float quat_w, quat_x, quat_y, quat_z;
   float gps_lat, gps_long, gps_alt;
+
+  // Constructor to set all fields to a default value
+  DataPacket(float value = -9999.9) {
+    timestamp = value;
+    voltage = value;
+    temperature = value;
+    pressure = value;
+    altitude = value;
+    gps_lat = value;
+    gps_long = value;
+    gps_alt = value;
+    comp_accel_x = value;
+    comp_accel_y = value;
+    comp_accel_z = value;
+    gyro_x = value;
+    gyro_y = value;
+    gyro_z = value;
+    quat_x = value;
+    quat_y = value;
+    quat_z = value;
+    quat_w = value;
+    magnetic_x = value;
+    magnetic_y = value;
+    magnetic_z = value;
+  }
 };
 
 // Packet start marker
