@@ -17,7 +17,6 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
     update_timestamp_ns: int
 
     # IMU Data Packet Fields
-    arduino_timestamp: int
     timestamp: float | None
     voltage: float | None
     ambientTemperature: float | None

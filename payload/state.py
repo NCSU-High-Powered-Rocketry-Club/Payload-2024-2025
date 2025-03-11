@@ -1,8 +1,7 @@
 """Module for the finite state machine that represents which state of flight we are in."""
 
-from abc import ABC, abstractmethod
 import threading
-import time
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from payload.constants import (
@@ -12,6 +11,7 @@ from payload.constants import (
     MOTOR_BURN_TIME_SECONDS,
     TAKEOFF_HEIGHT_METERS,
 )
+from payload.utils import convert_milliseconds_to_seconds
 
 if TYPE_CHECKING:
     from payload.payload import PayloadContext
@@ -33,7 +33,7 @@ class State(ABC):
 
     __slots__ = (
         "context",
-        "start_time_seconds",
+        "start_time_ms",
     )
 
     def __init__(self, context: "PayloadContext"):
@@ -41,7 +41,7 @@ class State(ABC):
         :param context: The state context object that will be used to interact with the electronics
         """
         self.context = context
-        self.start_time_seconds = context.data_processor.current_timestamp
+        self.start_time_ms = context.data_processor.current_timestamp
 
     @property
     def name(self):
@@ -107,7 +107,12 @@ class MotorBurnState(State):
         burned out."""
 
         # If it has been more than 2.4 seconds since motor burn, switch states.
-        if time.time() - self.start_time_seconds >= MOTOR_BURN_TIME_SECONDS:
+        if (
+            convert_milliseconds_to_seconds(
+                self.context.data_processor.current_timestamp - self.start_time_ms
+            )
+            >= MOTOR_BURN_TIME_SECONDS
+        ):
             self.next_state()
             return
 
@@ -149,8 +154,7 @@ class FreeFallState(State):
     def __init__(self, context):
         super().__init__(context)
         self.countdown_to_landed_timer = threading.Timer(
-            interval=MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS,
-            function=self.next_state
+            interval=MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS, function=self.next_state
         )
 
     def update(self):
@@ -159,11 +163,19 @@ class FreeFallState(State):
 
         # If our altitude is around 0, we start a timer and then switch states, to make sure
         # we have landed.
-        if data.current_altitude <= GROUND_ALTITUDE_METERS and not self.countdown_to_landed_timer.is_alive():
+        if (
+            data.current_altitude <= GROUND_ALTITUDE_METERS
+            and not self.countdown_to_landed_timer.is_alive()
+        ):
             self.countdown_to_landed_timer.start()
 
         # If we have been in free fall for too long, we move to the landed state
-        if (time.time() - self.start_time_seconds) >= MAX_FREE_FALL_SECONDS:
+        if (
+            convert_milliseconds_to_seconds(
+                self.context.data_processor.current_timestamp - self.start_time_ms
+            )
+            >= MAX_FREE_FALL_SECONDS
+        ):
             self.next_state()
 
     def next_state(self):
