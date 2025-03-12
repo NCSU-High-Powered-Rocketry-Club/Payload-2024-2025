@@ -181,7 +181,7 @@ class PayloadContext:
 
         # Values which are not updated are assigned as -9999.0 in the arduino code:
         for imu_data_field in imu_data_packet.__struct_fields__:
-            if getattr(imu_data_packet, imu_data_field, None) == -9999.0:
+            if int(getattr(imu_data_packet, imu_data_field, None)) == -9999:
                 # Check if previous data packet has a non zero value for the field:
                 if (dp:=getattr(self.imu_data_packet, imu_data_field, None)):
                     setattr(imu_data_packet, imu_data_field, dp)

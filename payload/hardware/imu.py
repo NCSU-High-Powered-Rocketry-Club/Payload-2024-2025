@@ -59,14 +59,14 @@ class IMU(BaseIMU):
                     packet = self._buffer[packet_start:packet_start + PACKET_BYTE_SIZE]
                     self._buffer = self._buffer[packet_start + PACKET_BYTE_SIZE:]
                     data_packet = self._process_packet_data(packet)
-                    self._queue.put(data_packet)
+                    self._queued_imu_packets.put(data_packet)
                 else:
                     continue  # Not enough data for a full packet
 
     def start(self):
         """Opens the serial connection to the Arduino."""
-        super().start()
         self._serial = serial.Serial(self._port, self._baud_rate, timeout=ARDUINO_SERIAL_TIMEOUT)
+        super().start()
 
     def stop(self):
         """Closes the serial connection to the Arduino."""
