@@ -94,7 +94,7 @@ class PayloadContext:
         self.transmitter.start()
         self.receiver.start()
         self.logger.start()
-        self.camera.start()
+        # self.camera.start()
 
     def stop(self) -> None:
         """
@@ -112,7 +112,7 @@ class PayloadContext:
         print("Stopped Transmitter")
         self.logger.stop()
         print("Stopped Logger")
-        self.camera.stop()
+        # self.camera.stop()
         print("Stopped Camera")
         self.shutdown_requested = True
         print("Stopped Everything")
@@ -125,27 +125,8 @@ class PayloadContext:
         """
 
         # We only get one data packet at a time from the IMU as it runs very slowly
-        last_imu_data_packet = self.imu_data_packet
-        self.imu_data_packet = self.imu.fetch_data()
-
-        # If we don't have a data packet, return early
-        if not self.imu_data_packet:
-            return
-
-        # print(self.imu_data_packet)
-        # If the GPS returns (0,0,0), use the last data
-        # This happens if there was no gps update that cycle
-        # We have to do it here and not in IMU so that
-        # The mock sim works with old files
-        if (
-            last_imu_data_packet is not None
-            and self.imu_data_packet is not None
-            and self.imu_data_packet.gpsLatitude == 0.0
-            and last_imu_data_packet.gpsLatitude != 0.0
-        ):
-            self.imu_data_packet.gpsLatitude = last_imu_data_packet.gpsLatitude
-            self.imu_data_packet.gpsLongitude = last_imu_data_packet.gpsLongitude
-            self.imu_data_packet.gpsAltitude = last_imu_data_packet.gpsAltitude
+        imu_data_packet = self.imu.get_data_packet()
+        self.imu_data_packet = self.assign_previous_data(imu_data_packet)
 
         # Update the processed data with the new data packet.
         self.data_processor.update(self.imu_data_packet)
@@ -182,7 +163,8 @@ class PayloadContext:
         self.transmission_packet = TransmitterDataPacket(
             temperature=self.imu_data_packet.ambientTemperature,
             apogee=self.processed_data_packet.maximum_altitude,
-            battery_level=self.imu_data_packet.voltage,
+            battery_level_pi=self.imu_data_packet.voltage_pi,
+            battery_level_tx=self.imu_data_packet.voltage_tx,
             orientation=(roll, pitch, yaw),
             time_of_landing=time.strftime("%H:%M:%S", time.gmtime()),
             max_velocity=self.processed_data_packet.maximum_velocity,
@@ -192,6 +174,20 @@ class PayloadContext:
         )
 
         self.transmitter.send_message(self.transmission_packet)
+
+    def assign_previous_data(self, imu_data_packet: "IMUDataPacket") -> "IMUDataPacket":
+        """The IMU data packet might have fields which are not updated every loop, e.g. GPS.
+        This method assigns the previous data to those fields."""
+
+        # Values which are not updated are assigned as -9999.0 in the arduino code:
+        for imu_data_field in imu_data_packet.__struct_fields__:
+            if int(getattr(imu_data_packet, imu_data_field, None)) == -9999:
+                # Check if previous data packet has a non zero value for the field:
+                if (dp:=getattr(self.imu_data_packet, imu_data_field, None)):
+                    setattr(imu_data_packet, imu_data_field, dp)
+                else:
+                    setattr(imu_data_packet, imu_data_field, 0.0)
+        return imu_data_packet
 
     def start_saving_camera_recording(self) -> None:
         """
@@ -211,7 +207,6 @@ class PayloadContext:
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True
             self._transmitting_latch = False
-
     def start_survivability_calculation(self):
         """
         Starts the calculation of crew survivability percent.
@@ -231,4 +226,4 @@ class PayloadContext:
         """
         Ends the video recording.
         """
-        self.camera.stop()
+        # self.camera.stop()

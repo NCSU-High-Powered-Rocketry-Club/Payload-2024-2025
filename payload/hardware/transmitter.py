@@ -50,16 +50,16 @@ class Transmitter(BaseTransmitter):
         GPIO.setup(self.gpio_pin, GPIO.OUT, initial=GPIO.LOW)
 
     def pull_pin_low(self):
-        #     """
-        #     Pulls the GPIO pin low. This pulls the PTT high. This deactivates the PTT (Push-To-Talk) of the transceiver.
-        #     """
+        """
+        Pulls the GPIO pin low. This pulls the PTT high. This deactivates the PTT (Push-To-Talk) of the transceiver.
+        """
         GPIO.setmode(GPIO.BCM)
         GPIO.output(self.gpio_pin, GPIO.LOW)
 
     def pull_pin_high(self):
-        #     """
-        #     Pulls the GPIO pin high. This pulls the PTT low. This activates the PTT (Push-To-Talk) of the transceiver.
-        #     """
+        """
+        Pulls the GPIO pin high. This pulls the PTT low. This activates the PTT (Push-To-Talk) of the transceiver.
+        """
         GPIO.setmode(GPIO.BCM)
         GPIO.output(self.gpio_pin, GPIO.HIGH)
 
