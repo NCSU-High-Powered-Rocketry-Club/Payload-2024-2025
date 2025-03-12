@@ -18,7 +18,8 @@ class LoggerDataPacket(TypedDict, total=False):  # total=False means all fields 
 
     # IMU Data Packet Fields
     timestamp: float | None
-    voltage: float | None
+    voltage_pi: float | None
+    voltage_tx: float | None
     ambientTemperature: float | None
     ambientPressure: float | None
     pressureAlt: float | None

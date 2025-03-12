@@ -9,7 +9,8 @@ class IMUDataPacket(msgspec.Struct):
     """
 
     timestamp: int  # In milliseconds
-    voltage: float | None = None
+    voltage_pi: float | None = None
+    voltage_tx: float | None = None
     # temperature in celsius
     ambientTemperature: float | None = None
     # pressure in mbar

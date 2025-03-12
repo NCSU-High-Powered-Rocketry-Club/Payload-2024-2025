@@ -149,13 +149,14 @@ class FreeFallState(State):
     When the rocket is falling back to the ground after apogee.
     """
 
-    __slots__ = ("countdown_to_landed_timer",)
+    __slots__ = ("countdown_to_landed_timer", "_counter_started")
 
     def __init__(self, context):
         super().__init__(context)
         self.countdown_to_landed_timer = threading.Timer(
             interval=MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS, function=self.next_state
         )
+        self._counter_started: bool = False
 
     def update(self):
         """Check if the rocket has landed, based on our altitude."""
@@ -163,10 +164,8 @@ class FreeFallState(State):
 
         # If our altitude is around 0, we start a timer and then switch states, to make sure
         # we have landed.
-        if (
-            data.current_altitude <= GROUND_ALTITUDE_METERS
-            and not self.countdown_to_landed_timer.is_alive()
-        ):
+        if data.current_altitude <= GROUND_ALTITUDE_METERS and not self._counter_started:
+            self._counter_started = True
             self.countdown_to_landed_timer.start()
 
         # If we have been in free fall for too long, we move to the landed state

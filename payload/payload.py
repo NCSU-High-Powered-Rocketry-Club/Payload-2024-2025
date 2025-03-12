@@ -112,7 +112,7 @@ class PayloadContext:
         print("Stopped Transmitter")
         self.logger.stop()
         print("Stopped Logger")
-        self.camera.stop()
+        # self.camera.stop()
         print("Stopped Camera")
         self.shutdown_requested = True
         print("Stopped Everything")
@@ -160,11 +160,11 @@ class PayloadContext:
         Transmits the processed data packet to the ground station using the transmitter.
         """
         (roll, pitch, yaw) = self.data_processor.calculate_orientation()
-        print(self.imu_data_packet)
         self.transmission_packet = TransmitterDataPacket(
             temperature=self.imu_data_packet.ambientTemperature,
             apogee=self.processed_data_packet.maximum_altitude,
-            battery_level=self.imu_data_packet.voltage,
+            battery_level_pi=self.imu_data_packet.voltage_pi,
+            battery_level_tx=self.imu_data_packet.voltage_tx,
             orientation=(roll, pitch, yaw),
             time_of_landing=time.strftime("%H:%M:%S", time.gmtime()),
             max_velocity=self.processed_data_packet.maximum_velocity,
@@ -207,7 +207,6 @@ class PayloadContext:
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True
             self._transmitting_latch = False
-
     def start_survivability_calculation(self):
         """
         Starts the calculation of crew survivability percent.
@@ -227,4 +226,4 @@ class PayloadContext:
         """
         Ends the video recording.
         """
-        self.camera.stop()
+        # self.camera.stop()

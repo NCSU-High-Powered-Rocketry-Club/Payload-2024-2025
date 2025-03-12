@@ -29,8 +29,7 @@ class IMU(BaseIMU):
         self._serial = None
         self._buffer = b""  # Initialize an empty buffer to store serial data
 
-    @staticmethod
-    def _process_packet_data(binary_packet: bytes) -> IMUDataPacket:
+    def _process_packet_data(self, binary_packet: bytes) -> IMUDataPacket:
         """
         Processes the data points in the unpacked packet into an IMUDataPacket.
 
@@ -40,7 +39,17 @@ class IMU(BaseIMU):
         # Unpack 84 bytes into 21 floats (84 / 4 = 21), assuming little-endian format
         # TODO: Handle statusFlags appropriately if part of the packet structure
         unpacked_data = struct.unpack("<" + "f" * (PACKET_BYTE_SIZE // 4), binary_packet)
-        return IMUDataPacket(*unpacked_data)
+        imu_data_packet = IMUDataPacket(*unpacked_data)
+        imu_data_packet = self._convert_voltage_to_percent(imu_data_packet)
+        return imu_data_packet
+    
+    def _convert_voltage_to_percent(self, imu_data_packet: IMUDataPacket) -> IMUDataPacket:
+        """Converts the voltage of the Pi pins and TX pins to a % and clamps it"""
+        imu_data_packet.voltage_pi = (imu_data_packet.voltage_pi - 2.2) / 1.1 * 100
+        imu_data_packet.voltage_pi = max(0, min(imu_data_packet.voltage_pi, 100))
+        imu_data_packet.voltage_tx = (imu_data_packet.voltage_tx - 2.0) / 1.0 * 100
+        imu_data_packet.voltage_tx = max(0, min(imu_data_packet.voltage_tx, 100))
+        return imu_data_packet
 
     def _read_data(self) -> None:
         """Function that reads data from the serial port and processes it."""

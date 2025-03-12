@@ -155,7 +155,8 @@ class FlightDisplay:
                     f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]}{RESET}",  # noqa: E501
                     f"{Y}{'=' * 19} IMU INFO {'=' * 18}{RESET}",
                     f"Timestamp:                 {G}{imu_data.timestamp:9.2f}{RESET} {R}ms{RESET}",
-                    f"Voltage:                   {G}{imu_data.voltage:6.2f}{RESET} {R}V{RESET}",
+                    f"Voltage pi:                {G}{imu_data.voltage_pi:6.2f}{RESET} {R}%{RESET}",
+                    f"Voltage tx:                {G}{imu_data.voltage_tx:6.2f}{RESET} {R}%{RESET}",
                     f"Temperature:               {G}{imu_data.ambientTemperature:6.2f}{RESET} {R}°C{RESET}",  # noqa: E501
                     f"Pressure:                  {G}{imu_data.ambientPressure:6.2f}{RESET} {R}mbar{RESET}",  # noqa: E501
                     f"Pressure Altitude:         {G}{imu_data.pressureAlt:6.2f}{RESET} {R}m{RESET}",

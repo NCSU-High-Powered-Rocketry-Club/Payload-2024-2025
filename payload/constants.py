@@ -40,7 +40,7 @@ ARDUINO_SERIAL_TIMEOUT = 1
 PACKET_START_MARKER = b'\xFF\xFE\xFD\xFC'
 """The start marker of the data packet. This helps use to know where a packet starts in the stream
 of bytes."""
-PACKET_BYTE_SIZE = 84
+PACKET_BYTE_SIZE = 88
 """Size of the data packet being sent from the Arduino in bytes"""
 
 IMU_APPROXIMATE_FREQUENCY = 40
