@@ -4,7 +4,8 @@
 #include <Arduino.h>
 
 // Pin definitions
-#define VOLTAGE_PIN 35         // ADC pin for battery voltage
+#define VOLTAGE_PIN_TX 35         // ADC pin for battery TX voltage
+#define VOLTAGE_PIN_PI 39         // ADC pin for battery voltage for the Pi
 #define LED_PIN 2              // ESP32's onboard LED
 
 // Constants
@@ -35,7 +36,8 @@
 // Data packet structure
 struct DataPacket {
   float timestamp;
-  float voltage;
+  float voltage_pi;
+  float voltage_tx;
   float temperature;
   float pressure;
   float altitude;
@@ -48,7 +50,8 @@ struct DataPacket {
   // Constructor to set all fields to a default value
   DataPacket(float value = -9999.9) {
     timestamp = value;
-    voltage = value;
+    voltage_pi = value;
+    voltage_tx = value;
     temperature = value;
     pressure = value;
     altitude = value;

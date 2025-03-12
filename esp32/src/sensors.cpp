@@ -51,7 +51,8 @@ void initSensors() {
 
 void collectSensorData(DataPacket &data) {
   status_flags = 0;
-  data.voltage = (analogRead(VOLTAGE_PIN) * 3.3) / 1024.0;
+  data.voltage_pi = (analogRead(VOLTAGE_PIN_PI) * 3.3) / 4096.0;
+  data.voltage_tx = (analogRead(VOLTAGE_PIN_TX) * 3.3) / 4096.0;
 
   sensors_event_t temp_event, pressure_event;
   if (dps.getEvents(&temp_event, &pressure_event)) {
