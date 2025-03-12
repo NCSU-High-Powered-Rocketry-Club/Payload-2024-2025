@@ -94,7 +94,7 @@ class PayloadContext:
         self.transmitter.start()
         self.receiver.start()
         self.logger.start()
-        self.camera.start()
+        # self.camera.start()
 
     def stop(self) -> None:
         """

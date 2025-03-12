@@ -111,10 +111,10 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 5
+GROUND_ALTITUDE_METERS = 15
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
 
-MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 8
+MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 10
 """The maximum amount of time in seconds that the rocket will take to fall to the ground from
 GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
 
