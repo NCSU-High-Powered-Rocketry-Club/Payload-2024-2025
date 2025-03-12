@@ -28,9 +28,9 @@ class TransmitterDataPacket(msgspec.Struct):
         """
         # The `:.1f` means that we are rounding the float to one decimal place.
         return (
-            f"temp={self.temperature:.2f},"
+            f"temperature={self.temperature:.2f},"
             f"apogee={self.apogee:.2f},"
-            f"battery_chk={self.battery_level:.2f},"
+            f"battery_status=CPU:{self.battery_level:.2f}% | TX:{self.battery_level:.2f}%,"
             f"orientation=(roll={self.orientation[0]:.2f},pitch={self.orientation[1]:.2f},yaw={self.orientation[2]:.2f}),"
             f"time_landing={self.time_of_landing},"
             f"max_vel={self.max_velocity:.2f},"
