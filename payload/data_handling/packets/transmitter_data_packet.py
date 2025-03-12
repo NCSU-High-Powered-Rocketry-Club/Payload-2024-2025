@@ -11,14 +11,14 @@ class TransmitterDataPacket(msgspec.Struct):
     station.
     """
 
-    temperature: np.float64  # Temperature
-    apogee: np.float64  # apogee reached
+    temperature: np.float32  # Temperature
+    apogee: np.float32  # apogee reached
     battery_level: float  # battery check
-    orientation: tuple[np.float64, np.float64, np.float64]  # of the stemnauts
+    orientation: tuple[np.float32, np.float32, np.float32]  # of the stemnauts
     time_of_landing: str  # time of landing
-    max_velocity: np.float64  # maximum velocity reached
-    landing_velocity: np.float64  # velocity on landing
-    crew_survivability: np.float64  # survivability, in percent
+    max_velocity: np.float32  # maximum velocity reached
+    landing_velocity: np.float32  # velocity on landing
+    crew_survivability: np.float32  # survivability, in percent
     landing_coords: tuple[float, float]  # landing coordinates
 
     def compress_packet(self):
