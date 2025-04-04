@@ -183,16 +183,18 @@ class PayloadContext:
         for imu_data_field in imu_data_packet.__struct_fields__:
             # Check for Nan's, which are very rare:
             new_dp_attr = getattr(imu_data_packet, imu_data_field, None)
-            if not new_dp_attr or math.isnan(new_dp_attr):
+            if new_dp_attr is None or math.isnan(new_dp_attr):
+                # print("nan found", new_dp_attr)
                 setattr(imu_data_packet, imu_data_field, 0.0)
                 # Nothing was returned from the IMU (shouldn't happen)
                 continue
             # Values which are not updated are assigned as -9999.0 in the arduino code:
             if int(new_dp_attr) == -9999:
+                # print(new_dp_attr)
                 # Check if previous data packet has a non zero value for the field:
                 old_dp_field = getattr(self.imu_data_packet, imu_data_field, None)
                 if old_dp_field:  # We only assign the previous data if it exists
-                    setattr(imu_data_packet, imu_data_field, new_dp_attr)
+                    setattr(imu_data_packet, imu_data_field, old_dp_field)
                 else:
                     setattr(imu_data_packet, imu_data_field, 0.0)
         return imu_data_packet
