@@ -93,7 +93,7 @@ class PayloadContext:
         # TODO: make threads safer by using a context manager
         self.imu.start()
         self.transmitter.start()
-        self.receiver.start()
+        # self.receiver.start()
         self.logger.start()
         # self.camera.start()
 
@@ -107,7 +107,7 @@ class PayloadContext:
             return
         self.imu.stop()
         print("Stopped IMU")
-        self.receiver.stop()
+        # self.receiver.stop()
         print("Stopped Receiver")
         self.transmitter.stop()
         print("Stopped Transmitter")
