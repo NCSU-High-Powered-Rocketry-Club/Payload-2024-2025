@@ -190,7 +190,6 @@ class PayloadContext:
                 continue
             # Values which are not updated are assigned as -9999.0 in the arduino code:
             if int(new_dp_attr) == -9999:
-                # print(new_dp_attr)
                 # Check if previous data packet has a non zero value for the field:
                 old_dp_field = getattr(self.imu_data_packet, imu_data_field, None)
                 if old_dp_field:  # We only assign the previous data if it exists
@@ -217,6 +216,7 @@ class PayloadContext:
         elif message == STOP_MESSAGE and not self._stop_latch:
             self._stop_latch = True
             self._transmitting_latch = False
+
     def start_survivability_calculation(self):
         """
         Starts the calculation of crew survivability percent.
