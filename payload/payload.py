@@ -1,5 +1,6 @@
 """Module which provides a high level interface to the payload system on the rocket."""
 
+import math
 import time
 from typing import TYPE_CHECKING
 
@@ -179,12 +180,19 @@ class PayloadContext:
         """The IMU data packet might have fields which are not updated every loop, e.g. GPS.
         This method assigns the previous data to those fields."""
 
-        # Values which are not updated are assigned as -9999.0 in the arduino code:
         for imu_data_field in imu_data_packet.__struct_fields__:
-            if int(getattr(imu_data_packet, imu_data_field, None)) == -9999:
+            # Check for Nan's, which are very rare:
+            new_dp_attr = getattr(imu_data_packet, imu_data_field, None)
+            if not new_dp_attr or math.isnan(new_dp_attr):
+                setattr(imu_data_packet, imu_data_field, 0.0)
+                # Nothing was returned from the IMU (shouldn't happen)
+                continue
+            # Values which are not updated are assigned as -9999.0 in the arduino code:
+            if int(new_dp_attr) == -9999:
                 # Check if previous data packet has a non zero value for the field:
-                if (dp:=getattr(self.imu_data_packet, imu_data_field, None)):
-                    setattr(imu_data_packet, imu_data_field, dp)
+                old_dp_field = getattr(self.imu_data_packet, imu_data_field, None)
+                if old_dp_field:  # We only assign the previous data if it exists
+                    setattr(imu_data_packet, imu_data_field, new_dp_attr)
                 else:
                     setattr(imu_data_packet, imu_data_field, 0.0)
         return imu_data_packet

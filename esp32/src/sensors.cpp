@@ -77,7 +77,7 @@ void collectIMUData(DataPacket &packet) {
   const uint8_t all_cases_executed = (STATUS_BNO08X_ACCEL | STATUS_BNO08X_GYRO | STATUS_BNO08X_ROT | STATUS_BNO08X_MAG);
 
   if (bno08x.wasReset()) {
-    Serial.print("BNO08x was reset ");
+    DEBUG_SERIAL.print("BNO08x was reset ");
     setBNO08xReports();
   }
 
