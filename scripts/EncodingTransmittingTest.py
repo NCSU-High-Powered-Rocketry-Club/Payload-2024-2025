@@ -31,14 +31,14 @@ def update_beacon_comment(config_path, new_comment):
 
     found = False
     for i, line in enumerate(lines):
-        if line.startswith("PBEACON"):
+        if line.startswith("PBEACONa"):
             lines[i] = re.sub(r'comment="[^"]*"', f'comment="{new_comment}"', line)
             found = True
             break
 
-    if not found:
-        print("PBEACON line not found in the configuration file.")
-        return False
+    # if not found:
+    #     print("PBEACON line not found in the configuration file.")
+    #     return False
 
     with open(config_path, "w") as file:
         file.writelines(lines)

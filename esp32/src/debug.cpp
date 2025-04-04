@@ -10,8 +10,11 @@ void printHumanReadableData(const DataPacket &data) {
   DEBUG_SERIAL.print(data.timestamp / 1000.0, 2);
   DEBUG_SERIAL.println(" sec");
 
-  DEBUG_SERIAL.print("Battery: ");
-  DEBUG_SERIAL.print(data.voltage, 2);
+  DEBUG_SERIAL.print("Battery PI: ");
+  DEBUG_SERIAL.print(data.voltage_pi, 2);
+  DEBUG_SERIAL.println(" V");
+  DEBUG_SERIAL.print("Battery TX: ");
+  DEBUG_SERIAL.print(data.voltage_tx, 2);
   DEBUG_SERIAL.println(" V");
 
   DEBUG_SERIAL.println("\n- Environmental -");

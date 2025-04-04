@@ -59,7 +59,7 @@ class MockIMU(BaseIMU):
             usecols=self._valid_columns,
         )
 
-    def fetch_data(self) -> IMUDataPacket | None:
+    def _read_data(self) -> None:
         """
         Returns the next row of the CSV as an IMUDataPacket at a rate of 50Hz.
         If called too soon, it returns None.
@@ -67,20 +67,13 @@ class MockIMU(BaseIMU):
         """
         # We simulate the delay the real imu has in sending data by checking the time that has
         # passed since the last fetch.
-        if self.real_time_replay:
-            time.sleep(1 / IMU_APPROXIMATE_FREQUENCY)  # 17Hz = 0.0588s
 
-        # If we have reached the end of the data, stop the IMU
-        if self._current_index >= len(self._df):
-            # -- Commented out to allow the transmission period to occur in mock sims
-            # self.stop()
+        while self.is_running and self._current_index < len(self._df):
+            row = self._df.iloc[self._current_index]
+            row_dict = {k: v for k, v in row.items() if pd.notna(v)}
+            self._current_index += 1
+            # Converts a row in the CSV to an IMUDataPacket
+            self._queued_imu_packets.put(IMUDataPacket(**row_dict))
 
-            return None
-
-        row = self._df.iloc[self._current_index]
-        row_dict = {k: v for k, v in row.items() if pd.notna(v)}
-        row_dict["arduino_timestamp"] = row_dict.pop("timestamp")
-        row_dict["timestamp"] = time.time()
-        self._current_index += 1
-        # Converts a row in the CSV to an IMUDataPacket
-        return IMUDataPacket(**row_dict)
+            if self.real_time_replay:
+                time.sleep(1 / IMU_APPROXIMATE_FREQUENCY)  # 17Hz = 0.0588s

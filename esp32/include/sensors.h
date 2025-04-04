@@ -21,6 +21,7 @@ extern bool badIMUDataDetected;
 extern uint8_t status_flags;
 
 // Function declarations
+void setBNO08xReports();
 void initSensors();
 void collectSensorData(DataPacket &data);
 void collectIMUData(DataPacket &data);

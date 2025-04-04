@@ -21,7 +21,8 @@ void setup() {
   initSensors();
 
   // ADC setup
-  pinMode(VOLTAGE_PIN, INPUT);
+  pinMode(VOLTAGE_PIN_PI, INPUT);
+  pinMode(VOLTAGE_PIN_TX, INPUT);
   analogReadResolution(12);
   analogSetAttenuation(ADC_11db);
 }
@@ -29,7 +30,7 @@ void setup() {
 void loop() {
   updateHeartbeatLED();
 
-  DataPacket data = {0};
+  DataPacket data;
   data.timestamp = millis();
 
   // Collect all sensor data

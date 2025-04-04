@@ -28,7 +28,7 @@ class DisplayEndingType(StrEnum):
 # IMU Configuration
 # -------------------------------------------------------
 
-ARDUINO_SERIAL_PORT = "/dev/ttyUSB0"
+ARDUINO_SERIAL_PORT = "/dev/USB_ESP32"
 """The port that the Arduino is connected to. This is typically the default port where the IMU
 connects to the Raspberry Pi. To check the port, run `ls /dev/ttyUSB*` in the terminal."""
 # ARDUINO_SERIAL_PORT = "COM5"
@@ -40,7 +40,7 @@ ARDUINO_SERIAL_TIMEOUT = 1
 PACKET_START_MARKER = b'\xFF\xFE\xFD\xFC'
 """The start marker of the data packet. This helps use to know where a packet starts in the stream
 of bytes."""
-PACKET_BYTE_SIZE = 84
+PACKET_BYTE_SIZE = 88
 """Size of the data packet being sent from the Arduino in bytes"""
 
 IMU_APPROXIMATE_FREQUENCY = 40
@@ -115,10 +115,10 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 5
+GROUND_ALTITUDE_METERS = 15
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
 
-MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 8
+MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 10
 """The maximum amount of time in seconds that the rocket will take to fall to the ground from
 GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
 
