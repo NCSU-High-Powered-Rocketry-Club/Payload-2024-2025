@@ -206,35 +206,3 @@ class LandedState(State):
     def next_state(self):
         # Explicitly do nothing, there is no next state
         pass
-
-
-class RecoveryState(State):
-    """
-    After the rockets transmission period has elapsed
-    """
-
-    __slots__ = ()
-
-    def update(self):
-        pass
-
-    def next_state(self):
-        self.context.state = ShutdownState(self.context)
-
-
-class ShutdownState(State):
-    """
-    If the rocket has receieved a command to shutdown
-    """
-
-    __slots__ = ()
-
-    def __init__(self, context: "PayloadContext"):
-        super().__init__(context)
-
-    def update(self):
-        """Nothing will be happening in this state"""
-
-    def next_state(self):
-        # Explicitly do nothing, there is no next state
-        pass
