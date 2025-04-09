@@ -192,7 +192,6 @@ class Logger:
 
         # Set up the csv logging in the new process
         with self.log_path.open(mode="a", newline="") as file_writer:
-
             number_of_lines_logged: int = 0
 
             writer = csv.DictWriter(file_writer, fieldnames=list(LoggerDataPacket.__annotations__))
@@ -216,4 +215,3 @@ class Logger:
                     # This operation is the one which is actually "blocking" when talking about
                     # file I/O.
                     os.fsync(file_writer.fileno())
-

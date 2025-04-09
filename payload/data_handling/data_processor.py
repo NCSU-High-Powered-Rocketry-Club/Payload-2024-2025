@@ -207,7 +207,7 @@ class DataProcessor:
             # Calculate the velocity using the altitude difference and the time difference.
             velocity = np.float64(
                 (self._data_packet.pressureAlt - self._last_velocity_calculation_packet.pressureAlt)
-               / convert_milliseconds_to_seconds(self._time_difference)
+                / convert_milliseconds_to_seconds(self._time_difference)
             )
             # Update the last velocity packet for the next update
             self._last_velocity_calculation_packet = self._data_packet

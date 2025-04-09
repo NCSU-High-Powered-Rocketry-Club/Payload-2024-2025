@@ -84,7 +84,10 @@ class StandbyState(State):
         # Ideally we would directly communicate with the motor, but we don't have that capability.
         data = self.context.data_processor
 
-        if data.current_altitude > TAKEOFF_HEIGHT_METERS and data.velocity_moving_average > TAKEOFF_VELOCITY_METERS_PER_SECOND:
+        if (
+            data.current_altitude > TAKEOFF_HEIGHT_METERS
+            and data.velocity_moving_average > TAKEOFF_VELOCITY_METERS_PER_SECOND
+        ):
             self.next_state()
             return
 

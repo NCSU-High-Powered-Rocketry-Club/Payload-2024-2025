@@ -37,7 +37,7 @@ ARDUINO_BAUD_RATE = 115200
 """The baud rate of the channel"""
 ARDUINO_SERIAL_TIMEOUT = 1
 """The amount of time in seconds that the serial port waits for a message"""
-PACKET_START_MARKER = b'\xFF\xFE\xFD\xFC'
+PACKET_START_MARKER = b"\xff\xfe\xfd\xfc"
 """The start marker of the data packet. This helps use to know where a packet starts in the stream
 of bytes."""
 PACKET_BYTE_SIZE = 88
