@@ -11,6 +11,7 @@ from payload.constants import (
     MOTOR_BURN_TIME_SECONDS,
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
+    MAX_VELOCITY_THRESHOLD,
 )
 from payload.utils import convert_milliseconds_to_seconds
 
@@ -106,14 +107,13 @@ class MotorBurnState(State):
     def update(self):
         """Checks to see if the acceleration has dropped to zero, indicating the motor has
         burned out."""
+        data = self.context.data_processor
 
-        # If it has been more than 2.4 seconds since motor burn, switch states.
-        if (
-            convert_milliseconds_to_seconds(
-                self.context.data_processor.current_timestamp - self.start_time_ms
-            )
-            >= MOTOR_BURN_TIME_SECONDS
-        ):
+        # If our current velocity is less than our max velocity, that means we have stopped
+        # accelerating. This is the same thing as checking if our accel sign has flipped
+        # We make sure that it is not just a temporary fluctuation by checking if the velocity is a
+        # bit less than the max velocity
+        if data.velocity_moving_average < data.max_vertical_velocity * MAX_VELOCITY_THRESHOLD:
             self.next_state()
             return
 
@@ -232,7 +232,7 @@ class ShutdownState(State):
     def __init__(self, context: "PayloadContext"):
         super().__init__(context)
 
-    def update():
+    def update(self):
         """Nothing will be happening in this state"""
 
     def next_state(self):
