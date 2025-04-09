@@ -107,6 +107,12 @@ MOTOR_BURN_TIME_SECONDS = 2.4
 """The maximum amount of time in seconds that the motor will burn."""
 
 # ----------------- Coasting to Freefall -----------------
+MAX_ALTITUDE_THRESHOLD = 0.90
+"""
+We don't care too much about accurately changing to the freefall state, so we just check if the
+rocket is less than 90% of the max altitude it reached. We do this because it would be catastrophic
+if we detected freefall too early.
+"""
 
 # ----------------- Freefall to Landing -----------------
 MAX_FREE_FALL_SECONDS = 300.0
@@ -118,7 +124,7 @@ deploying at apogee."""
 GROUND_ALTITUDE_METERS = 15
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
 
-MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS = 10
+SECONDS_TO_CONSIDERED_LANDED = 10
 """The maximum amount of time in seconds that the rocket will take to fall to the ground from
 GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
 

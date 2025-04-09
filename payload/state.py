@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING
 from payload.constants import (
     GROUND_ALTITUDE_METERS,
     MAX_FREE_FALL_SECONDS,
-    MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS,
+    SECONDS_TO_CONSIDERED_LANDED,
     MOTOR_BURN_TIME_SECONDS,
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
     MAX_VELOCITY_THRESHOLD,
+    MAX_ALTITUDE_THRESHOLD,
 )
 from payload.utils import convert_milliseconds_to_seconds
 
@@ -140,7 +141,7 @@ class CoastState(State):
         data = self.context.data_processor
 
         # If our current altitude is less than 90% of max altitude, we are in free fall.
-        if data.current_altitude <= data.max_altitude * 0.90:
+        if data.current_altitude <= data.max_altitude * MAX_ALTITUDE_THRESHOLD:
             self.next_state()
             return
 
@@ -158,7 +159,7 @@ class FreeFallState(State):
     def __init__(self, context):
         super().__init__(context)
         self.countdown_to_landed_timer = threading.Timer(
-            interval=MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS, function=self.next_state
+            interval=SECONDS_TO_CONSIDERED_LANDED, function=self.next_state
         )
         self._counter_started: bool = False
 
@@ -196,9 +197,9 @@ class LandedState(State):
         super().__init__(context)
 
         # Starts the transmission at the beginning of landed state
-        self.context.transmit_data()
         self.context.stop_survivability_calculation()
         self.context.data_processor.calculate_landing_velocity()
+        self.context.transmit_data()
 
         # Once we land we stop the camera recording
         self.context.end_video_recording()
