@@ -14,6 +14,7 @@ class IMU(BaseIMU):
     Represents the IMU on the rocket. This is used to interact with the data collected by the
     Arduino.
     """
+
     __slots__ = ("_baud_rate", "_buffer", "_port", "_serial")
 
     def __init__(self, port: str, baud_rate: int) -> None:
@@ -67,8 +68,8 @@ class IMU(BaseIMU):
                 packet_start = marker_idx + len(PACKET_START_MARKER)
                 if len(self._buffer) >= packet_start + PACKET_BYTE_SIZE:
                     # Extract and process packet
-                    packet = self._buffer[packet_start:packet_start + PACKET_BYTE_SIZE]
-                    self._buffer = self._buffer[packet_start + PACKET_BYTE_SIZE:]
+                    packet = self._buffer[packet_start : packet_start + PACKET_BYTE_SIZE]
+                    self._buffer = self._buffer[packet_start + PACKET_BYTE_SIZE :]
                     data_packet = self._process_packet_data(packet)
                     self._queued_imu_packets.put(data_packet)
                 else:

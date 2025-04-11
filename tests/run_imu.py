@@ -10,7 +10,8 @@ from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 MOVE_CURSOR_UP = "\033[F"  # Move cursor up one line
 
 # Open the serial port (adjust as needed)
-ser = serial.Serial('/dev/ttyUSB1', 115200, timeout=ARDUINO_SERIAL_TIMEOUT)
+ser = serial.Serial("/dev/ttyUSB1", 115200, timeout=ARDUINO_SERIAL_TIMEOUT)
+
 
 def fetch_data(ser):
     # Wait until there's enough data: marker + packet data
@@ -27,11 +28,13 @@ def fetch_data(ser):
                 return process_packet_data(binary_packet)
     return None
 
+
 def process_packet_data(binary_packet):
     num_floats = PACKET_BYTE_SIZE // 4
     unpacked_data = struct.unpack("<" + "f" * num_floats, binary_packet)
     # Assuming IMUDataPacket is defined appropriately to accept these values.
     return IMUDataPacket(*unpacked_data)
+
 
 # Example main loop:
 try:

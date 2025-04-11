@@ -7,10 +7,12 @@ from typing import TYPE_CHECKING
 from payload.constants import (
     GROUND_ALTITUDE_METERS,
     MAX_FREE_FALL_SECONDS,
-    MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS,
+    SECONDS_TO_CONSIDERED_LANDED,
     MOTOR_BURN_TIME_SECONDS,
     TAKEOFF_HEIGHT_METERS,
     TAKEOFF_VELOCITY_METERS_PER_SECOND,
+    MAX_VELOCITY_THRESHOLD,
+    MAX_ALTITUDE_THRESHOLD,
 )
 from payload.utils import convert_milliseconds_to_seconds
 
@@ -83,7 +85,10 @@ class StandbyState(State):
         # Ideally we would directly communicate with the motor, but we don't have that capability.
         data = self.context.data_processor
 
-        if data.current_altitude > TAKEOFF_HEIGHT_METERS and data.velocity_moving_average > TAKEOFF_VELOCITY_METERS_PER_SECOND:
+        if (
+            data.current_altitude > TAKEOFF_HEIGHT_METERS
+            and data.velocity_moving_average > TAKEOFF_VELOCITY_METERS_PER_SECOND
+        ):
             self.next_state()
             return
 
@@ -106,14 +111,13 @@ class MotorBurnState(State):
     def update(self):
         """Checks to see if the acceleration has dropped to zero, indicating the motor has
         burned out."""
+        data = self.context.data_processor
 
-        # If it has been more than 2.4 seconds since motor burn, switch states.
-        if (
-            convert_milliseconds_to_seconds(
-                self.context.data_processor.current_timestamp - self.start_time_ms
-            )
-            >= MOTOR_BURN_TIME_SECONDS
-        ):
+        # If our current velocity is less than our max velocity, that means we have stopped
+        # accelerating. This is the same thing as checking if our accel sign has flipped
+        # We make sure that it is not just a temporary fluctuation by checking if the velocity is a
+        # bit less than the max velocity
+        if data.velocity_moving_average < data.max_vertical_velocity * MAX_VELOCITY_THRESHOLD:
             self.next_state()
             return
 
@@ -137,7 +141,7 @@ class CoastState(State):
         data = self.context.data_processor
 
         # If our current altitude is less than 90% of max altitude, we are in free fall.
-        if data.current_altitude <= data.max_altitude * 0.90:
+        if data.current_altitude <= data.max_altitude * MAX_ALTITUDE_THRESHOLD:
             self.next_state()
             return
 
@@ -155,7 +159,7 @@ class FreeFallState(State):
     def __init__(self, context):
         super().__init__(context)
         self.countdown_to_landed_timer = threading.Timer(
-            interval=MAX_TIME_TO_LAND_FROM_GROUND_ALTITUDE_METERS, function=self.next_state
+            interval=SECONDS_TO_CONSIDERED_LANDED, function=self.next_state
         )
         self._counter_started: bool = False
 
@@ -193,47 +197,15 @@ class LandedState(State):
         super().__init__(context)
 
         # Starts the transmission at the beginning of landed state
-        self.context.transmit_data()
         self.context.stop_survivability_calculation()
         self.context.data_processor.calculate_landing_velocity()
+        self.context.transmit_data()
 
         # Once we land we stop the camera recording
         self.context.end_video_recording()
 
     def update(self):
         """This method does nothing"""
-
-    def next_state(self):
-        # Explicitly do nothing, there is no next state
-        pass
-
-
-class RecoveryState(State):
-    """
-    After the rockets transmission period has elapsed
-    """
-
-    __slots__ = ()
-
-    def update(self):
-        pass
-
-    def next_state(self):
-        self.context.state = ShutdownState(self.context)
-
-
-class ShutdownState(State):
-    """
-    If the rocket has receieved a command to shutdown
-    """
-
-    __slots__ = ()
-
-    def __init__(self, context: "PayloadContext"):
-        super().__init__(context)
-
-    def update():
-        """Nothing will be happening in this state"""
 
     def next_state(self):
         # Explicitly do nothing, there is no next state

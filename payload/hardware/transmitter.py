@@ -201,5 +201,4 @@ class Transmitter(BaseTransmitter):
         # p = psutil.Process(pid)
         # p.nice(-20)
 
-
         self.message_worker_thread.start()

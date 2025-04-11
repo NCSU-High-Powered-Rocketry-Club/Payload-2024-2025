@@ -4,7 +4,11 @@ import os
 from contextlib import suppress
 from threading import Event, Thread
 
-from payload.constants import CAMERA_SAVE_PATH, CAMERA_START_RECORDING_TIMEOUT, CAMERA_STOP_RECORDING_TIMEOUT
+from payload.constants import (
+    CAMERA_SAVE_PATH,
+    CAMERA_START_RECORDING_TIMEOUT,
+    CAMERA_STOP_RECORDING_TIMEOUT,
+)
 
 # These libraries are only available on the Raspberry Pi so we ignore them if they are not available
 with suppress(ImportError):
