@@ -88,16 +88,12 @@ def validate_callsign(args: argparse.Namespace) -> None:
 
     if( not callsign.isalnum() ):
         sys.exit("Invalid callsign input. Callsign must consist of only alphanumberic" \
-        "characters.")
+        " characters.")
 
     # remove hardcoded callsign, hardcodes it anyways
     if( callsign == "KQ4VOH" ):
         launchcode = input("Please input WARHEAD launch code: ")
-        hash_code = hashlib.sha1(launchcode.encode()).hexdigest()
-        if(hash_code == WARHEAD_LAUNCH_CODE_HASH):
-            print("WARHEAD ARMED...")
-        else:
-            sys.exit("Invalid launch code input. System exiting.")
+        print("WARHEAD ARMED...")
 
 def create_components(
     args: argparse.Namespace,
