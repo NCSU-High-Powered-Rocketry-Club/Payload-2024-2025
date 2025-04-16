@@ -31,7 +31,7 @@ def update_beacon_comment(config_path, new_comment):
 
     found = False
     for i, line in enumerate(lines):
-        if line.startswith("PBEACONa"):
+        if line.startswith("PBEACON"):
             lines[i] = re.sub(r'comment="[^"]*"', f'comment="{new_comment}"', line)
             found = True
             break

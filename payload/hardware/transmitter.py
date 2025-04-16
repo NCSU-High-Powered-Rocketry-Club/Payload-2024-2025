@@ -31,7 +31,7 @@ class Transmitter(BaseTransmitter):
 
     __slots__ = ("_stop_event", "config_path", "gpio_pin", "message_worker_thread")
 
-    def __init__(self, gpio_pin: int, config_path: Path) -> None:
+    def __init__(self, gpio_pin: int, config_path: Path, callsign: str) -> None:
         """
         Initializes the transmitter with the specified GPIO pin and Direwolf configuration file
         path.
@@ -42,6 +42,7 @@ class Transmitter(BaseTransmitter):
         self.config_path = config_path
         self._stop_event = threading.Event()
         self.message_worker_thread = None
+        self.callsign = callsign
 
         self.setup_gpio()
 
@@ -100,7 +101,8 @@ class Transmitter(BaseTransmitter):
                 if line.startswith("PBEACON"):
                     lines[i] = self._create_beacon_line(message)
                     found = True
-                    break
+                elif line.startswith("MYCALL"):
+                    lines[i] = f'MYCALL {self.callsign}\n'
 
             if not found:
                 print("PBEACON line not found in the configuration file.")

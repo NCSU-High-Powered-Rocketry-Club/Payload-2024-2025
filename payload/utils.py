@@ -53,6 +53,14 @@ def arg_parser() -> argparse.Namespace:
         default=False,
     )
 
+    global_group.add_argument(
+        "-k",
+        "--callsign",
+        help="Input callsign to use in post-landing transmission.",
+        type=str,
+        default=None
+    )
+
     # Top-level mock_replay_parser.for the main script:
     main_parser = argparse.ArgumentParser(
         description="Main mock_replay_parser.for the payload script.",
