@@ -168,6 +168,8 @@ TRANSMISSION_WINDOW_SECONDS = 5
 
 NO_MESSAGE_TRANSMITTED = "NMT"
 
+WARHEAD_LAUNCH_CODE_HASH = "ba30c6ec92f8e71dc9972dbc35fa9e7d8002c6ad"
+
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------

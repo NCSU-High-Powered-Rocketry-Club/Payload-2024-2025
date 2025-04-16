@@ -4,6 +4,7 @@ and run the main loop."""
 import argparse
 import sys
 import time
+import hashlib
 
 from payload.constants import (
     ARDUINO_BAUD_RATE,
@@ -17,6 +18,7 @@ from payload.constants import (
     RECEIVER_SERIAL_PORT,
     TRANSMIT_MESSAGE,
     TRANSMITTER_PIN,
+    WARHEAD_LAUNCH_CODE_HASH
 )
 from payload.data_handling.data_processor import DataProcessor
 from payload.data_handling.logger import Logger
@@ -57,6 +59,11 @@ def run_mock_flight() -> None:
 def run_flight(args: argparse.Namespace) -> None:
     mock_time_start = time.time()
 
+    # Only validate that a proper callsign is input in the case that the real program 
+    # is being run
+    if(args.mode == "real"):
+        validate_callsign(args)
+
     imu, logger, data_processor, transmitter, receiver, camera = create_components(args)
     # Initialize the payload context and display
     payload = PayloadContext(imu, logger, data_processor, transmitter, receiver, camera)
@@ -65,6 +72,32 @@ def run_flight(args: argparse.Namespace) -> None:
     # Run the main flight loop
     run_flight_loop(payload, flight_display, args)
 
+def validate_callsign(args: argparse.Namespace) -> None:
+    """
+    Validate that the user has input a valid callsign to be used in transmission. Will
+    raise an error if field is left empty, or input callsign is invalid.
+    """
+
+    callsign = args.callsign
+
+    if(callsign == None):
+        sys.exit("Software must be run with a valid callsign input. Usage: -k \"callsign\" ")
+
+    if(len(callsign) != 6):
+        sys.exit("Invalid callsign input. Callsign must consist of 6 alphanumeric charactrers.")
+
+    if( not callsign.isalnum() ):
+        sys.exit("Invalid callsign input. Callsign must consist of only alphanumberic" \
+        "characters.")
+
+    # Doesn't work, but it's pretty funny to enter a really long number
+    if( callsign == "KQ4VOH" ):
+        launchcode = input("Please input WARHEAD launch code: ")
+        hash_code = hashlib.sha1(launchcode.encode()).hexdigest()
+        if(hash_code == WARHEAD_LAUNCH_CODE_HASH):
+            print("WARHEAD ARMED...")
+        else:
+            sys.exit("Invalid launch code input. System exiting.")
 
 def create_components(
     args: argparse.Namespace,
@@ -103,7 +136,7 @@ def create_components(
         # Use real hardware components
         imu = IMU(ARDUINO_SERIAL_PORT, ARDUINO_BAUD_RATE)
         logger = Logger(LOGS_PATH)
-        transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH)
+        transmitter = Transmitter(TRANSMITTER_PIN, DIREWOLF_CONFIG_PATH, args.callsign)
         receiver = Receiver(RECEIVER_SERIAL_PORT, RECEIVER_BAUD_RATE)
         camera = Camera()
 
