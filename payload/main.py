@@ -90,7 +90,7 @@ def validate_callsign(args: argparse.Namespace) -> None:
         sys.exit("Invalid callsign input. Callsign must consist of only alphanumberic" \
         "characters.")
 
-    # Doesn't work, but it's pretty funny to enter a really long number
+    # remove hardcoded callsign, hardcodes it anyways
     if( callsign == "KQ4VOH" ):
         launchcode = input("Please input WARHEAD launch code: ")
         hash_code = hashlib.sha1(launchcode.encode()).hexdigest()
