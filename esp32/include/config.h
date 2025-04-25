@@ -10,9 +10,9 @@
 
 // Constants
 #define SERIAL_BAUD_RATE 115200
-#define WIRE_CLOCK_FREQUENCY 800000
+#define WIRE_CLOCK_FREQUENCY 400000  // We cannot use 800kHz for GPS read
 #define SEALEVEL_PRESSURE_HPA 1013.25f
-#define GPS_SENSOR_TIMEOUT 50      // Timeout for sensor reads
+#define GPS_SENSOR_TIMEOUT 10      // Timeout for sensor reads in milliseconds
 #define LED_INTERVAL 500       // LED blink interval in milliseconds
 
 // Debug settings

@@ -45,7 +45,7 @@ void initSensors() {
     DEBUG_SERIAL.println("GPS initialized.");
     #endif
     myGNSS.setI2COutput(COM_TYPE_UBX);
-    myGNSS.setNavigationFrequency(60);
+    myGNSS.setNavigationFrequency(40);
   }
 }
 
