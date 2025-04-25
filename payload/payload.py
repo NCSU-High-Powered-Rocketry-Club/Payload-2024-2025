@@ -2,6 +2,8 @@
 
 import math
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING
 
 from payload.constants import STOP_MESSAGE, TRANSMIT_MESSAGE
@@ -162,18 +164,19 @@ class PayloadContext:
         """
         (roll, pitch, yaw) = self.data_processor.calculate_orientation()
         self.transmission_packet = TransmitterDataPacket(
-            temperature=self.imu_data_packet.ambientTemperature,
-            apogee=self.processed_data_packet.maximum_altitude,
-            battery_level_pi=self.imu_data_packet.voltage_pi,
-            battery_level_tx=self.imu_data_packet.voltage_tx,
-            orientation=(roll, pitch, yaw),
-            time_of_landing=time.strftime("%H:%M:%S", time.gmtime()),
-            max_velocity=self.processed_data_packet.maximum_velocity,
-            landing_velocity=self.processed_data_packet.landing_velocity,
-            crew_survivability=self.processed_data_packet.crew_survivability,
+            temperature=float(self.imu_data_packet.ambientTemperature),
+            apogee=float(self.processed_data_packet.maximum_altitude),
+            battery_level_pi=float(self.imu_data_packet.voltage_pi),
+            battery_level_tx=float(self.imu_data_packet.voltage_tx),
+            orientation=(float(roll), float(pitch), float(yaw)),
+            time_of_landing=datetime.now(tz=ZoneInfo("America/Chicago")).strftime("%H:%M:%S"),
+            max_velocity=float(self.processed_data_packet.maximum_velocity),
+            landing_velocity=float(self.processed_data_packet.landing_velocity),
+            crew_survivability=float(self.processed_data_packet.crew_survivability),
             landing_coords=(self.imu_data_packet.gpsLatitude, self.imu_data_packet.gpsLongitude),
         )
 
+        self.transmission_packet.validate_data_points()
         self.transmitter.send_message(self.transmission_packet)
 
     def assign_previous_data(self, imu_data_packet: "IMUDataPacket") -> "IMUDataPacket":
