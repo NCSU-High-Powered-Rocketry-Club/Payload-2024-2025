@@ -1,7 +1,8 @@
 """Data packet which we will use for transmitting the data via RF and direwolf."""
 
 import msgspec
-import numpy as np
+
+from payload.constants import TransmitterValueRanges
 
 
 class TransmitterDataPacket(msgspec.Struct):
@@ -11,15 +12,15 @@ class TransmitterDataPacket(msgspec.Struct):
     station.
     """
 
-    temperature: np.float64  # Temperature
-    apogee: np.float64  # apogee reached
+    temperature: float  # Temperature
+    apogee: float  # apogee reached
     battery_level_pi: float  # battery pi check
     battery_level_tx: float  # battery tx check
-    orientation: tuple[np.float64, np.float64, np.float64]  # of the stemnauts
+    orientation: tuple[float, float, float]  # of the stemnauts
     time_of_landing: str  # time of landing
-    max_velocity: np.float64  # maximum velocity reached
-    landing_velocity: np.float64  # velocity on landing
-    crew_survivability: np.float64  # survivability, in percent
+    max_velocity: float  # maximum velocity reached
+    landing_velocity: float  # velocity on landing
+    crew_survivability: float  # survivability, in percent
     landing_coords: tuple[float, float]  # landing coordinates
 
     def compress_packet(self) -> str:
@@ -38,3 +39,28 @@ class TransmitterDataPacket(msgspec.Struct):
             f"landing_vel={self.landing_velocity * 3.28084:.2f}ft/s,"
             f"crew_survival={self.crew_survivability * 100:3.1f}%"
         )
+
+    def validate_data_points(self) -> None:
+        """
+        Validates the data points in the packet. This ensures that all the data is within a range,
+        and if not, it will clamp the values to the range.
+        """
+
+        temp_range = TransmitterValueRanges.TEMPERATURE_RANGE_CELSIUS
+        if self.temperature < temp_range[0]:
+            self.temperature = temp_range[0]
+        elif self.temperature > temp_range[1]:
+            self.temperature = temp_range[1]
+        
+        max_velocity_range = TransmitterValueRanges.MAX_VELOCITY_RANGE_METERS_PER_SECOND
+        if self.max_velocity < max_velocity_range[0]:
+            self.max_velocity = max_velocity_range[0]
+        elif self.max_velocity > max_velocity_range[1]:
+            self.max_velocity = max_velocity_range[1]
+
+        landing_velocity_range = TransmitterValueRanges.LANDING_VELOCITY_RANGE_METERS_PER_SECOND
+        if self.landing_velocity < landing_velocity_range[0]:
+            self.landing_velocity = landing_velocity_range[0]
+        elif self.landing_velocity > landing_velocity_range[1]:
+            self.landing_velocity = landing_velocity_range[1]
+

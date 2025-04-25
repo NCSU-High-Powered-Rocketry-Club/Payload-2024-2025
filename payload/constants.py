@@ -170,6 +170,26 @@ NO_MESSAGE_TRANSMITTED = "NMT"
 
 WARHEAD_LAUNCH_CODE_HASH = "7110eda4d09e062aa5e4a390b0a572ac0d2c0220"
 
+
+class TransmitterValueRanges:
+    """
+    Represents the range of the values that are considered to be "accurate" when transmitting
+    data. This is used to determine if the data is valid or not.
+    """
+
+    TEMPERATURE_RANGE_CELSIUS = [16, 34]
+    """The range of the temperature in Celsius. This is used to determine if the temperature is
+    valid or not."""
+
+    MAX_VELOCITY_RANGE_METERS_PER_SECOND = [120, 190]
+    """The range of the maximum velocity in meters per second. This is used to determine if the
+    maximum velocity is valid or not."""
+
+    LANDING_VELOCITY_RANGE_METERS_PER_SECOND = [-7, 0]
+    """The range of the landing velocity in meters per second. This is used to determine if the
+    landing velocity is valid or not."""
+
+
 # -------------------------------------------------------
 # Receiver Configuration
 # -------------------------------------------------------
