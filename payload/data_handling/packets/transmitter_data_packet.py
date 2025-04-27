@@ -30,14 +30,14 @@ class TransmitterDataPacket(msgspec.Struct):
         """
         # The `:.2f` means that we are rounding the float to one decimal place.
         return (
-            f"temperature={self.temperature * (9 / 5) + 32:.2f}\xc2\xb0F,"  # that's the degree symbol
-            f"apogee={self.apogee * 3.28084:.2f}ft,"
-            f"battery_status=CPU:{self.battery_level_pi:.2f}% | TX:{self.battery_level_tx:.2f}%,"
-            f"orientation=(roll={self.orientation[0]:.2f},pitch={self.orientation[1]:.2f},yaw={self.orientation[2]:.2f}),"
-            f"time_landing={self.time_of_landing},"
-            f"max_vel={self.max_velocity * 3.28084:.2f}ft/s,"
-            f"landing_vel={self.landing_velocity * 3.28084:.2f}ft/s,"
-            f"crew_survival={self.crew_survivability * 100:3.1f}%"
+            f"temp={self.temperature * (9 / 5) + 32:.2f}\xc2\xb0F,"  # that's the degree symbol
+            f"apo={self.apogee * 3.28084:.2f}ft,"
+            f"batt=CPU:{self.battery_level_pi:.2f}%|TX:{self.battery_level_tx:.2f}%,"
+            f"ori=(r={self.orientation[0]:.2f},p={self.orientation[1]:.2f},y={self.orientation[2]:.2f}),"
+            f"ToL={self.time_of_landing},"
+            f"m_vel={self.max_velocity * 3.28084:.2f}ft/s,"
+            f"l_vel={self.landing_velocity * 3.28084:.2f}ft/s,"
+            f"surv={self.crew_survivability * 100:3.1f}%"
         )
 
     def validate_data_points(self) -> None:
