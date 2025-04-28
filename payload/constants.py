@@ -7,7 +7,7 @@ from pathlib import Path
 # Display Configuration
 # -------------------------------------------------------
 
-DISPLAY_FREQUENCY = 10
+DISPLAY_FREQUENCY = 5
 """The frequency at which the display updates in Hz"""
 
 
@@ -92,9 +92,9 @@ ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""
 
-TAKEOFF_HEIGHT_METERS = 20
+TAKEOFF_HEIGHT_METERS = 1 # 20
 """The height in meters that the rocket must reach before we consider it to have taken off."""
-TAKEOFF_VELOCITY_METERS_PER_SECOND = 35
+TAKEOFF_VELOCITY_METERS_PER_SECOND = 1# 35
 """The velocity in meters per second that the rocket must reach before we consider it to have taken
 off."""
 
@@ -121,18 +121,12 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 15
+GROUND_ALTITUDE_METERS = 5
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
 
 SECONDS_TO_CONSIDERED_LANDED = 10
 """The maximum amount of time in seconds that the rocket will take to fall to the ground from
 GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
-
-LANDED_VELOCITY_METERS_PER_SECOND = 7
-# ----------------- Landing to Program Stop -----------------
-
-STOP_AFTER_SECONDS = 30
-"""The time in seconds after which the program will stop itself."""
 
 # -------------------------------------------------------
 # Data Processor Configuration
@@ -163,12 +157,15 @@ TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
 NUMBER_OF_TRANSMISSIONS = 10
+"""Number of transmission to occur after the rocket has landed"""
 
 TRANSMISSION_WINDOW_SECONDS = 5
+"""Active transmission period that the transmitter will be pulled up for"""
 
 NO_MESSAGE_TRANSMITTED = "NMT"
 
 WARHEAD_LAUNCH_CODE_HASH = "7110eda4d09e062aa5e4a390b0a572ac0d2c0220"
+"""Launch code hash to be entered when attempting to arm the WARHEAD"""
 
 
 class TransmitterValueRanges:
@@ -226,5 +223,7 @@ ANGULAR_RATE_WEIGHT = 1.00
 PITCH_WEIGHT = 10.1
 
 INTENSITY_PERCENT_THRESHOLD = 0.20
+
+SURVIVABILITY_SCALE = 10
 
 LANDING_VELOCITY_DEDUCTION = 0.8

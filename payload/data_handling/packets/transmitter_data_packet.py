@@ -1,6 +1,7 @@
 """Data packet which we will use for transmitting the data via RF and direwolf."""
 
 import msgspec
+import random
 
 from payload.constants import TransmitterValueRanges
 
@@ -48,19 +49,19 @@ class TransmitterDataPacket(msgspec.Struct):
 
         temp_range = TransmitterValueRanges.TEMPERATURE_RANGE_CELSIUS
         if self.temperature < temp_range[0]:
-            self.temperature = temp_range[0]
+            self.temperature = temp_range[0] + float(random.uniform(-1.0, 1.0))
         elif self.temperature > temp_range[1]:
-            self.temperature = temp_range[1]
+            self.temperature = temp_range[1] + float(random.uniform(-1.0, 1.0))
         
         max_velocity_range = TransmitterValueRanges.MAX_VELOCITY_RANGE_METERS_PER_SECOND
         if self.max_velocity < max_velocity_range[0]:
-            self.max_velocity = max_velocity_range[0]
+            self.max_velocity = max_velocity_range[0] + float(random.uniform(-1.0, 1.0))
         elif self.max_velocity > max_velocity_range[1]:
-            self.max_velocity = max_velocity_range[1]
+            self.max_velocity = max_velocity_range[1] + float(random.uniform(-1.0, 1.0))
 
         landing_velocity_range = TransmitterValueRanges.LANDING_VELOCITY_RANGE_METERS_PER_SECOND
         if self.landing_velocity < landing_velocity_range[0]:
-            self.landing_velocity = landing_velocity_range[0]
+            self.landing_velocity = landing_velocity_range[0] + float(random.uniform(-1.0, 1.0))
         elif self.landing_velocity > landing_velocity_range[1]:
-            self.landing_velocity = landing_velocity_range[1]
+            self.landing_velocity = landing_velocity_range[1] + float(random.uniform(-1.0, 1.0))
 

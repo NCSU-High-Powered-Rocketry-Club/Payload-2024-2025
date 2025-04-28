@@ -171,6 +171,8 @@ class FreeFallState(State):
         # we have landed.
         if data.current_altitude <= GROUND_ALTITUDE_METERS and not self._counter_started:
             self._counter_started = True
+            self.context.stop_survivability_calculation()
+            self.context.data_processor.calculate_landing_velocity()
             self.countdown_to_landed_timer.start()
 
         # If we have been in free fall for too long, we move to the landed state
@@ -197,8 +199,6 @@ class LandedState(State):
         super().__init__(context)
 
         # Starts the transmission at the beginning of landed state
-        self.context.stop_survivability_calculation()
-        self.context.data_processor.calculate_landing_velocity()
         self.context.transmit_data()
 
         # Once we land we stop the camera recording

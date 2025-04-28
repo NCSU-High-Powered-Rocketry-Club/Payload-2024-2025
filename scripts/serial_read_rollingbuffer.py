@@ -11,7 +11,7 @@ def detect_and_read_packets(port=ARDUINO_SERIAL_PORT, baud_rate=ARDUINO_BAUD_RAT
     START_FLAG_LEN = len(START_FLAG)
     
     # DataPacket structure size (in bytes)
-    PACKET_SIZE = 84
+    PACKET_SIZE = 88
     
     # Initialize serial port
     ser = serial.Serial(port, baud_rate, timeout=1)

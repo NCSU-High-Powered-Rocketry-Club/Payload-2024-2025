@@ -164,9 +164,9 @@ class FlightDisplay:
                     f"Angular Rate:              {G}<{imu_data.estAngularRateX:6.2f}, {imu_data.estAngularRateY:6.2f}, {imu_data.estAngularRateZ:6.2f}>{RESET} {R}rad/s{RESET}",  # noqa: E501
                     f"Magnetic Field:            {G}<{imu_data.magneticFieldX:6.2f}, {imu_data.magneticFieldY:6.2f}, {imu_data.magneticFieldZ:6.2f}>{RESET} {R}microT{RESET}",  # noqa: E501
                     f"Orient Quaternions:        {G}<{imu_data.estOrientQuaternionW:6.2f}, {imu_data.estOrientQuaternionX:6.2f}, {imu_data.estOrientQuaternionY:6.2f}, {imu_data.estOrientQuaternionZ:6.2f}>{RESET}",  # noqa: E501
-                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:6.2f}{RESET} {R}°{RESET}",
-                    f"GPS Longitude:             {G}{imu_data.gpsLongitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
-                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:6.2f}{RESET} {R}m{RESET}",
+                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:8.4f}{RESET} {R}°{RESET}",
+                    f"GPS Longitude:             {G}{imu_data.gpsLongitude:8.4f}{RESET} {R}°{RESET}",  # noqa: E501
+                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:8.4f}{RESET} {R}m{RESET}",
                     # f"Status Flag:               {G}{imu_data.statusFlag:6.2f}{RESET} {R}{RESET}",  # noqa: E501
                 ]
             )

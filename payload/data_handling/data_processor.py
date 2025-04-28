@@ -12,6 +12,7 @@ from payload.constants import (
     LANDING_VELOCITY_THRESHOLD,
     VELOCITY_FROM_ALTITUDE_WINDOW_SIZE,
     VERTICAL_ACCELERATION_WEIGHT,
+    SURVIVABILITY_SCALE,
 )
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
@@ -247,7 +248,7 @@ class DataProcessor:
         intensity_percent = (
             np.abs(self._data_packet.estCompensatedAccelZ) * VERTICAL_ACCELERATION_WEIGHT
             + np.abs(self._data_packet.estAngularRateY) * ANGULAR_RATE_WEIGHT
-        ) / 75
+        ) / SURVIVABILITY_SCALE
 
         if intensity_percent > INTENSITY_PERCENT_THRESHOLD:
             # Since the code is updated so frequently, intensity percent is divided by large
