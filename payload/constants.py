@@ -92,9 +92,9 @@ ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""
 
-TAKEOFF_HEIGHT_METERS = 1 # 20
+TAKEOFF_HEIGHT_METERS = 20
 """The height in meters that the rocket must reach before we consider it to have taken off."""
-TAKEOFF_VELOCITY_METERS_PER_SECOND = 1# 35
+TAKEOFF_VELOCITY_METERS_PER_SECOND = 35
 """The velocity in meters per second that the rocket must reach before we consider it to have taken
 off."""
 
@@ -121,7 +121,7 @@ have landed. This is to prevent the program from running indefinitely if our cod
 landing of the rocket. This value accounts for the worst case scenario of the main parachute
 deploying at apogee."""
 
-GROUND_ALTITUDE_METERS = 5
+GROUND_ALTITUDE_METERS = 15
 """The altitude in meters that the rocket must be under before we consider it to have landed."""
 
 SECONDS_TO_CONSIDERED_LANDED = 10
@@ -224,6 +224,12 @@ PITCH_WEIGHT = 10.1
 
 INTENSITY_PERCENT_THRESHOLD = 0.20
 
-SURVIVABILITY_SCALE = 10
+SURVIVABILITY_SCALE = 25
 
 LANDING_VELOCITY_DEDUCTION = 0.8
+
+# -------------------------------------------------------
+# Battery Rolling Average
+# -------------------------------------------------------
+
+BATTERY_ROLLING_AVG_SAMPLE_SIZE = 200

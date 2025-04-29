@@ -155,8 +155,8 @@ class FlightDisplay:
                     f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]}{RESET}",  # noqa: E501
                     f"{Y}{'=' * 19} IMU INFO {'=' * 18}{RESET}",
                     f"Timestamp:                 {G}{imu_data.timestamp:9.2f}{RESET} {R}ms{RESET}",
-                    f"Voltage pi:                {G}{imu_data.voltage_pi:6.2f}{RESET} {R}%{RESET}",
-                    f"Voltage tx:                {G}{imu_data.voltage_tx:6.2f}{RESET} {R}%{RESET}",
+                    f"Voltage pi:                {G}{data_processor.battery_moving_average[0]:6.2f}{RESET} {R}%{RESET}",
+                    f"Voltage tx:                {G}{data_processor.battery_moving_average[1]:6.2f}{RESET} {R}%{RESET}",
                     f"Temperature:               {G}{imu_data.ambientTemperature:6.2f}{RESET} {R}°C{RESET}",  # noqa: E501
                     f"Pressure:                  {G}{imu_data.ambientPressure:6.2f}{RESET} {R}mbar{RESET}",  # noqa: E501
                     f"Pressure Altitude:         {G}{imu_data.pressureAlt:6.2f}{RESET} {R}m{RESET}",
@@ -167,6 +167,9 @@ class FlightDisplay:
                     f"GPS Latitude:              {G}{imu_data.gpsLatitude:8.4f}{RESET} {R}°{RESET}",
                     f"GPS Longitude:             {G}{imu_data.gpsLongitude:8.4f}{RESET} {R}°{RESET}",  # noqa: E501
                     f"GPS Altitude:              {G}{imu_data.gpsAltitude:8.4f}{RESET} {R}m{RESET}",
+                    f"Orientation roll:          {G}{float(data_processor.euler_orientation[0])}{RESET}",
+                    f"Orientation pitch:         {G}{float(data_processor.euler_orientation[1])}{RESET}",
+                    f"Orientation yaw:           {G}{float(data_processor.euler_orientation[2])}{RESET}",
                     # f"Status Flag:               {G}{imu_data.statusFlag:6.2f}{RESET} {R}{RESET}",  # noqa: E501
                 ]
             )
