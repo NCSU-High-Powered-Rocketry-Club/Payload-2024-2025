@@ -300,13 +300,13 @@ class DataProcessor:
         Calculates the orientation of the rocket using the magnetometer and accelerometer.
         :return: a tuple of roll, pitch, and yaw.
         """
-        acc = np.array(
-            [
-                self._data_packet.estCompensatedAccelX,
-                self._data_packet.estCompensatedAccelY,
-                self._data_packet.estCompensatedAccelZ,
-            ]
-        )
+        # acc = np.array(
+        #     [
+        #         self._data_packet.estCompensatedAccelX,
+        #         self._data_packet.estCompensatedAccelY,
+        #         self._data_packet.estCompensatedAccelZ,
+        #     ]
+        # )
 
         mag = np.array(
             [
@@ -316,8 +316,25 @@ class DataProcessor:
             ]
         )
 
-        if any(mag_data_point is None for mag_data_point in mag):
-            return None
+        # if any(mag_data_point is None for mag_data_point in mag):
+        #     return None
 
-        orientation = self._filter.estimate(acc=acc, mag=mag)
-        return tuple(R.from_quat(orientation, scalar_first=True).as_euler("xyz", degrees=True))
+        # orientation = self._filter.estimate(acc=acc, mag=mag)
+
+        mag = np.array(mag, dtype=float)
+        mag_norm = mag / np.linalg.norm(mag)
+        Bx, By, Bz = mag_norm
+
+        # Calculate pitch (theta): angle between vector and horizontal plane
+        pitch = np.arcsin(-Bz) * 180 / np.pi  # Bz is down in NED, so negate for pitch
+
+        # Calculate roll (phi): angle in the transverse plane
+        roll = np.arctan2(By, Bx) * 180 / np.pi
+
+        yaw = 0
+
+        return roll, pitch, yaw
+        
+        #return orientation
+
+        #return tuple(R.from_quat(orientation, scalar_first=True).as_euler("xyz", degrees=True))
