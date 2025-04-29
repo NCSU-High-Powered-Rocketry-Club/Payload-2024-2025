@@ -117,7 +117,11 @@ class MotorBurnState(State):
         # accelerating. This is the same thing as checking if our accel sign has flipped
         # We make sure that it is not just a temporary fluctuation by checking if the velocity is a
         # bit less than the max velocity
-        if data.velocity_moving_average < data.max_vertical_velocity * MAX_VELOCITY_THRESHOLD:
+        if (
+            convert_milliseconds_to_seconds(
+                self.context.data_processor.current_timestamp - self.start_time_ms
+            ) >= MOTOR_BURN_TIME_SECONDS
+        ):
             self.next_state()
             return
 

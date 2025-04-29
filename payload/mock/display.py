@@ -100,9 +100,9 @@ class FlightDisplay:
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
-            # if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
-            #     self._update_display(DisplayEndingType.TAKEOFF)
-            #     break
+            if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
+                self._update_display(DisplayEndingType.TAKEOFF)
+                break
 
         # The program has ended, so we print the final display, depending on how it ended:
         if self.end_mock_natural.is_set():
@@ -167,9 +167,9 @@ class FlightDisplay:
                     f"GPS Latitude:              {G}{imu_data.gpsLatitude:8.4f}{RESET} {R}°{RESET}",
                     f"GPS Longitude:             {G}{imu_data.gpsLongitude:8.4f}{RESET} {R}°{RESET}",  # noqa: E501
                     f"GPS Altitude:              {G}{imu_data.gpsAltitude:8.4f}{RESET} {R}m{RESET}",
-                    f"Orientation roll:          {G}{float(data_processor.euler_orientation[0])}{RESET}",
-                    f"Orientation pitch:         {G}{float(data_processor.euler_orientation[1])}{RESET}",
-                    f"Orientation yaw:           {G}{float(data_processor.euler_orientation[2])}{RESET}",
+                    f"Orientation roll:          {G}{float(data_processor.euler_orientation[0]):5.2f}{RESET}",
+                    f"Orientation pitch:         {G}{float(data_processor.euler_orientation[1]):5.2f}{RESET}",
+                    f"Orientation yaw:           {G}{float(data_processor.euler_orientation[2]):5.2f}{RESET}",
                     # f"Status Flag:               {G}{imu_data.statusFlag:6.2f}{RESET} {R}{RESET}",  # noqa: E501
                 ]
             )
