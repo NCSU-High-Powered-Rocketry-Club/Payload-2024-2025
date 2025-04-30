@@ -41,27 +41,27 @@ class TransmitterDataPacket(msgspec.Struct):
             f"surv={self.crew_survivability * 100:3.1f}%"
         )
 
-    def validate_data_points(self) -> None:
-        """
-        Validates the data points in the packet. This ensures that all the data is within a range,
-        and if not, it will clamp the values to the range.
-        """
+    # def validate_data_points(self) -> None:
+    #     """
+    #     Validates the data points in the packet. This ensures that all the data is within a range,
+    #     and if not, it will clamp the values to the range.
+    #     """
 
-        temp_range = TransmitterValueRanges.TEMPERATURE_RANGE_CELSIUS
-        if self.temperature < temp_range[0]:
-            self.temperature = temp_range[0] + float(random.uniform(-1.0, 1.0))
-        elif self.temperature > temp_range[1]:
-            self.temperature = temp_range[1] + float(random.uniform(-1.0, 1.0))
+    #     temp_range = TransmitterValueRanges.TEMPERATURE_RANGE_CELSIUS
+    #     if self.temperature < temp_range[0]:
+    #         self.temperature = temp_range[0] + float(random.uniform(-1.0, 1.0))
+    #     elif self.temperature > temp_range[1]:
+    #         self.temperature = temp_range[1] + float(random.uniform(-1.0, 1.0))
         
-        max_velocity_range = TransmitterValueRanges.MAX_VELOCITY_RANGE_METERS_PER_SECOND
-        if self.max_velocity < max_velocity_range[0]:
-            self.max_velocity = max_velocity_range[0] + float(random.uniform(-1.0, 1.0))
-        elif self.max_velocity > max_velocity_range[1]:
-            self.max_velocity = max_velocity_range[1] + float(random.uniform(-1.0, 1.0))
+    #     max_velocity_range = TransmitterValueRanges.MAX_VELOCITY_RANGE_METERS_PER_SECOND
+    #     if self.max_velocity < max_velocity_range[0]:
+    #         self.max_velocity = max_velocity_range[0] + float(random.uniform(-1.0, 1.0))
+    #     elif self.max_velocity > max_velocity_range[1]:
+    #         self.max_velocity = max_velocity_range[1] + float(random.uniform(-1.0, 1.0))
 
-        landing_velocity_range = TransmitterValueRanges.LANDING_VELOCITY_RANGE_METERS_PER_SECOND
-        if self.landing_velocity < landing_velocity_range[0]:
-            self.landing_velocity = landing_velocity_range[0] + float(random.uniform(-1.0, 1.0))
-        elif self.landing_velocity > landing_velocity_range[1]:
-            self.landing_velocity = landing_velocity_range[1] + float(random.uniform(-1.0, 1.0))
+    #     landing_velocity_range = TransmitterValueRanges.LANDING_VELOCITY_RANGE_METERS_PER_SECOND
+    #     if self.landing_velocity < landing_velocity_range[0]:
+    #         self.landing_velocity = landing_velocity_range[0] + float(random.uniform(-1.0, 1.0))
+    #     elif self.landing_velocity > landing_velocity_range[1]:
+    #         self.landing_velocity = landing_velocity_range[1] + float(random.uniform(-1.0, 1.0))
 
