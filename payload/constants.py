@@ -7,7 +7,7 @@ from pathlib import Path
 # Display Configuration
 # -------------------------------------------------------
 
-DISPLAY_FREQUENCY = 10
+DISPLAY_FREQUENCY = 5
 """The frequency at which the display updates in Hz"""
 
 
@@ -92,7 +92,7 @@ ACCEL_DEADBAND_METERS_PER_SECOND_SQUARED = 0.5
 like wind or being small bumps can cause this to accumulate even while the rocket is stationary, so
 we deadband the accel to prevent this."""
 
-TAKEOFF_HEIGHT_METERS = 20
+TAKEOFF_HEIGHT_METERS = 20 
 """The height in meters that the rocket must reach before we consider it to have taken off."""
 TAKEOFF_VELOCITY_METERS_PER_SECOND = 35
 """The velocity in meters per second that the rocket must reach before we consider it to have taken
@@ -128,12 +128,6 @@ SECONDS_TO_CONSIDERED_LANDED = 10
 """The maximum amount of time in seconds that the rocket will take to fall to the ground from
 GROUND_ALTITUDE_METERS. This is to make sure that the rocket has definitely landed."""
 
-LANDED_VELOCITY_METERS_PER_SECOND = 7
-# ----------------- Landing to Program Stop -----------------
-
-STOP_AFTER_SECONDS = 30
-"""The time in seconds after which the program will stop itself."""
-
 # -------------------------------------------------------
 # Data Processor Configuration
 # -------------------------------------------------------
@@ -163,12 +157,35 @@ TRANSMISSION_DELAY = 10.0
 """The amount of time we wait in between transmissions"""
 
 NUMBER_OF_TRANSMISSIONS = 10
+"""Number of transmission to occur after the rocket has landed"""
 
 TRANSMISSION_WINDOW_SECONDS = 5
+"""Active transmission period that the transmitter will be pulled up for"""
 
 NO_MESSAGE_TRANSMITTED = "NMT"
 
 WARHEAD_LAUNCH_CODE_HASH = "7110eda4d09e062aa5e4a390b0a572ac0d2c0220"
+"""Launch code hash to be entered when attempting to arm the WARHEAD"""
+
+
+class TransmitterValueRanges:
+    """
+    Represents the range of the values that are considered to be "accurate" when transmitting
+    data. This is used to determine if the data is valid or not.
+    """
+
+    TEMPERATURE_RANGE_CELSIUS = [16, 34]
+    """The range of the temperature in Celsius. This is used to determine if the temperature is
+    valid or not."""
+
+    MAX_VELOCITY_RANGE_METERS_PER_SECOND = [120, 190]
+    """The range of the maximum velocity in meters per second. This is used to determine if the
+    maximum velocity is valid or not."""
+
+    LANDING_VELOCITY_RANGE_METERS_PER_SECOND = [-7, 0]
+    """The range of the landing velocity in meters per second. This is used to determine if the
+    landing velocity is valid or not."""
+
 
 
 class TransmitterValueRanges:
@@ -227,4 +244,12 @@ PITCH_WEIGHT = 10.1
 
 INTENSITY_PERCENT_THRESHOLD = 0.20
 
+SURVIVABILITY_SCALE = 25
+
 LANDING_VELOCITY_DEDUCTION = 0.8
+
+# -------------------------------------------------------
+# Battery Rolling Average
+# -------------------------------------------------------
+
+BATTERY_ROLLING_AVG_SAMPLE_SIZE = 200

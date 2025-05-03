@@ -100,9 +100,9 @@ class FlightDisplay:
             self._update_display()
 
             # If we are running a real flight, we will stop the display when the rocket takes off:
-            # if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
-            #     self._update_display(DisplayEndingType.TAKEOFF)
-            #     break
+            if self._args.mode == "real" and self._payload.state.name == "MotorBurnState":
+                self._update_display(DisplayEndingType.TAKEOFF)
+                break
 
         # The program has ended, so we print the final display, depending on how it ended:
         if self.end_mock_natural.is_set():
@@ -155,8 +155,8 @@ class FlightDisplay:
                     f"Receiver message:          {G}{self._payload.receiver.latest_message[:14]}{RESET}",  # noqa: E501
                     f"{Y}{'=' * 19} IMU INFO {'=' * 18}{RESET}",
                     f"Timestamp:                 {G}{imu_data.timestamp:9.2f}{RESET} {R}ms{RESET}",
-                    f"Voltage pi:                {G}{imu_data.voltage_pi:6.2f}{RESET} {R}%{RESET}",
-                    f"Voltage tx:                {G}{imu_data.voltage_tx:6.2f}{RESET} {R}%{RESET}",
+                    f"Voltage pi:                {G}{data_processor.battery_moving_average[0]:6.2f}{RESET} {R}%{RESET}",
+                    f"Voltage tx:                {G}{data_processor.battery_moving_average[1]:6.2f}{RESET} {R}%{RESET}",
                     f"Temperature:               {G}{imu_data.ambientTemperature:6.2f}{RESET} {R}°C{RESET}",  # noqa: E501
                     f"Pressure:                  {G}{imu_data.ambientPressure:6.2f}{RESET} {R}mbar{RESET}",  # noqa: E501
                     f"Pressure Altitude:         {G}{imu_data.pressureAlt:6.2f}{RESET} {R}m{RESET}",
@@ -164,9 +164,12 @@ class FlightDisplay:
                     f"Angular Rate:              {G}<{imu_data.estAngularRateX:6.2f}, {imu_data.estAngularRateY:6.2f}, {imu_data.estAngularRateZ:6.2f}>{RESET} {R}rad/s{RESET}",  # noqa: E501
                     f"Magnetic Field:            {G}<{imu_data.magneticFieldX:6.2f}, {imu_data.magneticFieldY:6.2f}, {imu_data.magneticFieldZ:6.2f}>{RESET} {R}microT{RESET}",  # noqa: E501
                     f"Orient Quaternions:        {G}<{imu_data.estOrientQuaternionW:6.2f}, {imu_data.estOrientQuaternionX:6.2f}, {imu_data.estOrientQuaternionY:6.2f}, {imu_data.estOrientQuaternionZ:6.2f}>{RESET}",  # noqa: E501
-                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:6.2f}{RESET} {R}°{RESET}",
-                    f"GPS Longitude:             {G}{imu_data.gpsLongitude:6.2f}{RESET} {R}°{RESET}",  # noqa: E501
-                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:6.2f}{RESET} {R}m{RESET}",
+                    f"GPS Latitude:              {G}{imu_data.gpsLatitude:8.4f}{RESET} {R}°{RESET}",
+                    f"GPS Longitude:             {G}{imu_data.gpsLongitude:8.4f}{RESET} {R}°{RESET}",  # noqa: E501
+                    f"GPS Altitude:              {G}{imu_data.gpsAltitude:8.4f}{RESET} {R}m{RESET}",
+                    f"Orientation roll:          {G}{float(data_processor.euler_orientation[0]):5.2f}{RESET}",
+                    f"Orientation pitch:         {G}{float(data_processor.euler_orientation[1]):5.2f}{RESET}",
+                    f"Orientation yaw:           {G}{float(data_processor.euler_orientation[2]):5.2f}{RESET}",
                     # f"Status Flag:               {G}{imu_data.statusFlag:6.2f}{RESET} {R}{RESET}",  # noqa: E501
                 ]
             )

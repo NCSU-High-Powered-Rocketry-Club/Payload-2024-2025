@@ -1,7 +1,6 @@
-ADEVICE null plughw:0,0
-ARATe 44100
+ADEVICE stdin headphones
+ARATe 22050
 CHANNEL 0
 MYCALL PLACEHOLDER
-MODEM 1200 E+ /3
-AGWPORT 8000
-KISSPORT 8001
+MODEM 1200
+PBEACON delay=0:1 every=0:5 overlay=S symbol=\O lat=10.1010N long=010.1010W comment="message"

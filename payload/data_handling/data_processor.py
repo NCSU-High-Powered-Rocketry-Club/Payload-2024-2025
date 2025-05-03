@@ -12,7 +12,11 @@ from payload.constants import (
     LANDING_VELOCITY_THRESHOLD,
     VELOCITY_FROM_ALTITUDE_WINDOW_SIZE,
     VERTICAL_ACCELERATION_WEIGHT,
+    SURVIVABILITY_SCALE,
+    BATTERY_ROLLING_AVG_SAMPLE_SIZE
 )
+
+from collections import deque
 from payload.data_handling.packets.imu_data_packet import IMUDataPacket
 from payload.data_handling.packets.processor_data_packet import ProcessorDataPacket
 from payload.utils import convert_milliseconds_to_seconds, deadband
@@ -41,6 +45,9 @@ class DataProcessor:
         "_velocity_rolling_average",
         "_vertical_velocity",
         "calculating_crew_survivability",
+        "_battery_rolling_average",
+        "_battery",
+        "_euler_orientation"
     )
 
     def __init__(self):
@@ -66,7 +73,10 @@ class DataProcessor:
         self._last_velocity_calculation_packet: IMUDataPacket | None = None
         self._velocity_rolling_average: list[np.float64] = []
         self._landing_velocity: np.float64 = np.float64(0.0)
-        self._filter = ahrs.filters.Davenport(magnetic_dip=62, weights=[3, 1])
+        self._filter = ahrs.filters.Davenport(magnetic_dip=62, weights=[3,1])
+        self._battery_rolling_average = [deque(maxlen=BATTERY_ROLLING_AVG_SAMPLE_SIZE), deque(maxlen=BATTERY_ROLLING_AVG_SAMPLE_SIZE)]
+        self._battery = [100.0, 100.0]  # pi_battery, tx_battery
+        self._euler_orientation: tuple = (0,0,0)
 
     @property
     def max_altitude(self) -> float:
@@ -115,6 +125,15 @@ class DataProcessor:
             return float(np.mean(self._velocity_rolling_average))
         return self.vertical_velocity
 
+    @property
+    def battery_moving_average(self) -> tuple[float, float]:
+        """"""
+        return self._battery[0], self._battery[1]
+
+    @property
+    def euler_orientation(self) -> tuple:
+        return self._euler_orientation
+
     def update(self, data_packet: IMUDataPacket) -> None:
         """
         Updates the data points to process. This will recompute all calculations for altitude,
@@ -141,6 +160,9 @@ class DataProcessor:
         self._current_altitude = self._calculate_current_altitude()
         self._max_altitude = max(self._current_altitude, self._max_altitude)
         self._max_velocity = max(self.velocity_moving_average, self._max_velocity)
+        self._euler_orientation = self.calculate_orientation()
+
+        self._battery = self._calculate_battery_rolling_average()
 
         if self.calculating_crew_survivability:
             self._crew_survivability = self._calculate_crew_survivability()
@@ -232,6 +254,16 @@ class DataProcessor:
             sum(self._velocity_rolling_average[:landing_velocity_size]) / landing_velocity_size
         )
 
+    def _calculate_battery_rolling_average(self) -> tuple[float, float]:
+        """Calculates battery RA"""
+        self._battery_rolling_average[0].append(self._data_packet.voltage_pi)
+        self._battery_rolling_average[1].append(self._data_packet.voltage_tx)
+
+        pi_battery = sum(self._battery_rolling_average[0]) / len(self._battery_rolling_average[0])
+        tx_battery = sum(self._battery_rolling_average[1]) / len(self._battery_rolling_average[1])
+
+        return pi_battery, tx_battery
+
     def _calculate_crew_survivability(self) -> np.float64:
         """
         Calculates the probability that our crew of STEMnauts is alive depending on
@@ -247,7 +279,7 @@ class DataProcessor:
         intensity_percent = (
             np.abs(self._data_packet.estCompensatedAccelZ) * VERTICAL_ACCELERATION_WEIGHT
             + np.abs(self._data_packet.estAngularRateY) * ANGULAR_RATE_WEIGHT
-        ) / 75
+        ) / SURVIVABILITY_SCALE
 
         if intensity_percent > INTENSITY_PERCENT_THRESHOLD:
             # Since the code is updated so frequently, intensity percent is divided by large
@@ -276,6 +308,14 @@ class DataProcessor:
             ]
         )
 
+        R_y = np.array([
+            [0, 0, 1],
+            [0, 1, 0],
+            [-1, 0, 0]
+        ])
+
+        acc = R_y @ acc 
+
         mag = np.array(
             [
                 self._data_packet.magneticFieldX,
@@ -287,5 +327,6 @@ class DataProcessor:
         if any(mag_data_point is None for mag_data_point in mag):
             return None
 
-        orientation = self._filter.estimate(acc=acc, mag=mag)
+        orientation = ahrs.filters.FQA(acc=acc, mag=mag).Q
+
         return tuple(R.from_quat(orientation, scalar_first=True).as_euler("xyz", degrees=True))

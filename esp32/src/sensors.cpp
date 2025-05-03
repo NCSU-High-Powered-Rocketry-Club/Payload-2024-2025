@@ -15,9 +15,9 @@ sh2_SensorValue_t sensorValue;
 
 void setBNO08xReports() {
   bno08x.enableReport(SH2_ROTATION_VECTOR, 10000);
-  bno08x.enableReport(SH2_LINEAR_ACCELERATION, 10000);
   bno08x.enableReport(SH2_GYROSCOPE_CALIBRATED, 10000);
   bno08x.enableReport(SH2_MAGNETIC_FIELD_CALIBRATED, 20000);
+  bno08x.enableReport(SH2_ACCELEROMETER, 10000);
 }
 
 void initSensors() {
@@ -83,26 +83,26 @@ void collectIMUData(DataPacket &packet) {
 
   if (bno08x.getSensorEvent(&sensorValue)) {
     switch (sensorValue.sensorId) {
-      case SH2_LINEAR_ACCELERATION:
-        if (abs(sensorValue.un.linearAcceleration.x) > MAX_ACCEL_VALUE ||
-            abs(sensorValue.un.linearAcceleration.y) > MAX_ACCEL_VALUE ||
-            abs(sensorValue.un.linearAcceleration.z) > MAX_ACCEL_VALUE) {
+      case SH2_ACCELEROMETER:
+        if (abs(sensorValue.un.accelerometer.x) > MAX_ACCEL_VALUE ||
+            abs(sensorValue.un.accelerometer.y) > MAX_ACCEL_VALUE ||
+            abs(sensorValue.un.accelerometer.z) > MAX_ACCEL_VALUE) {
           badIMUDataDetected = true;
           #if DEBUG_MODE
           DEBUG_SERIAL.print("Bad accel data: ");
-          DEBUG_SERIAL.print(sensorValue.un.linearAcceleration.x); 
+          DEBUG_SERIAL.print(sensorValue.un.accelerometer.x); 
           DEBUG_SERIAL.print(", ");
-          DEBUG_SERIAL.print(sensorValue.un.linearAcceleration.y);
+          DEBUG_SERIAL.print(sensorValue.un.accelerometer.y);
           DEBUG_SERIAL.print(", ");
-          DEBUG_SERIAL.println(sensorValue.un.linearAcceleration.z);
+          DEBUG_SERIAL.println(sensorValue.un.accelerometer.z);
           #endif
-          packet.comp_accel_x = constrain(sensorValue.un.linearAcceleration.x, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
-          packet.comp_accel_y = constrain(sensorValue.un.linearAcceleration.y, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
-          packet.comp_accel_z = constrain(sensorValue.un.linearAcceleration.z, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
+          packet.comp_accel_x = constrain(sensorValue.un.accelerometer.x, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
+          packet.comp_accel_y = constrain(sensorValue.un.accelerometer.y, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
+          packet.comp_accel_z = constrain(sensorValue.un.accelerometer.z, -MAX_ACCEL_VALUE, MAX_ACCEL_VALUE);
         } else {
-          packet.comp_accel_x = sensorValue.un.linearAcceleration.x;
-          packet.comp_accel_y = sensorValue.un.linearAcceleration.y;
-          packet.comp_accel_z = sensorValue.un.linearAcceleration.z;
+          packet.comp_accel_x = sensorValue.un.accelerometer.x;
+          packet.comp_accel_y = sensorValue.un.accelerometer.y;
+          packet.comp_accel_z = sensorValue.un.accelerometer.z;
         }
         executed_cases |= STATUS_BNO08X_ACCEL;
         break;

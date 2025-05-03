@@ -166,8 +166,8 @@ class PayloadContext:
         self.transmission_packet = TransmitterDataPacket(
             temperature=float(self.imu_data_packet.ambientTemperature),
             apogee=float(self.processed_data_packet.maximum_altitude),
-            battery_level_pi=float(self.imu_data_packet.voltage_pi),
-            battery_level_tx=float(self.imu_data_packet.voltage_tx),
+            battery_level_pi=float(self.data_processor.battery_moving_average[0]),
+            battery_level_tx=float(self.data_processor.battery_moving_average[1]),
             orientation=(float(roll), float(pitch), float(yaw)),
             time_of_landing=datetime.now(tz=ZoneInfo("America/Chicago")).strftime("%H:%M:%S"),
             max_velocity=float(self.processed_data_packet.maximum_velocity),
@@ -176,7 +176,7 @@ class PayloadContext:
             landing_coords=(self.imu_data_packet.gpsLatitude, self.imu_data_packet.gpsLongitude),
         )
 
-        self.transmission_packet.validate_data_points()
+        # self.transmission_packet.validate_data_points()
         self.transmitter.send_message(self.transmission_packet)
 
     def assign_previous_data(self, imu_data_packet: "IMUDataPacket") -> "IMUDataPacket":

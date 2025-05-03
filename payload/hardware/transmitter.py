@@ -74,14 +74,16 @@ class Transmitter(BaseTransmitter):
         lat_hemi = "N" if lat > 0 else "S"
         lat_frac, lat_degrees = math.modf(abs(lat))
         lat_degrees = int(lat_degrees)
-        lat_minutes = lat_frac * 60.0
-        lat_str = f"{lat_degrees:02}^{lat_minutes:05.2f}{lat_hemi}"
+        lat_minutes = int(lat_frac * 10000)
+        lat_str = f"{lat_degrees:02}.{lat_minutes:04}{lat_hemi}"
 
+        # Longitude conversion
         lon_hemi = "E" if lon > 0 else "W"
         lon_frac, lon_degrees = math.modf(abs(lon))
         lon_degrees = int(lon_degrees)
-        lon_minutes = lon_frac * 60.0
-        lon_str = f"{lon_degrees:03}^{lon_minutes:05.2f}{lon_hemi}"
+        lon_minutes = int(lon_frac * 10000)
+        lon_str = f"{lon_degrees:03}.{lon_minutes:04}{lon_hemi}"
+
 
         # return f'PBEACON delay=0:1 every=0:5 overlay=S symbol=\\O lat={lat_str} long={lon_str} comment="t=22.0,a=0.1,b=13.2,"'
         return f'PBEACON delay=0:1 every=0:5 overlay=S symbol=\\O lat={lat_str} long={lon_str} comment="{message.compress_packet()}"'
