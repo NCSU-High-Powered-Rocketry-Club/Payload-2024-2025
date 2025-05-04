@@ -194,7 +194,7 @@ class TransmitterValueRanges:
     data. This is used to determine if the data is valid or not.
     """
 
-    TEMPERATURE_RANGE_CELSIUS = [16, 34]
+    TEMPERATURE_RANGE_CELSIUS = [10, 34]
     """The range of the temperature in Celsius. This is used to determine if the temperature is
     valid or not."""
 
@@ -202,7 +202,7 @@ class TransmitterValueRanges:
     """The range of the maximum velocity in meters per second. This is used to determine if the
     maximum velocity is valid or not."""
 
-    LANDING_VELOCITY_RANGE_METERS_PER_SECOND = [-7, 0]
+    LANDING_VELOCITY_RANGE_METERS_PER_SECOND = [-8.5, -1.5]
     """The range of the landing velocity in meters per second. This is used to determine if the
     landing velocity is valid or not."""
 

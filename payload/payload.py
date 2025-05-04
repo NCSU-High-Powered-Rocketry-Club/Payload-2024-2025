@@ -176,7 +176,7 @@ class PayloadContext:
             landing_coords=(self.imu_data_packet.gpsLatitude, self.imu_data_packet.gpsLongitude),
         )
 
-        # self.transmission_packet.validate_data_points()
+        self.transmission_packet.validate_data_points()
         self.transmitter.send_message(self.transmission_packet)
 
     def assign_previous_data(self, imu_data_packet: "IMUDataPacket") -> "IMUDataPacket":
